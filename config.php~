@@ -18,7 +18,7 @@
 	define( 'DB_USER', 'root' );
 	define( 'DB_PSWD', '' );
 	define( 'DB_HOST', 'localhost' );
-	define( 'DB_NAME', 'ATC' );
+	define( 'DB_NAME', 'pkbasc' );
 	
 	define( 'MONEYFORMAT', '%(#2.2n' );
 	
@@ -151,8 +151,20 @@
 		define('CMD_RESTORE', 'mysql -u '.DB_USER.' '.(strlen(DB_PSWD)?'-p "'.DB_PSWD.'" ':'').DB_NAME.' <'.dirname($_SERVER['SCRIPT_FILENAME']).'/backups/');
 	}
 	
-	require_once 'atc.class.php';
-	$ATC = new ATC();
+	require_once 'pkbasc.class.php';
+	$PKBASC = new PKBASC();
 
+	/* Function to work out what students are due to attend during a week, which have bookings, which have known absences and which have requested one-off attendance */
+	function studentBookings( $weekcommencing )
+	{
+		global $PKBASC;
+		return $PKBASC->getStudentBookings( $weekcommencing );
+	}
+	
+	function currency_format( $format, $amount )
+	{
+		global $PKBASC;
+		return $PKBASC->currency_format( $format, $amount );
+	}
 	
 ?>
