@@ -151,8 +151,5 @@
 		define('CMD_RESTORE', 'mysql -u '.DB_USER.' '.(strlen(DB_PSWD)?'-p "'.DB_PSWD.'" ':'').DB_NAME.' <'.dirname($_SERVER['SCRIPT_FILENAME']).'/backups/');
 	}
 	
-	require_once 'atc.class.php';
-	$ATC = new ATC();
-
 	
 ?>
