@@ -1,4 +1,19 @@
 <?php
+	define( 'ATC_DEBUG', 						1 );
+
+	define( 'ATC_USER_LEVEL_ADMIN', 			1 );
+	define( 'ATC_USER_LEVEL_CADET', 			2 );
+	define( 'ATC_USER_LEVEL_JNCO', 				4 );
+	define( 'ATC_USER_LEVEL_SNCO', 				8 );
+	define( 'ATC_USER_LEVEL_OFFICER', 			16 );
+	define( 'ATC_USER_LEVEL_ADJUTANT', 			32 );
+	define( 'ATC_USER_LEVEL_STORES', 			64 );
+	define( 'ATC_USER_LEVEL_TRAINING', 			128 );
+	define( 'ATC_USER_LEVEL_CUCDR', 			512 );
+	define( 'ATC_USER_LEVEL_SUPOFF', 			1024 );
+	define( 'ATC_USER_LEVEL_TREASURER',			2048 );
+	//define( 'ATC_USER_LEVEL_ADMIN', 	4096 );
+
 	require_once 'config.php';
 	
 	class ATCException extends Exception {
@@ -17,31 +32,9 @@
 			return sprintf("EXCEPTION:PKBASC:%s", $class, htmlentities($this->getMessage()));
 		}
 	}
-	class ATCExceptionnBadData extends ATCExceptionn {}
-	class ATCExceptionnDBConn extends ATCExceptionn {}
+	class ATCExceptionnBadData extends ATCException {}
+	class ATCExceptionnDBConn extends ATCException {}
 	
-	define( 'PKB_INVOICE_INCLUDE', 0 );
-	define( 'PKB_INVOICE_EXCLUDE', 1 );
-	define( 'PKB_INVOICE_BOTH',    2 );
-	
-	define( 'PKB_TIMEOUT_AUTH_ABS',  '15:10' );
-	define( 'PKB_TIMEOUT_UNAUTH_ABS','15:00' );
-
-	define( 'ATC_DEBUG', 				1 );
-
-	define( 'ATC_USER_LEVEL_ADMIN', 	1 );
-	define( 'ATC_USER_LEVEL_CADET', 	2 );
-	define( 'ATC_USER_LEVEL_JNCO', 		4 );
-	define( 'ATC_USER_LEVEL_SNCO', 		8 );
-	define( 'ATC_USER_LEVEL_OFFICER', 	16 );
-	define( 'ATC_USER_LEVEL_ADJUTANT', 	32 );
-	define( 'ATC_USER_LEVEL_STORES', 	64 );
-	define( 'ATC_USER_LEVEL_TRAINING', 	128 );
-	define( 'ATC_USER_LEVEL_CUCDR', 	512 );
-	define( 'ATC_USER_LEVEL_SUPOFF', 	1024 );
-	define( 'ATC_USER_LEVEL_TREASURER',	2048 );
-	//define( 'ATC_USER_LEVEL_ADMIN', 	4096 );
-
 	
 	class ATC
 	{
@@ -140,6 +133,74 @@
 			return $str;
 		}
 				
+		public function get_personnel( $id )
+		{
+			$personnel = new stdClass();
+			switch( $id )
+			{
+					case null:
+						$personnel = array();
+						$query = "SELECT * FROM `personnel`;";
+						
+						if ($result = self::$mysqli->query($query))
+							while ( $obj = $result->fetch_object() )
+								$personnel[] = $obj;
+						break;
+					case 0:
+						$personnel->personnel_id = 0;
+						$personnel->firstname = null;
+						$personnel->lastname = null;
+						$personnel->email = null;
+						$personnel->access_rights = 585;
+						$personnel->created = date("c", time());
+						break;
+					default:
+						$query = "SELECT * FROM `personnel` WHERE `personnel_id` = ".(int)$id." LIMIT 1;";
+						
+						if ($result = self::$mysqli->query($query)) 
+							$personnel = $result->fetch_object();
+						break;
+			}
+			return $personnel;
+		}	
+		
+		public function gui_output_page_footer( $title )
+		{
+			echo '
+	</body>
+</html>';
+		}
+		
+		public function gui_output_page_header( $title )
+		{
+			echo '<!doctype html>
+<html lang="us">
+	<head>
+		<meta charset="utf-8">
+		<title>ATC '.$title.'</title>
+		<link href="jquery-ui-1.9.2.custom/css/redmond/jquery-ui-1.9.2.custom.css" rel="stylesheet">
+		<link href="atc.css" rel="stylesheet">
+		<script type="text/javascript" src="jquery-ui-1.9.2.custom/js/jquery-1.8.3.js"></script>
+		<script type="text/javascript" src="jquery-ui-1.9.2.custom/js/jquery-ui-1.9.2.custom.js"></script>
+		<script type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
+		
+		<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+		
+		<script type="text/javascript">
+			$(function(){
+			});
+			
+		</script>
+		
+	</head>
+	<body>
+		<div class="navoptions">
+			<button class="home" type="button">Home</button><br />
+		</div>
+		<h1> ATC '.$title.' </h1>
+		<div id="dialog"></div>
+';
+		}
 		public function getStudentDetails( $student_id )
 		{
 			$query = "SELECT DISTINCT * FROM `student` WHERE `student_id` = ".(int)$student_id." LIMIT 1;";
