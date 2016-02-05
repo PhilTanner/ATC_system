@@ -61,7 +61,7 @@
 					user = jQuery.parseJSON( '<?= json_encode( $user ) ?>' );
 
 					$('#firstname').val(user['firstname']);
-					$('#larstname').val(user['lastname']);
+					$('#lastname').val(user['lastname']);
 					$('#email').val(user['email']);
 					$('#created').val(user['created']);
 	
@@ -93,6 +93,30 @@
 <?php
 	} elseif( is_array( $user ) ) {
 ?>
+	<table>
+		<thead>
+			<tr>
+				<th> ID </th>
+				<th> Name </th>
+			</tr>
+		</thead>
+		<tfoot>
+			<tr>
+			</tr>
+		</tfoot>
+		<tbody>
+			<?php
+				foreach( $user as $obj )
+				{
+					echo '<tr>';
+					echo '	<th>'.$obj->personnel_id.'</th>';
+					echo '	<td>'.$obj->firstname.' '.$obj->lastname.'</td>';
+					echo '	<td> <a href="?id='.$obj->personnel_id.'">Edit</a> </td>';
+					echo '</tr>';
+				}
+			?>
+		</tbody>
+	</table>
 <?php
 	}
 	$ATC->gui_output_page_footer('Personnel');
