@@ -12,7 +12,7 @@
 	define( 'ATC_USER_LEVEL_CUCDR', 			512 );
 	define( 'ATC_USER_LEVEL_SUPOFF', 			1024 );
 	define( 'ATC_USER_LEVEL_TREASURER',			2048 );
-	//define( 'ATC_USER_LEVEL_ADMIN', 	4096 );
+	define( 'ATC_USER_LEVEL_USC', 				4096 );
 
 	require_once 'config.php';
 	
@@ -136,23 +136,28 @@
 		public function get_personnel( $id )
 		{
 			$personnel = new stdClass();
+
 			switch( $id )
 			{
+					// only loose casting, so work it out properly here
 					case null:
-						$personnel = array();
-						$query = "SELECT * FROM `personnel`;";
-						
-						if ($result = self::$mysqli->query($query))
-							while ( $obj = $result->fetch_object() )
-								$personnel[] = $obj;
-						break;
 					case 0:
-						$personnel->personnel_id = 0;
-						$personnel->firstname = null;
-						$personnel->lastname = null;
-						$personnel->email = null;
-						$personnel->access_rights = 585;
-						$personnel->created = date("c", time());
+						if( is_null($id) )
+						{
+							$personnel = array();
+							$query = "SELECT * FROM `personnel`;";
+							
+							if ($result = self::$mysqli->query($query))
+								while ( $obj = $result->fetch_object() )
+									$personnel[] = $obj;
+						} else {
+							$personnel->personnel_id = 0;
+							$personnel->firstname = null;
+							$personnel->lastname = null;
+							$personnel->email = null;
+							$personnel->access_rights = 585;
+							$personnel->created = date("c", time());
+						}
 						break;
 					default:
 						$query = "SELECT * FROM `personnel` WHERE `personnel_id` = ".(int)$id." LIMIT 1;";

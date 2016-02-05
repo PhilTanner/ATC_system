@@ -5,15 +5,14 @@
 	$id = ( isset($_GET['id'])?(int)$_GET['id']:null );
 	$user = $ATC->get_personnel($id);
 	
-	var_dump($user);
 	$ATC->gui_output_page_header('Personnel');
 	
 	if( is_object($user) )
 	{	
 ?>
-		<form id="personnelform">
+		<form id="personnelform" method="post">
+			<h2> Personal details </h2>
 			<fieldset id="personal">
-				<legend> Personal details </legend>
 				<input type="hidden" name="personnel_id" value="0" />
 				<label for="firstname">First name</label>
 				<input type="text" name="firstname" id="firstname" value="" maxlength="50" required="required" placeholder="First name" /> <br />
@@ -25,32 +24,36 @@
 				<input type="password" name="password" id="password" value="" maxlength="255" required="required" placeholder="Password"  /> <br />
 				<label for="created">Date created</label>
 				<input type="text" name="created" id="created" value="" maxlength="50" required="required" readonly="readonly" disabled="disabled" /><br />
+				<button type="submit">Save</button>
 			</fieldset>
 
+			<h2> Access Rights </h2>
 			<fieldset id="accessrights">
-				<legend> Access Rights </legend>
-				<input type="checkbox" name="access_rights_admin" id="access_rights_admin" value="" />
+				<input type="checkbox" name="access_rights" id="access_rights_admin" value="" />
 				<label for="access_rights_admin">Admin</label><br />
-				<input type="checkbox" name="access_rights_cadet" id="access_rights_cadet" value="" />
+				<input type="checkbox" name="access_rights" id="access_rights_cadet" value="" />
 				<label for="access_rights_cadet">Cadet</label><br />
-				<input type="checkbox" name="access_rights_jnco" id="access_rights_jnco" value="" />
+				<input type="checkbox" name="access_rights" id="access_rights_jnco" value="" />
 				<label for="access_rights_jnco">Junior NCO</label><br />
-				<input type="checkbox" name="access_rights_snco" id="access_rights_snco" value="" />
+				<input type="checkbox" name="access_rights" id="access_rights_snco" value="" />
 				<label for="access_rights_snco">Senior NCO</label><br />
-				<input type="checkbox" name="access_rights_officer" id="access_rights_officer" value="" />
+				<input type="checkbox" name="access_rights" id="access_rights_officer" value="" />
 				<label for="access_rights_officer">Officer</label><br />
-				<input type="checkbox" name="access_rights_adjutant" id="access_rights_adjutant" value="" />
+				<input type="checkbox" name="access_rights" id="access_rights_adjutant" value="" />
 				<label for="access_rights_adjutant">Adjutant</label><br />
-				<input type="checkbox" name="access_rights_stores" id="access_rights_stores" value="" />
+				<input type="checkbox" name="access_rights" id="access_rights_stores" value="" />
 				<label for="access_rights_stores">Stores</label><br />
-				<input type="checkbox" name="access_rights_training" id="access_rights_training" value="" />
+				<input type="checkbox" name="access_rights" id="access_rights_training" value="" />
 				<label for="access_rights_training">Training</label><br />
-				<input type="checkbox" name="access_rights_cucdr" id="access_rights_cucdr" value="" />
+				<input type="checkbox" name="access_rights" id="access_rights_cucdr" value="" />
 				<label for="access_rights_cucdr">Cadet Unit Commander</label><br />
-				<input type="checkbox" name="access_rights_supoff" id="access_rights_supoff" value="" />
+				<input type="checkbox" name="access_rights" id="access_rights_supoff" value="" />
 				<label for="access_rights_supoff">Supplimentary Officer</label><br />
-				<input type="checkbox" name="access_rights_treasurer" id="access_rights_treasurer" value="" />
+				<input type="checkbox" name="access_rights" id="access_rights_treasurer" value="" />
 				<label for="access_rights_treasurer">Treasurer</label><br />
+				<input type="checkbox" name="access_rights" id="access_rights_usc" value="" />
+				<label for="access_rights_usc">Unit Support Committee</label><br />
+				<button type="submit">Save</button>
 			</fieldset>
 			
 			<button type="submit">Save</button>
@@ -64,6 +67,8 @@
 					$('#lastname').val(user['lastname']);
 					$('#email').val(user['email']);
 					$('#created').val(user['created']);
+					if( user['personnel_id'] )
+						$('#password').prop('required', false).prop('placeholder', 'Leave blank to keep current password').prev().html('Change password');
 	
 					if( user['access_rights'] & <?= ATC_USER_LEVEL_ADMIN ?> )
 						$('#access_rights_admin').prop('checked', true);
@@ -87,6 +92,10 @@
 						$('#access_rights_supoff').prop('checked', true);
 					if( user['access_rights'] & <?= ATC_USER_LEVEL_TREASURER ?> )
 						$('#access_rights_treasurer').prop('checked', true);
+					if( user['access_rights'] & <?= ATC_USER_LEVEL_USC ?> )
+						$('#access_rights_usc').prop('checked', true);
+					
+					$('#personnelform').accordion({ header: 'h2' });
 			});
 		</script>
 
@@ -102,6 +111,8 @@
 		</thead>
 		<tfoot>
 			<tr>
+				<th colspan="2"></th>
+				<th> <a href="?id=0" class="button new"> New </a> </th>
 			</tr>
 		</tfoot>
 		<tbody>
