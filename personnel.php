@@ -13,49 +13,42 @@
 		$ATC->set_personnel( $user );
 	}
 	
-	
 	$ATC->gui_output_page_header('Personnel');
 	
 	if( is_object($user) )
 	{	
 ?>
-		<form id="personnelform" method="post" action="?id=<?=$user->personnel_id?>">
+		<div id="personnelform">
 			<h2 href="personal.php?id=<?=$user->personnel_id?>"> Personal details </h2>
-			<fieldset id="personal">
-			</fieldset>
-
+			<div id="personal">
+			</div>
+	
 			<h2 href="attendance.php?id=<?=$user->personnel_id?>"> Attendance </h2>
-			<fieldset id="accessrights">
-				<button type="submit">Save</button>
-			</fieldset>
-
+			<div id="accessrights">
+			</div>
+	
 			<h2> Activites </h2>
-			<fieldset id="accessrights">
-				<button type="submit">Save</button>
-			</fieldset>
-
+			<div id="accessrights">
+			</div>
+	
 			<h2> Finance </h2>
-			<fieldset id="accessrights">
-				<button type="submit">Save</button>
-			</fieldset>
-
+			<div id="accessrights">
+			</div>
+	
 			<h2> Stores </h2>
-			<fieldset id="accessrights">
-				<button type="submit">Save</button>
-			</fieldset>
-			
-			<button type="submit">Save</button>
-		</form>
+			<div id="accessrights">
+			</div>
+		</div>
 		
 		<script>
 			$(function(){					
-					$('#personnelform fieldset:first').load( $('#personnelform h2:first').attr('href'), function(){
+					$('#personnelform div:first').load( $('#personnelform h2:first').attr('href'), function(){
 	
 						$('#personnelform').accordion({ 
 							header: 'h2', 
 							changestart:function( event, ui )
 										{
-											console.log(ui.newHeader.attr('href'));
+											// There's a delay after load to set height, to allow the DOM to update properly
 											ui.newContent.load(ui.newHeader.attr('href'), function(){ setTimeout( function(){ $('#personnelform').accordion('resize'); },500); });
 										} 
 						});
