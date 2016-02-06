@@ -46,7 +46,7 @@
 					$('#email').val(user['email']);
 					$('#created').val(user['created']);
 					$('#dob').val(user['dob']);
-					$('#access_rights').val(user['access_rights']);
+					$('#access_rights').val( user['access_rights']);
 					if( user['personnel_id'] )
 						$('#password').prop('required', false).prop('placeholder', 'Leave blank to keep current password').prev().html('Change password');
 	

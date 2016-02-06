@@ -17,3 +17,6 @@ thead th { padding: 1ex 1ex; }
 .pickdate { width: 8em; }
 .navoptions { float: right; }
 .navoptions button { margin-bottom: 5px; }
+
+label { display:inline-block; width: 10em; }
+input, select, textarea { width: 50em; }

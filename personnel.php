@@ -48,26 +48,17 @@
 		</form>
 		
 		<script>
-			$(function(){
-					user = jQuery.parseJSON( '<?= json_encode( $user ) ?>' );
-
-					$('#personnel_id').val(user['personnel_id']);
-					$('#firstname').val(user['firstname']);
-					$('#lastname').val(user['lastname']);
-					$('#email').val(user['email']);
-					$('#created').val(user['created']);
-					$('#dob').val(user['dob']);
-					$('#access_rights').val(user['access_rights']);
-					if( user['personnel_id'] )
-						$('#password').prop('required', false).prop('placeholder', 'Leave blank to keep current password').prev().html('Change password');
+			$(function(){					
+					$('#personnelform fieldset:first').load( $('#personnelform h2:first').attr('href'), function(){
 	
-					$('#personnelform').accordion({ 
-						header: 'h2', 
-						changestart:function( event, ui )
-									{
-										console.log(ui.newHeader.attr('href'));
-										ui.newContent.load(ui.newHeader.attr('href'), function(){ setTimeout( function(){ $('#personnelform').accordion('resize'); },500); });
-									} 
+						$('#personnelform').accordion({ 
+							header: 'h2', 
+							changestart:function( event, ui )
+										{
+											console.log(ui.newHeader.attr('href'));
+											ui.newContent.load(ui.newHeader.attr('href'), function(){ setTimeout( function(){ $('#personnelform').accordion('resize'); },500); });
+										} 
+						});
 					});
 			});
 			
