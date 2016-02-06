@@ -1,18 +1,35 @@
 <?php
-	define( 'ATC_DEBUG', 						1 );
+	define( 'ATC_DEBUG', 										1 );
 
-	define( 'ATC_USER_LEVEL_ADMIN', 			1 );
-	define( 'ATC_USER_LEVEL_CADET', 			2 );
-	define( 'ATC_USER_LEVEL_JNCO', 				4 );
-	define( 'ATC_USER_LEVEL_SNCO', 				8 );
-	define( 'ATC_USER_LEVEL_OFFICER', 			16 );
-	define( 'ATC_USER_LEVEL_ADJUTANT', 			32 );
-	define( 'ATC_USER_LEVEL_STORES', 			64 );
-	define( 'ATC_USER_LEVEL_TRAINING', 			128 );
-	define( 'ATC_USER_LEVEL_CUCDR', 			512 );
-	define( 'ATC_USER_LEVEL_SUPOFF', 			1024 );
-	define( 'ATC_USER_LEVEL_TREASURER',			2048 );
-	define( 'ATC_USER_LEVEL_USC', 				4096 );
+	define( 'ATC_USER_PERMISSION_PERSONNEL_VIEW', 				1 );
+	define( 'ATC_USER_PERMISSION_PERSONNEL_EDIT',		 		ATC_USER_PERMISSION_PERSONNEL_VIEW + 2 );
+	define( 'ATC_USER_PERMISSION_ATTENDANCE_VIEW', 				4 );
+	define( 'ATC_USER_PERMISSION_ATTENDANCE_EDIT', 				ATC_USER_PERMISSION_ATTENDANCE_VIEW + 8 );
+	define( 'ATC_USER_PERMISSION_ACTIVITIES_VIEW', 				16 );
+	define( 'ATC_USER_PERMISSION_ACTIVITIES_EDIT', 				ATC_USER_PERMISSION_ACTIVITIES_VIEW + 32 );
+	define( 'ATC_USER_PERMISSION_FINANCE_VIEW', 				64 );
+	define( 'ATC_USER_PERMISSION_FINANCE_EDIT', 				ATC_USER_PERMISSION_FINANCE_VIEW + 128 );
+	define( 'ATC_SYSTEM_PERMISSION_VIEW', 						512 );
+	define( 'ATC_SYSTEM_PERMISSION_EDIT', 						ATC_SYSTEM_PERMISSION_VIEW + 1024 );
+	define( 'ATC_USER_PERMISSION_STORES_VIEW',					2048 );
+	define( 'ATC_USER_PERMISSION_STORES_EDIT',					ATC_USER_PERMISSION_STORES_VIEW + 4096 );
+	define( 'ATC_STORES_PERMISSION_VIEW',						8192 );
+	define( 'ATC_STORES_PERMISSION_EDIT',						ATC_STORES_PERMISSION_VIEW + 16384 );
+	define( 'ATC_ACTIVITIES_PERMISSION_VIEW',					32768 );
+	define( 'ATC_ACTIVITIES_PERMISSION_EDIT',					ATC_ACTIVITIES_PERMISSION_VIEW + 65536 );
+
+	// Give admin everything we can think of in the future.
+	define( 'ATC_USER_LEVEL_ADMIN', 							1048575 );
+	define( 'ATC_USER_LEVEL_CADET', 							0 );
+	define( 'ATC_USER_LEVEL_NCO', 								ATC_USER_PERMISSION_PERSONNEL_VIEW );
+	//define( 'ATC_USER_LEVEL_OFFICER', 							ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_ACTIVITIES_VIEW );
+	define( 'ATC_USER_LEVEL_ADJUTANT', 							ATC_USER_PERMISSION_PERSONNEL_EDIT + ATC_USER_PERMISSION_ATTENDANCE_EDIT + ATC_USER_PERMISSION_ACTIVITIES_EDIT + ATC_USER_PERMISSION_FINANCE_EDIT + ATC_USER_PERMISSION_STORES_VIEW );
+	define( 'ATC_USER_LEVEL_STORES', 							ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_FINANCE_EDIT + ATC_USER_PERMISSION_STORES_EDIT );
+	define( 'ATC_USER_LEVEL_TRAINING', 							ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_FINANCE_VIEW + ATC_USER_PERMISSION_STORES_VIEW );
+	define( 'ATC_USER_LEVEL_CUCDR', 							ATC_USER_PERMISSION_PERSONNEL_EDIT + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_ACTIVITIES_VIEW + ATC_USER_PERMISSION_FINANCE_VIEW + ATC_USER_PERMISSION_STORES_VIEW );
+	define( 'ATC_USER_LEVEL_SUPOFF', 							ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_ACTIVITIES_VIEW );
+	define( 'ATC_USER_LEVEL_TREASURER',							ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_ACTIVITIES_VIEW + ATC_USER_PERMISSION_STORES_VIEW + ATC_USER_PERMISSION_FINANCE_EDIT );
+	define( 'ATC_USER_LEVEL_USC', 								ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_ACTIVITIES_VIEW + ATC_USER_PERMISSION_STORES_VIEW + ATC_USER_PERMISSION_FINANCE_VIEW );
 
 	require_once 'config.php';
 	
@@ -155,7 +172,7 @@
 							$personnel->firstname = null;
 							$personnel->lastname = null;
 							$personnel->email = null;
-							$personnel->access_rights = 585;
+							$personnel->access_rights = 2;
 							$personnel->created = date("c", time());
 						}
 						break;
@@ -167,6 +184,23 @@
 						break;
 			}
 			return $personnel;
+		}	
+		
+		public function set_personnel( &$user )
+		{
+			$query = "";
+			if( !$user->personnel_id )
+			{
+				$query .= "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `password`, `salt`, `access_rights` ) VALUES ( ";
+				$query .= '"'.$user->firstname.'", "'.$user->lastname.'", "'.$user->email.'", "'.$user->password.'", "", '.$user->access_rights.' );';
+				if ($result = self::$mysqli->query($query))
+				{
+					$user->personnel_id = self::$mysqli->insert_id;
+					return true;
+				}
+				return false;
+			} else {
+			}
 		}	
 		
 		public function gui_output_page_footer( $title )
