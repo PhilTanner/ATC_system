@@ -5,14 +5,6 @@
 	$id = ( isset($_GET['id'])?(int)$_GET['id']:null );
 	$user = $ATC->get_personnel($id);
 
-	if( isset( $_POST['personnel_id'] ) && isset( $_GET['id'] ) )
-	{
-		foreach( $_POST as $var => $val )
-			$user->$var = $val;
-		
-		$ATC->set_personnel( $user );
-	}
-	
 	$ATC->gui_output_page_header('Personnel');
 	
 	if( is_object($user) )
