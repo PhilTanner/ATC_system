@@ -20,65 +20,27 @@
 	{	
 ?>
 		<form id="personnelform" method="post" action="?id=<?=$user->personnel_id?>">
-			<h2> Personal details </h2>
+			<h2 href="personal.php?id=<?=$user->personnel_id?>"> Personal details </h2>
 			<fieldset id="personal">
-				<input type="hidden" name="personnel_id" id="personnel_id" value="" />
-				<label for="firstname">First name</label>
-				<input type="text" name="firstname" id="firstname" value="" maxlength="50" required="required" placeholder="First name" /> <br />
-				<label for="lastname">Last name</label>
-				<input type="text" name="lastname" id="lastname" value="" maxlength="100" required="required" placeholder="Last name" /> <br />
-				<label for="email">Email address</label>
-				<input type="email" name="email" id="email" value="" maxlength="255" required="required" placeholder="Email address" /> <br />
-				<label for="password">Password</label>
-				<input type="password" name="password" id="password" value="" maxlength="255" required="required" placeholder="Password"  /> <br />
-				<label for="dob">Date of birth</label>
-				<input type="date" name="dob" id="dob" value="" maxlength="50" required="required" /><br />
-				<label for="created">Date created</label>
-				<input type="datetime-local" name="created" id="created" value="" maxlength="50" readonly="readonly" disabled="disabled" /><br />
-				<label for="access_rights">Access level</label>
-				<select name="access_rights" id="access_rights">
-					<option value="<?=ATC_USER_LEVEL_CADET?>"> Cadet </option>
-					<option value="<?=ATC_USER_LEVEL_NCO?>"> NCO </option>
-					<option value="<?=ATC_USER_LEVEL_SUPOFF?>"> Supplimentary Officer </option>
-					<option value="<?=ATC_USER_LEVEL_ADJUTANT?>"> Adjutant </option>
-					<option value="<?=ATC_USER_LEVEL_STORES?>"> Stores </option>
-					<option value="<?=ATC_USER_LEVEL_TRAINING?>"> Training </option>
-					<option value="<?=ATC_USER_LEVEL_CUCDR?>"> CUCDR </option>
-					<option value="<?=ATC_USER_LEVEL_USC?>"> Unit Support Committee Member </option>
-					<option value="<?=ATC_USER_LEVEL_TREASURER?>"> Treasurer </option>
-					<option value="<?=ATC_USER_LEVEL_ADMIN?>"> Admin </option>
-				</select><br />
+			</fieldset>
+
+			<h2 href="attendance.php?id=<?=$user->personnel_id?>"> Attendance </h2>
+			<fieldset id="accessrights">
 				<button type="submit">Save</button>
 			</fieldset>
 
-			<h2> Access Rights </h2>
+			<h2> Activites </h2>
 			<fieldset id="accessrights">
-<!--
-				<input type="checkbox" name="access_rights[]" id="access_rights_admin" value="<?=ATC_USER_LEVEL_ADMIN?>" />
-				<label for="access_rights_admin">Admin</label><br />
-				<input type="checkbox" name="access_rights[]" id="access_rights_cadet" value="<?=ATC_USER_LEVEL_CADET?>" />
-				<label for="access_rights_cadet">Cadet</label><br />
-				<input type="checkbox" name="access_rights[]" id="access_rights_jnco" value="<?=ATC_USER_LEVEL_JNCO?>" />
-				<label for="access_rights_jnco">Junior NCO</label><br />
-				<input type="checkbox" name="access_rights[]" id="access_rights_snco" value="<?=ATC_USER_LEVEL_SNCO?>" />
-				<label for="access_rights_snco">Senior NCO</label><br />
-				<input type="checkbox" name="access_rights[]" id="access_rights_officer" value="<?=ATC_USER_LEVEL_OFFICER?>" />
-				<label for="access_rights_officer">Officer</label><br />
-				<input type="checkbox" name="access_rights[]" id="access_rights_adjutant" value="<?=ATC_USER_LEVEL_ADJUTANT?>" />
-				<label for="access_rights_adjutant">Adjutant</label><br />
-				<input type="checkbox" name="access_rights[]" id="access_rights_stores" value="<?=ATC_USER_LEVEL_STORES?>" />
-				<label for="access_rights_stores">Stores</label><br />
-				<input type="checkbox" name="access_rights[]" id="access_rights_training" value="<?=ATC_USER_LEVEL_TRAINING?>" />
-				<label for="access_rights_training">Training</label><br />
-				<input type="checkbox" name="access_rights[]" id="access_rights_cucdr" value="<?=ATC_USER_LEVEL_CUCDR?>" />
-				<label for="access_rights_cucdr">Cadet Unit Commander</label><br />
-				<input type="checkbox" name="access_rights[]" id="access_rights_supoff" value="<?=ATC_USER_LEVEL_SUPOFF?>" />
-				<label for="access_rights_supoff">Supplimentary Officer</label><br />
-				<input type="checkbox" name="access_rights[]" id="access_rights_treasurer" value="<?=ATC_USER_LEVEL_TREASURER?>" />
-				<label for="access_rights_treasurer">Treasurer</label><br />
-				<input type="checkbox" name="access_rights[]" id="access_rights_usc" value="<?=ATC_USER_LEVEL_USC?>" />
-				<label for="access_rights_usc">Unit Support Committee</label><br />
--->
+				<button type="submit">Save</button>
+			</fieldset>
+
+			<h2> Finance </h2>
+			<fieldset id="accessrights">
+				<button type="submit">Save</button>
+			</fieldset>
+
+			<h2> Stores </h2>
+			<fieldset id="accessrights">
 				<button type="submit">Save</button>
 			</fieldset>
 			
@@ -95,40 +57,20 @@
 					$('#email').val(user['email']);
 					$('#created').val(user['created']);
 					$('#dob').val(user['dob']);
+					$('#access_rights').val(user['access_rights']);
 					if( user['personnel_id'] )
 						$('#password').prop('required', false).prop('placeholder', 'Leave blank to keep current password').prev().html('Change password');
 	
-/*
-					if( user['access_rights'] & <?= ATC_USER_LEVEL_ADMIN ?> )
-						$('#access_rights_admin').prop('checked', true);
-					if( user['access_rights'] & <?= ATC_USER_LEVEL_CADET ?> )
-						$('#access_rights_cadet').prop('checked', true);
-					if( user['access_rights'] & <?= ATC_USER_LEVEL_JNCO ?> )
-						$('#access_rights_jnco').prop('checked', true);
-					if( user['access_rights'] & <?= ATC_USER_LEVEL_SNCO ?> )
-						$('#access_rights_snco').prop('checked', true);
-					if( user['access_rights'] & <?= ATC_USER_LEVEL_OFFICER ?> )
-						$('#access_rights_officer').prop('checked', true);
-					if( user['access_rights'] & <?= ATC_USER_LEVEL_ADJUTANT ?> )
-						$('#access_rights_adjutant').prop('checked', true);
-					if( user['access_rights'] & <?= ATC_USER_LEVEL_STORES ?> )
-						$('#access_rights_stores').prop('checked', true);
-					if( user['access_rights'] & <?= ATC_USER_LEVEL_TRAINING ?> )
-						$('#access_rights_training').prop('checked', true);
-					if( user['access_rights'] & <?= ATC_USER_LEVEL_CUCDR ?> )
-						$('#access_rights_cucdr').prop('checked', true);
-					if( user['access_rights'] & <?= ATC_USER_LEVEL_SUPOFF ?> )
-						$('#access_rights_supoff').prop('checked', true);
-					if( user['access_rights'] & <?= ATC_USER_LEVEL_TREASURER ?> )
-						$('#access_rights_treasurer').prop('checked', true);
-					if( user['access_rights'] & <?= ATC_USER_LEVEL_USC ?> )
-						$('#access_rights_usc').prop('checked', true);
-*/
-					$('#access_rights').val(user['access_rights']);
-
-
-					$('#personnelform').accordion({ header: 'h2' });
+					$('#personnelform').accordion({ 
+						header: 'h2', 
+						changestart:function( event, ui )
+									{
+										console.log(ui.newHeader.attr('href'));
+										ui.newContent.load(ui.newHeader.attr('href'), function(){ setTimeout( function(){ $('#personnelform').accordion('resize'); },500); });
+									} 
+					});
 			});
+			
 		</script>
 
 <?php
