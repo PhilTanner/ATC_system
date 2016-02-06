@@ -173,7 +173,7 @@
 							$personnel->lastname = null;
 							$personnel->email = null;
 							$personnel->access_rights = 2;
-							$personnel->created = date("c", time());
+							$personnel->created = date("d/m/Y h:i a", time());
 						}
 						break;
 					default:
@@ -181,6 +181,8 @@
 						
 						if ($result = self::$mysqli->query($query)) 
 							$personnel = $result->fetch_object();
+						$personnel->created = date("Y-m-d\TH:i", strtotime($personnel->created));
+
 						break;
 			}
 			return $personnel;
@@ -191,8 +193,8 @@
 			$query = "";
 			if( !$user->personnel_id )
 			{
-				$query .= "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `password`, `salt`, `access_rights` ) VALUES ( ";
-				$query .= '"'.$user->firstname.'", "'.$user->lastname.'", "'.$user->email.'", "'.$user->password.'", "", '.$user->access_rights.' );';
+				$query .= "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `dob`, `password`, `access_rights` ) VALUES ( ";
+				$query .= '"'.htmlentities($user->firstname).'", "'.htmlentities($user->lastname).'", "'.htmlentities($user->email).'", "'.date('Y-m-d',strtotime($user->dob)).'", "'.htmlentities(create_hash($user->password)).'", '.(int)$user->access_rights.' );';
 				if ($result = self::$mysqli->query($query))
 				{
 					$user->personnel_id = self::$mysqli->insert_id;
@@ -200,6 +202,13 @@
 				}
 				return false;
 			} else {
+				$query .= 'UPDATE `personnel` SET `firstname` = "'.htmlentities($user->firstname).'", `lastname` = "'.htmlentities($user->lastname).'", `email` = "'.htmlentities($user->email).'", `dob` = "'.date('Y-m-d',strtotime($user->dob)).'", ';
+				if( strlen(trim($user->password)) ) 
+					 $query .= '`password` = "'.htmlentities(create_hash($user->password)).'", ';
+				$query .= '`access_rights` = '.(int)$user->access_rights.' WHERE personnel_id = '.(int)$user->personnel_id.' LIMIT 1;';
+				if ($result = self::$mysqli->query($query))
+					return true;
+				return false;
 			}
 		}	
 		

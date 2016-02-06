@@ -7,16 +7,10 @@
 
 	if( isset( $_POST['personnel_id'] ) && isset( $_GET['id'] ) )
 	{
-		$accessrights = 0;
-		foreach( $_POST['access_rights'] as $permission )
-			$accessrights+=(int)$permission;
-		$_POST['access_rights'] = $accessrights;
-		
 		foreach( $_POST as $var => $val )
 			$user->$var = $val;
 		
 		$ATC->set_personnel( $user );
-		var_dump($user);
 	}
 	
 	
@@ -28,7 +22,7 @@
 		<form id="personnelform" method="post" action="?id=<?=$user->personnel_id?>">
 			<h2> Personal details </h2>
 			<fieldset id="personal">
-				<input type="hidden" name="personnel_id" value="" />
+				<input type="hidden" name="personnel_id" id="personnel_id" value="" />
 				<label for="firstname">First name</label>
 				<input type="text" name="firstname" id="firstname" value="" maxlength="50" required="required" placeholder="First name" /> <br />
 				<label for="lastname">Last name</label>
@@ -37,13 +31,29 @@
 				<input type="email" name="email" id="email" value="" maxlength="255" required="required" placeholder="Email address" /> <br />
 				<label for="password">Password</label>
 				<input type="password" name="password" id="password" value="" maxlength="255" required="required" placeholder="Password"  /> <br />
+				<label for="dob">Date of birth</label>
+				<input type="date" name="dob" id="dob" value="" maxlength="50" required="required" /><br />
 				<label for="created">Date created</label>
-				<input type="text" name="created" id="created" value="" maxlength="50" required="required" readonly="readonly" disabled="disabled" /><br />
+				<input type="datetime-local" name="created" id="created" value="" maxlength="50" readonly="readonly" disabled="disabled" /><br />
+				<label for="access_rights">Access level</label>
+				<select name="access_rights" id="access_rights">
+					<option value="<?=ATC_USER_LEVEL_CADET?>"> Cadet </option>
+					<option value="<?=ATC_USER_LEVEL_NCO?>"> NCO </option>
+					<option value="<?=ATC_USER_LEVEL_SUPOFF?>"> Supplimentary Officer </option>
+					<option value="<?=ATC_USER_LEVEL_ADJUTANT?>"> Adjutant </option>
+					<option value="<?=ATC_USER_LEVEL_STORES?>"> Stores </option>
+					<option value="<?=ATC_USER_LEVEL_TRAINING?>"> Training </option>
+					<option value="<?=ATC_USER_LEVEL_CUCDR?>"> CUCDR </option>
+					<option value="<?=ATC_USER_LEVEL_USC?>"> Unit Support Committee Member </option>
+					<option value="<?=ATC_USER_LEVEL_TREASURER?>"> Treasurer </option>
+					<option value="<?=ATC_USER_LEVEL_ADMIN?>"> Admin </option>
+				</select><br />
 				<button type="submit">Save</button>
 			</fieldset>
 
 			<h2> Access Rights </h2>
 			<fieldset id="accessrights">
+<!--
 				<input type="checkbox" name="access_rights[]" id="access_rights_admin" value="<?=ATC_USER_LEVEL_ADMIN?>" />
 				<label for="access_rights_admin">Admin</label><br />
 				<input type="checkbox" name="access_rights[]" id="access_rights_cadet" value="<?=ATC_USER_LEVEL_CADET?>" />
@@ -68,6 +78,7 @@
 				<label for="access_rights_treasurer">Treasurer</label><br />
 				<input type="checkbox" name="access_rights[]" id="access_rights_usc" value="<?=ATC_USER_LEVEL_USC?>" />
 				<label for="access_rights_usc">Unit Support Committee</label><br />
+-->
 				<button type="submit">Save</button>
 			</fieldset>
 			
@@ -83,9 +94,11 @@
 					$('#lastname').val(user['lastname']);
 					$('#email').val(user['email']);
 					$('#created').val(user['created']);
+					$('#dob').val(user['dob']);
 					if( user['personnel_id'] )
 						$('#password').prop('required', false).prop('placeholder', 'Leave blank to keep current password').prev().html('Change password');
 	
+/*
 					if( user['access_rights'] & <?= ATC_USER_LEVEL_ADMIN ?> )
 						$('#access_rights_admin').prop('checked', true);
 					if( user['access_rights'] & <?= ATC_USER_LEVEL_CADET ?> )
@@ -110,7 +123,10 @@
 						$('#access_rights_treasurer').prop('checked', true);
 					if( user['access_rights'] & <?= ATC_USER_LEVEL_USC ?> )
 						$('#access_rights_usc').prop('checked', true);
-					
+*/
+					$('#access_rights').val(user['access_rights']);
+
+
 					$('#personnelform').accordion({ header: 'h2' });
 			});
 		</script>
