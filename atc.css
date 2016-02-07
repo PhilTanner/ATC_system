@@ -1,0 +1,24 @@
+body
+{
+	font-family: 'Lucida Sans', 'Lucida Sans Unicode', Verdana, Arial, sans-serif;
+	font-size:80%;
+	/*background: url("logo.png") no-repeat fixed right bottom White*/
+}
+
+td.currency { text-align: right; }
+table { border-left: 1px solid silver; border-spacing:0; border-collapse:collapse; }
+tr th, tbody tr td { border: 1px solid silver; border-left:0px; }
+th, td { padding: 0.25ex 1ex; }
+thead th { padding: 1ex 1ex; }
+
+.ui-widget { font-size: 90%; }
+.ui-button-text { margin-left : 0.75ex; }
+.picktime, .hourlyrate { width: 4em; }
+.pickdate { width: 8em; }
+.navoptions { float: right; }
+.navoptions button { margin-bottom: 5px; }
+
+label { display:inline-block; width: 10em; }
+input, select, textarea { width: 50em; }
+input[type=checkbox] { width: auto; }
+button[type=submit] { float:right; }

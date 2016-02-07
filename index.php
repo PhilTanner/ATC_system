@@ -2,7 +2,7 @@
 <html lang="us">
 	<head>
 		<meta charset="utf-8">
-		<title>PKBASC</title>
+		<title>ATC</title>
 		<link href="jquery-ui-1.9.2.custom/css/redmond/jquery-ui-1.9.2.custom.css" rel="stylesheet">
 		<script type="text/javascript" src="jquery-ui-1.9.2.custom/js/jquery-1.8.3.js"></script>
 		<script type="text/javascript" src="jquery-ui-1.9.2.custom/js/jquery-ui-1.9.2.custom.js"></script>
@@ -70,7 +70,7 @@
 			{
 				font-family: 'Lucida Sans', 'Lucida Sans Unicode', Verdana, Arial, sans-serif;
 				font-size:80%;
-				background: url("logo.png") no-repeat fixed right bottom White
+				/*background: url("logo.png") no-repeat fixed right bottom White*/
 			}
 			
 			td.currency { text-align: right; }
@@ -100,7 +100,7 @@
 			<hr />
 			<input type="checkbox" id="showhidden" value="1" /> <label for="showhidden">Show all students?</label>
 		</div>
-		<h1> Pukerua Bay After School Care </h1>
+		<h1> ATC </h1>
 		<div id="studenttable">
 			<table id="studentlist">
 				<thead class="ui-widget-header">
@@ -124,9 +124,12 @@
 	</body>
 </html>
 <?php
-	// Backup the database at the start of each session
+/*
+// Backup the database at the start of each session
 	ob_start();
 	$_GET['automatic'] = true;
 	include 'ajax-systembackup.php';
-	ob_end_clean();  
+	ob_end_clean();
+	
+*/
 ?>

@@ -1,3 +1,6 @@
 backups/*
 automatedBackups/*
 invoices/*
+\#*\#
+*\~
+*.php~
