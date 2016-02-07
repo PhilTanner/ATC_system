@@ -215,6 +215,9 @@
 		public function gui_output_page_footer( $title )
 		{
 			echo '
+		<script>
+			$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
+		</script>
 	</body>
 </html>';
 		}

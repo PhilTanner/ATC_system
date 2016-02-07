@@ -80,12 +80,16 @@
 					echo '<tr>';
 					echo '	<th>'.$obj->personnel_id.'</th>';
 					echo '	<td>'.$obj->firstname.' '.$obj->lastname.'</td>';
-					echo '	<td> <a href="?id='.$obj->personnel_id.'">Edit</a> </td>';
+					echo '	<td> <a href="?id='.$obj->personnel_id.'" class="button edit">Edit</a> </td>';
 					echo '</tr>';
 				}
 			?>
 		</tbody>
 	</table>
+	<script>
+		$('a.button.edit').button({ icons: { primary: 'ui-icon-pencil' }, text: false });
+		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false });
+	</script>
 <?php
 	}
 	$ATC->gui_output_page_footer('Personnel');
