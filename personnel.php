@@ -77,9 +77,9 @@
 			<?php
 				foreach( $user as $obj )
 				{
-					echo '<tr>';
+					echo '<tr'.($obj->enabled?'':' class="ui-state-disabled"').'>';
 					echo '	<th>'.$obj->personnel_id.'</th>';
-					echo '	<td>'.$obj->firstname.' '.$obj->lastname.'</td>';
+					echo '	<td>'.$obj->lastname.', '.$obj->firstname.'</td>';
 					echo '	<td> <a href="?id='.$obj->personnel_id.'" class="button edit">Edit</a> </td>';
 					echo '</tr>';
 				}
@@ -87,6 +87,7 @@
 		</tbody>
 	</table>
 	<script>
+		$("thead th").button({ icons: { primary: "ui-icon-arrowthick-2-n-s" } }).removeClass("ui-corner-all").css({ display: "table-cell" });
 		$('a.button.edit').button({ icons: { primary: 'ui-icon-pencil' }, text: false });
 		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false });
 	</script>
