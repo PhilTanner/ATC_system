@@ -16,19 +16,23 @@
 			</div>
 	
 			<h2 href="attendance.php?id=<?=$user->personnel_id?>"> Attendance </h2>
-			<div id="accessrights">
+			<div id="attendance">
 			</div>
 	
 			<h2> Activites </h2>
-			<div id="accessrights">
+			<div id="activities">
 			</div>
 	
 			<h2> Finance </h2>
-			<div id="accessrights">
+			<div id="finance">
 			</div>
 	
 			<h2> Stores </h2>
-			<div id="accessrights">
+			<div id="stores">
+			</div>
+
+			<h2> Training </h2>
+			<div id="training">
 			</div>
 		</div>
 		
