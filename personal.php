@@ -41,7 +41,7 @@
 			<label for="dob">Date of birth</label>
 			<input type="date" name="dob" id="dob" value="" maxlength="50" required="required" /><br />
 			<label for="joined_date">Date joined</label>
-			<input type="date" name="joined_date" id="joined_date" value="" maxlength="50" /><br />
+			<input type="date" name="joined_date" id="joined_date" value="" maxlength="50" required="required" /><br />
 			<label for="left_date">Date left</label>
 			<input type="date" name="left_date" id="left_date" value="" maxlength="50" /><br />
 			<label for="access_rights">Access level</label>
@@ -104,7 +104,10 @@
 							   },
 							   success: function(data)
 							   {
-								   //$('#personalform').html(data);
+								   // When creating new users, redirect to the user page after creation, to continue editing.
+								   if( $('#personalform').attr('action') != $(data).filter('#personalform').attr('action') )
+								   	   // location.replace used to keep expected back button behaviour
+								   	   window.location.replace('personnel.php?id='+$(data).filter('#personalform').attr('action').match(/\d+/)[0]);
 								   return false;
 							   }
 							 });
