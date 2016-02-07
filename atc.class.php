@@ -49,8 +49,9 @@
 			return sprintf("EXCEPTION:PKBASC:%s", $class, htmlentities($this->getMessage()));
 		}
 	}
-	class ATCExceptionnBadData extends ATCException {}
-	class ATCExceptionnDBConn extends ATCException {}
+	class ATCExceptionBadData extends ATCException {}
+	class ATCExceptionDBConn extends ATCException {}
+	class ATCExceptionInsufficientPermissions extends ATCException {}
 	
 	
 	class ATC
@@ -67,34 +68,6 @@
 			if (mysqli_connect_errno())
 			    throw new ATCExceptionnDBConn(mysqli_connect_error());
 
-/*
-			// Find out if we're using the latest version....		    
-		    $dbtime = -1;
-			if ($result = self::$mysqli->query("SELECT MAX(`date`) AS a FROM `version` LIMIT 1;"))
-			{
-				$row = $result->fetch_object();
-				$dbtime = strtotime($row->a);
-			}
-			
-			if ($handle = opendir('./backups/')) 
-			{
-				$files = array();
-				while (false !== ($entry = readdir($handle))) 
-					if( substr($entry,0,6) == "pkbasc" ) 
-						$files[] = $entry;
-				closedir($handle);
-		
-				arsort($files);
-				foreach($files as $entry)
-				{
-					$backuptime = substr($entry, 7, 10);
-					break;
-				}
-			}
-			
-			if( $dbtime ==  $backuptime ) 
-				self::$dbUpToDate = true;
-*/
 		}
 		
 		public function backup( $automatic = true )
@@ -154,6 +127,9 @@
 		{
 			$personnel = new stdClass();
 
+			if(!self::user_has_permission( ATC_USER_PERMISSION_PERSONNEL_VIEW, $id ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this user");
+				
 			switch( $id )
 			{
 					// only loose casting, so work it out properly here
@@ -191,25 +167,35 @@
 		public function set_personnel( &$user )
 		{
 			$query = "";
+			if(!self::user_has_permission( ATC_USER_PERMISSION_PERSONNEL_EDIT, $user->personnel_id ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to edit this user");
+				
 			if( !$user->personnel_id )
 			{
-				$query .= "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `dob`, `password`, `access_rights` ) VALUES ( ";
-				$query .= '"'.htmlentities($user->firstname).'", "'.htmlentities($user->lastname).'", "'.htmlentities($user->email).'", "'.date('Y-m-d',strtotime($user->dob)).'", "'.htmlentities(create_hash($user->password)).'", '.(int)$user->access_rights.' );';
+				$query .= "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `dob`, `password`, `joined date`, `left_date`, `access_rights` ) VALUES ( ";
+				$query .= '"'.htmlentities($user->firstname).'", "'.htmlentities($user->lastname).'", "'.htmlentities($user->email).'", "'.date('Y-m-d',strtotime($user->dob)).'", ';
+				$query .= '"'.htmlentities(create_hash($user->password)).'", "'.date('Y-m-d',strtotime($user->joined_date)).'", "'.date('Y-m-d',strtotime($user->left_date)).'", '.(int)$user->access_rights.' );';
 				if ($result = self::$mysqli->query($query))
 				{
 					$user->personnel_id = self::$mysqli->insert_id;
 					return true;
 				}
-				return false;
 			} else {
 				$query .= 'UPDATE `personnel` SET `firstname` = "'.htmlentities($user->firstname).'", `lastname` = "'.htmlentities($user->lastname).'", `email` = "'.htmlentities($user->email).'", `dob` = "'.date('Y-m-d',strtotime($user->dob)).'", ';
 				if( strlen(trim($user->password)) ) 
 					 $query .= '`password` = "'.htmlentities(create_hash($user->password)).'", ';
-				$query .= '`access_rights` = '.(int)$user->access_rights.' WHERE personnel_id = '.(int)$user->personnel_id.' LIMIT 1;';
+				$query .= '`joined_date` = "'.date('Y-m-d',strtotime($user->joined_date)).'", ';
+				if( strtotime($user->left_date) )
+					$query .= '`left_date` = "'.date('Y-m-d',strtotime($user->left_date)).'", ';
+				else 
+					$query .= '`left_date` = NULL, ';
+				$query .= '`access_rights` = '.(int)$user->access_rights.', `enabled` = '.(isset($user->enabled)&&$user->enabled==-1?-1:0);
+				$query .= ' WHERE personnel_id = '.(int)$user->personnel_id.' LIMIT 1;';
+
 				if ($result = self::$mysqli->query($query))
 					return true;
-				return false;
 			}
+			return false;
 		}	
 		
 		public function gui_output_page_footer( $title )
@@ -249,35 +235,11 @@
 		<div id="dialog"></div>
 ';
 		}
-		public function getStudentDetails( $student_id )
-		{
-			$query = "SELECT DISTINCT * FROM `student` WHERE `student_id` = ".(int)$student_id." LIMIT 1;";
-			
-			if ($result = self::$mysqli->query($query)) 
-				return $result->fetch_object();
-		}
-
-		public function getStudentList()
-		{
-			$query = "SELECT DISTINCT student_id, firstname, lastname, balance, `wins_overpayments`, `display` FROM student ORDER BY lastname, firstname, lastname";
-			$students = array($query);	
-			if ($result = self::$mysqli->query($query)) 
-				while ($obj = $result->fetch_object())
-					$students[] = $obj;
-			return $students;
-		}
-
-		// Extract WINS payments that cover the period requested
-		public function getWINSPaymentsForStudent( $student_id, $startDate, $endDate )
-		{
-			$sql = 'SELECT DISTINCT * FROM `payments` WHERE `benefit_payment` = 1 AND `period_end` BETWEEN \''.date('c', strtotime($startDate)).'\' AND \''.date('c', strtotime($endDate)).'\' AND `student_id` = '.(int)$student_id.';';
-			$payments = array($sql);
-			if( $result = self::$mysqli->query($sql) )
-				while ($obj = $result->fetch_object()) 
-					$payments[] = $obj;
-			return $payments;
-		}
 		
+		public function user_has_permission( $permission, $target )
+		{
+			return true;
+		}
 		
 		
 	}

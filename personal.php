@@ -9,14 +9,17 @@
 	{
 		foreach( $_POST as $var => $val )
 			$user->$var = $val;
+		if( !isset($_POST['enabled']) || !$_POST['enabled'] )
+			$user->enabled = 0;
 		
 		$ATC->set_personnel( $user );
 	}
-	
-	if( is_object($user) )
+	//var_dump($user);
+	if( is_object($user) && $ATC->user_has_permission(ATC_USER_PERMISSION_PERSONNEL_VIEW, $id ) )
 	{	
 ?>
-		<form id="personalform" method="post" action="?id=<?=$user->personnel_id?>">
+
+		<form id="personalform" method="post" action="personal.php?id=<?=$user->personnel_id?>#personalform">
 			<input type="hidden" name="personnel_id" id="personnel_id" value="" />
 			<div style="float:right">
 				<label for="created">Date created</label>
@@ -75,7 +78,33 @@
 					// Update our password settings for editing existing users for clarity
 					if( user['personnel_id'] )
 						$('#password').prop('required', false).prop('placeholder', 'Leave blank to keep current password').prev().html('Change password');
-	
+
+					$('#personalform button[type=submit]').button();
+					$('#personalform').submit(function(e) {
+						
+						e.preventDefault(); // stop the submit button actually submitting
+						
+						$.ajax({
+							   type: "POST",
+							   url: $('#personalform').attr('action'),
+							   data: $("#personalform").serialize(),
+							   beforeSend: function()
+							   {
+							   	   $('#personalform').addClass('ui-state-disabled');
+							   },
+							   complete: function()
+							   {
+							   	   $('#personalform').removeClass('ui-state-disabled');
+							   },
+							   success: function(data)
+							   {
+								   //$('#personalform').html(data);
+								   return false;
+							   }
+							 });
+						return false;						
+					});
+						
 			});
 		</script>
 
