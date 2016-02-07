@@ -179,7 +179,7 @@
 			{
 				$query .= "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `dob`, `password`, `joined_date`, `left_date`, `access_rights`, `is_female` ) VALUES ( ";
 				$query .= '"'.htmlentities($user->firstname).'", "'.htmlentities($user->lastname).'", "'.htmlentities($user->email).'", "'.date('Y-m-d',strtotime($user->dob)).'", ';
-				$query .= '"'.htmlentities(create_hash($user->password)).'", "'.date('Y-m-d',strtotime($user->joined_date)).'", "'.date('Y-m-d',strtotime($user->left_date)).'", '.(int)$user->access_rights.', ';
+				$query .= '"'.htmlentities(create_hash($user->password)).'", "'.date('Y-m-d',strtotime($user->joined_date)).'", '.(strtotime($user->left_date)?'"'.date('Y-m-d',strtotime($user->left_date)).'"':'NULL').', '.(int)$user->access_rights.', ';
 				$query .= (int)$user->is_female.' );';
 				if ($result = self::$mysqli->query($query))
 				{
