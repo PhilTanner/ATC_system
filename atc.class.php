@@ -114,7 +114,7 @@
 			return $str;
 		}
 				
-		public function get_personnel( $id )
+		public function get_personnel( $id, $orderby = "ASC" )
 		{
 			$personnel = new stdClass();
 
@@ -129,11 +129,13 @@
 						if( is_null($id) )
 						{
 							$personnel = array();
-							$query = "SELECT * FROM `personnel`;";
+							$query = "SELECT * FROM `personnel`  ORDER BY `enabled` ASC, `lastname` ".htmlentities($orderby).", `firstname` ".htmlentities($orderby).", `personnel_id` ".htmlentities($orderby).";";
 							
 							if ($result = self::$mysqli->query($query))
 								while ( $obj = $result->fetch_object() )
 									$personnel[] = $obj;
+							else
+								throw new ATCExceptionDBError(self::$mysqli->error);
 						} else {
 							$personnel->personnel_id = 0;
 							$personnel->firstname = null;
@@ -154,7 +156,7 @@
 						if ($result = self::$mysqli->query($query)) 
 							$personnel = $result->fetch_object();
 						else
-							throw new ATCExceptionDBError($mysqli->error);
+							throw new ATCExceptionDBError(self::$mysqli->error);
 						$personnel->created = date("Y-m-d\TH:i", strtotime($personnel->created));
 
 						break;
@@ -167,7 +169,7 @@
 		{
 			$query = "INSERT INTO `log_changes` (`personnel_id`, `sql_executed`, `table_updated` ) VALUES ( ".self::$currentuser.', "'.htmlentities($sql_run).'", "'.htmlentities($table_name).'" );';
 			if ($result = self::$mysqli->query($query))	return true;
-			else throw new ATCExceptionDBError($mysqli->error);
+			else throw new ATCExceptionDBError(self::$mysqli->error);
 		}
 		
 		public function set_personnel( &$user )
@@ -188,7 +190,7 @@
 					self::log_action( 'personnel', $query );
 					return true;
 				} else 
-					throw new ATCExceptionDBError($mysqli->error);
+					throw new ATCExceptionDBError(self::$mysqli->error);
 			} else {
 				$query .= 'UPDATE `personnel` SET `firstname` = "'.htmlentities($user->firstname).'", `lastname` = "'.htmlentities($user->lastname).'", `email` = "'.htmlentities($user->email).'", `dob` = "'.date('Y-m-d',strtotime($user->dob)).'", ';
 				if( strlen(trim($user->password)) ) 
@@ -206,7 +208,7 @@
 					self::log_action( 'personnel', $query );
 					return true;
 				} else
-					throw new ATCExceptionDBError($mysqli->error);
+					throw new ATCExceptionDBError(self::$mysqli->error);
 				
 			}
 			return false;
@@ -215,9 +217,6 @@
 		public function gui_output_page_footer( $title )
 		{
 			echo '
-		<script>
-			$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
-		</script>
 	</body>
 </html>';
 		}
