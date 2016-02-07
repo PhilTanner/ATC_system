@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 04, 2016 at 11:08 AM
+-- Generation Time: Feb 07, 2016 at 10:13 PM
 -- Server version: 10.1.9-MariaDB
 -- PHP Version: 5.5.30
 
@@ -27,14 +27,18 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `personnel` (
-  `id` int(11) NOT NULL,
+  `personnel_id` int(11) NOT NULL,
   `firstname` varchar(50) NOT NULL,
   `lastname` varchar(100) NOT NULL,
-  `email` int(255) NOT NULL,
-  `password` int(255) NOT NULL,
-  `salt` int(32) NOT NULL,
-  `accessrights` smallint(5) UNSIGNED NOT NULL,
-  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  `is_female` tinyint(1) NOT NULL COMMENT 'User self identifies as',
+  `email` varchar(255) NOT NULL,
+  `dob` date NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `access_rights` mediumint(5) UNSIGNED NOT NULL,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `joined_date` date NOT NULL,
+  `left_date` date DEFAULT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT '-1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -45,7 +49,7 @@ CREATE TABLE `personnel` (
 -- Indexes for table `personnel`
 --
 ALTER TABLE `personnel`
-  ADD PRIMARY KEY (`id`),
+  ADD PRIMARY KEY (`personnel_id`),
   ADD UNIQUE KEY `uniq_email` (`email`),
   ADD KEY `email` (`email`,`password`);
 
@@ -57,7 +61,7 @@ ALTER TABLE `personnel`
 -- AUTO_INCREMENT for table `personnel`
 --
 ALTER TABLE `personnel`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `personnel_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
