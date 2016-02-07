@@ -29,6 +29,11 @@
 			<input type="text" name="firstname" id="firstname" value="" maxlength="50" required="required" placeholder="First name" /> <br />
 			<label for="lastname">Last name</label>
 			<input type="text" name="lastname" id="lastname" value="" maxlength="100" required="required" placeholder="Last name" /> <br />
+			<label for="is_female">Gender</label>
+			<select name="is_female" id="is_female">
+				<option value="-1"> Female </option>
+				<option value="0"> Male </option>
+			</select><br />
 			<label for="email">Email address</label>
 			<input type="email" name="email" id="email" value="" maxlength="255" required="required" placeholder="Email address" /> <br />
 			<label for="password">Password</label>
@@ -68,9 +73,10 @@
 					$('#created').val(user['created']);
 					$('#dob').val(user['dob']);
 					$('#access_rights').val( user['access_rights']);
+					$('#is_female').val( user['is_female']);
 					$('#joined_date').val(user['joined_date']);
 					$('#left_date').val(user['left_date']);
-					if( user['enabled'] )
+					if( user['enabled'] == "-1" )
 						$('#enabled').prop('checked', true);
 					else
 						$('#enabled').prop('checked', false);

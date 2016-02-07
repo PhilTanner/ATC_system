@@ -148,7 +148,12 @@
 							$personnel->firstname = null;
 							$personnel->lastname = null;
 							$personnel->email = null;
-							$personnel->access_rights = 2;
+							$personnel->access_rights = 0;
+							$personnel->joined_date = null;
+							$personnel->left_date = null;
+							$personnel->is_female = 0;
+							$personnel->dob = null;
+							$personnel->enabled = -1;
 							$personnel->created = date("d/m/Y h:i a", time());
 						}
 						break;
@@ -172,9 +177,10 @@
 				
 			if( !$user->personnel_id )
 			{
-				$query .= "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `dob`, `password`, `joined date`, `left_date`, `access_rights` ) VALUES ( ";
+				$query .= "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `dob`, `password`, `joined_date`, `left_date`, `access_rights`, `is_female` ) VALUES ( ";
 				$query .= '"'.htmlentities($user->firstname).'", "'.htmlentities($user->lastname).'", "'.htmlentities($user->email).'", "'.date('Y-m-d',strtotime($user->dob)).'", ';
-				$query .= '"'.htmlentities(create_hash($user->password)).'", "'.date('Y-m-d',strtotime($user->joined_date)).'", "'.date('Y-m-d',strtotime($user->left_date)).'", '.(int)$user->access_rights.' );';
+				$query .= '"'.htmlentities(create_hash($user->password)).'", "'.date('Y-m-d',strtotime($user->joined_date)).'", "'.date('Y-m-d',strtotime($user->left_date)).'", '.(int)$user->access_rights.', ';
+				$query .= (int)$user->is_female.' );';
 				if ($result = self::$mysqli->query($query))
 				{
 					$user->personnel_id = self::$mysqli->insert_id;
@@ -189,7 +195,7 @@
 					$query .= '`left_date` = "'.date('Y-m-d',strtotime($user->left_date)).'", ';
 				else 
 					$query .= '`left_date` = NULL, ';
-				$query .= '`access_rights` = '.(int)$user->access_rights.', `enabled` = '.(isset($user->enabled)&&$user->enabled==-1?-1:0);
+				$query .= '`access_rights` = '.(int)$user->access_rights.', `enabled` = '.(isset($user->enabled)&&$user->enabled==-1?-1:0).', `is_female` = '.(int)$user->is_female;
 				$query .= ' WHERE personnel_id = '.(int)$user->personnel_id.' LIMIT 1;';
 
 				if ($result = self::$mysqli->query($query))
@@ -228,11 +234,11 @@
 		
 	</head>
 	<body>
-		<div class="navoptions">
-			<button class="home" type="button">Home</button><br />
-		</div>
-		<h1> ATC '.$title.' </h1>
 		<div id="dialog"></div>
+		<nav class="navoptions">
+			<button class="home" type="button">Home</button><br />
+		</nav>
+		<h1> ATC '.$title.' </h1>
 ';
 		}
 		
