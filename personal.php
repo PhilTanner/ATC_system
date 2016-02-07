@@ -85,7 +85,7 @@
 					if( user['personnel_id'] )
 						$('#password').prop('required', false).prop('placeholder', 'Leave blank to keep current password').prev().html('Change password');
 
-					$('#personalform button[type=submit]').button();
+					$('#personalform button[type=submit]').button({icons: { primary: "ui-icon-disk" }});
 					$('#personalform').submit(function(e) {
 						
 						e.preventDefault(); // stop the submit button actually submitting
