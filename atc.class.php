@@ -236,6 +236,9 @@
 		
 		<script type="text/javascript">
 			$(function(){
+				$(".navoptions ul li a").button().addClass("ui-state-disabled");
+				$(".navoptions ul li a.home").button({ icons: { primary: "ui-icon-home" } }).removeClass("ui-state-disabled")'.($title=='Home'?'.addClass("ui-state-active")':'').';
+				$(".navoptions ul li a.personnel").button({ icons: { primary: "ui-icon-person" } }).removeClass("ui-state-disabled")'.($title=='Personnel'?'.addClass("ui-state-active")':'').';
 			});
 			
 		</script>
@@ -244,7 +247,15 @@
 	<body>
 		<div id="dialog"></div>
 		<nav class="navoptions">
-			<button class="home" type="button">Home</button><br />
+			<ul>
+				<li> <a href="./" class="home">Home</a> </li>
+				<li> <a href="./personnel.php" class="personnel">Personnel</a> </li>
+				<li> <a href="./" class="attendance">Attendance</a> </li>
+				<li> <a href="./" class="activities">Activities</a> </li>
+				<li> <a href="./" class="finance">Finance</a> </li>
+				<li> <a href="./" class="stores">Stores</a> </li>
+				<li> <a href="./" class="training">Training</a> </li>
+			</ul>
 		</nav>
 		<h1> ATC '.$title.' </h1>
 ';

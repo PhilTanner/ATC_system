@@ -18,6 +18,8 @@ thead th { padding: 1ex 1ex; }
 .navoptions { float: right; }
 .navoptions button { margin-bottom: 5px; }
 
+nav ul li { float: right; list-style: none; margin-left: 1ex; }
+
 label { display:inline-block; width: 10em; }
 input, select, textarea { width: 50em; }
 input[type=checkbox] { width: auto; }

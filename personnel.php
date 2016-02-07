@@ -15,6 +15,10 @@
 			<div id="personal">
 			</div>
 	
+			<h2> Contact details </h2>
+			<div id="contact">
+			</div>
+	
 			<h2 href="attendance.php?id=<?=$user->personnel_id?>"> Attendance </h2>
 			<div id="attendance">
 			</div>
