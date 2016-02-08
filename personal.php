@@ -12,8 +12,31 @@
 		if( !isset($_POST['enabled']) || !$_POST['enabled'] )
 			$user->enabled = 0;
 		
-		$ATC->set_personnel( $user );
+		try {
+			$ATC->set_personnel( $user );
+		} catch (ATCExceptionInsufficientPermissions $e) {
+			header("HTTP/1.0 401 Unauthorised");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+			exit();
+		} catch (ATCExceptionDBError $e) {
+			header("HTTP/1.0 500 Internal Server Error");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+			exit();
+		} catch (ATCExceptionDBConn $e) {
+			header("HTTP/1.0 500 Internal Server Error");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+			exit();
+		} catch (ATCException $e) {
+			header("HTTP/1.0 400 Bad Request");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+			exit();
+		} catch (Exception $e) {
+			header("HTTP/1.0 500 Internal Server Error");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+			exit();
+		}
 	}
+
 	//var_dump($user);
 	if( is_object($user) && $ATC->user_has_permission(ATC_USER_PERMISSION_PERSONNEL_VIEW, $id ) )
 	{	
@@ -108,7 +131,29 @@
 								   if( $('#personalform').attr('action') != $(data).filter('#personalform').attr('action') )
 								   	   // location.replace used to keep expected back button behaviour
 								   	   window.location.replace('personnel.php?id='+$(data).filter('#personalform').attr('action').match(/\d+/)[0]);
-								   $('<img src="save-ok.png" style="position: absolute; left: 70em; top: 12em" id="save" />').appendTo('#personalform').fadeOut(1500, function(){ $('#save').remove(); } );
+								   $('<img src="save-ok.png" style="position: absolute; left: 70em; top: 12em" id="save_indicator" />').appendTo('#personalform').fadeOut(1500, function(){ $('#save_indicator').remove(); } );
+								   return false;
+							   },
+							   error: function(data)
+							   {
+								   $('<img src="save-fail.png" style="position: absolute; left: 70em; top: 12em" id="save_indicator" />').appendTo('#personalform');
+								   $('#dialog').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
+								      modal: true,
+								      //dialogClass: 'ui-state-error',
+								      title: 'Error!',
+									  buttons: {
+										Close: function() {
+										  $( this ).dialog( "close" );
+										}
+									  },
+									  close: function() { 
+									  	$( this ).dialog( "destroy" ); 
+									  	$('#save_indicator').fadeOut(1500, function(){ $('#save_indicator').remove() });
+									  },
+									  open: function() {
+									  	 $('.ui-dialog-titlebar').addClass('ui-state-error');
+									  }
+									}).filter('ui-dialog-titlebar');
 								   return false;
 							   }
 							 });
