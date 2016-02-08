@@ -108,6 +108,7 @@
 								   if( $('#personalform').attr('action') != $(data).filter('#personalform').attr('action') )
 								   	   // location.replace used to keep expected back button behaviour
 								   	   window.location.replace('personnel.php?id='+$(data).filter('#personalform').attr('action').match(/\d+/)[0]);
+								   $('<img src="save-ok.png" style="position: absolute; left: 70em; top: 12em" id="save" />').appendTo('#personalform').fadeOut(1500, function(){ $('#save').remove(); } );
 								   return false;
 							   }
 							 });
