@@ -63,9 +63,7 @@
 		
 		public function __construct()
 		{
-			if(ATC_DEBUG) recordTimestamp('PKBASC starting');
 			self::$mysqli = new mysqli(DB_HOST, DB_USER, DB_PSWD, DB_NAME);
-			if(ATC_DEBUG) recordTimestamp('mysqli initiated');
 			/* check connection */
 			if (mysqli_connect_errno())
 			    throw new ATCExceptionnDBConn(mysqli_connect_error());
@@ -123,49 +121,49 @@
 				
 			switch( $id )
 			{
-					// only loose casting, so work it out properly here
-					case null:
-					case 0:
-						if( is_null($id) )
-						{
-							$personnel = array();
-							$query = "SELECT * FROM `personnel`  ORDER BY `enabled` ASC, `lastname` ".htmlentities($orderby).", `firstname` ".htmlentities($orderby).", `personnel_id` ".htmlentities($orderby).";";
-							
-							if ($result = self::$mysqli->query($query))
-							{
-								while ( $obj = $result->fetch_object() )
-									$personnel[] = $obj;
-								foreach( $personnel as $obj )
-									$obj->rank = "";
-							}	
-							else
-								throw new ATCExceptionDBError(self::$mysqli->error);
-						} else {
-							$personnel->personnel_id = 0;
-							$personnel->firstname = null;
-							$personnel->lastname = null;
-							$personnel->email = null;
-							$personnel->access_rights = 0;
-							$personnel->joined_date = null;
-							$personnel->left_date = null;
-							$personnel->is_female = 0;
-							$personnel->dob = null;
-							$personnel->rank = null;
-							$personnel->enabled = -1;
-							$personnel->created = date("d/m/Y h:i a", time());
-						}
-						break;
-					default:
-						$query = "SELECT * FROM `personnel` WHERE `personnel_id` = ".(int)$id." LIMIT 1;";
+				// only loose casting, so work it out properly here
+				case null:
+				case 0:
+					if( is_null($id) )
+					{
+						$personnel = array();
+						$query = "SELECT * FROM `personnel`  ORDER BY `enabled` ASC, `lastname` ".htmlentities($orderby).", `firstname` ".htmlentities($orderby).", `personnel_id` ".htmlentities($orderby).";";
 						
-						if ($result = self::$mysqli->query($query)) 
-							$personnel = $result->fetch_object();
+						if ($result = self::$mysqli->query($query))
+						{
+							while ( $obj = $result->fetch_object() )
+								$personnel[] = $obj;
+							foreach( $personnel as $obj )
+								$obj->rank = "";
+						}	
 						else
 							throw new ATCExceptionDBError(self::$mysqli->error);
-						$personnel->created = date("Y-m-d\TH:i", strtotime($personnel->created));
+					} else {
+						$personnel->personnel_id = 0;
+						$personnel->firstname = null;
+						$personnel->lastname = null;
+						$personnel->email = null;
+						$personnel->access_rights = 0;
+						$personnel->joined_date = null;
+						$personnel->left_date = null;
+						$personnel->is_female = 0;
+						$personnel->dob = null;
 						$personnel->rank = null;
-						
-						break;
+						$personnel->enabled = -1;
+						$personnel->created = date("d/m/Y h:i a", time());
+					}
+					break;
+				default:
+					$query = "SELECT * FROM `personnel` WHERE `personnel_id` = ".(int)$id." LIMIT 1;";
+					
+					if ($result = self::$mysqli->query($query)) 
+						$personnel = $result->fetch_object();
+					else
+						throw new ATCExceptionDBError(self::$mysqli->error);
+					$personnel->created = date("Y-m-d\TH:i", strtotime($personnel->created));
+					$personnel->rank = null;
+					
+					break;
 			}
 			return $personnel;
 		}

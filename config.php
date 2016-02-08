@@ -3,18 +3,6 @@
 	$time = $mtime[1] + $mtime[0];
 	$timers = array(array($time, 0, 'Init'));
 
-	function recordTimestamp( $description )
-	{
-		global $timers;
-		/*
-		$mtime = explode(" ",microtime()); 
-		$time = $mtime[1] + $mtime[0];
-		
-		$lasttimestamp = $timers[count($timers)-1][0];
-		$timers[] = array($time, ($time-$lasttimestamp), $description, debug_backtrace());
-		*/
-	}
-	
 	define( 'DB_USER', 'root' );
 	define( 'DB_PSWD', '' );
 	define( 'DB_HOST', 'localhost' );
