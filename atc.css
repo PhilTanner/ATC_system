@@ -10,6 +10,7 @@ table { border-left: 1px solid silver; border-spacing:0; border-collapse:collaps
 tr th, tbody tr td { border: 1px solid silver; border-left:0px; }
 th, td { padding: 0.25ex 1ex; }
 thead th { padding: 1ex 1ex; }
+td.attendance { text-align: center; }
 
 .ui-widget { font-size: 90%; }
 .ui-button-text { margin-left : 0.75ex; }
