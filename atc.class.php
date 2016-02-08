@@ -132,8 +132,12 @@
 							$query = "SELECT * FROM `personnel`  ORDER BY `enabled` ASC, `lastname` ".htmlentities($orderby).", `firstname` ".htmlentities($orderby).", `personnel_id` ".htmlentities($orderby).";";
 							
 							if ($result = self::$mysqli->query($query))
+							{
 								while ( $obj = $result->fetch_object() )
 									$personnel[] = $obj;
+								foreach( $personnel as $obj )
+									$obj->rank = "";
+							}	
 							else
 								throw new ATCExceptionDBError(self::$mysqli->error);
 						} else {
@@ -146,6 +150,7 @@
 							$personnel->left_date = null;
 							$personnel->is_female = 0;
 							$personnel->dob = null;
+							$personnel->rank = null;
 							$personnel->enabled = -1;
 							$personnel->created = date("d/m/Y h:i a", time());
 						}
@@ -158,7 +163,8 @@
 						else
 							throw new ATCExceptionDBError(self::$mysqli->error);
 						$personnel->created = date("Y-m-d\TH:i", strtotime($personnel->created));
-
+						$personnel->rank = null;
+						
 						break;
 			}
 			return $personnel;
