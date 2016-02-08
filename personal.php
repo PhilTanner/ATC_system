@@ -87,7 +87,7 @@
 		
 		<script>
 			$(function(){
-					user = jQuery.parseJSON( '<?= json_encode( $user ) ?>' );
+					user = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $user )) ?>' );
 
 					$('#personnel_id').val(user['personnel_id']);
 					$('#firstname').val(user['firstname']);
