@@ -221,6 +221,7 @@
 		public function gui_output_page_footer( $title )
 		{
 			echo '
+		<img src="49squadron.png" style="position:absolute; bottom: 1em; right: 1em; z-index: -1;" />
 	</body>
 </html>';
 		}
