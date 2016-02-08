@@ -24,3 +24,6 @@ label { display:inline-block; width: 10em; line-height: 2em; }
 input, select, textarea { width: 50em; border: 1px solid #ddd; padding: 0.5ex 0.5em; }
 input[type=checkbox] { width: auto; }
 button[type=submit] { float:right; }
+
+footer { position: absolute; bottom:0px; color: #ddd; margin:0px; padding:0px; width: 99%; }
+footer a { color: #ccc;  }

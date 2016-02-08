@@ -221,7 +221,10 @@
 		public function gui_output_page_footer( $title )
 		{
 			echo '
-		<img src="49squadron.png" style="position:absolute; bottom: 1em; right: 1em; z-index: -1;" />
+		<footer>
+			<p> Built on the ATC system code available at <a target="blank" href="https://github.com/PhilTanner/ATC_system">https://github.com/PhilTanner/ATC_system</a> </p>
+			<img src="49squadron.png" style="position:absolute; bottom: 1em; right: 1em; z-index: -1;" />
+		</footer>
 	</body>
 </html>';
 		}
@@ -246,6 +249,11 @@
 				$(".navoptions ul li a").button().addClass("ui-state-disabled");
 				$(".navoptions ul li a.home").button({ icons: { primary: "ui-icon-home" } }).removeClass("ui-state-disabled")'.($title=='Home'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.personnel").button({ icons: { primary: "ui-icon-person" } }).removeClass("ui-state-disabled")'.($title=='Personnel'?'.addClass("ui-state-active")':'').';
+				$(".navoptions ul li a.attendance").button({ icons: { primary: "ui-icon-clipboard" } });
+				$(".navoptions ul li a.activities").button({ icons: { primary: "ui-icon-image" } });
+				$(".navoptions ul li a.finance").button({ icons: { primary: "ui-icon-cart" } });
+				$(".navoptions ul li a.stores").button({ icons: { primary: "ui-icon-tag" } });
+				$(".navoptions ul li a.training").button({ icons: { primary: "ui-icon-calendar" } });
 			});
 			
 		</script>
