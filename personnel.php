@@ -64,12 +64,12 @@
 		<thead>
 			<tr>
 				<th> ID </th>
-				<th> Name </th>
+				<th colspan="2"> Name </th>
 			</tr>
 		</thead>
 		<tfoot>
 			<tr>
-				<th colspan="2"></th>
+				<th colspan="3"></th>
 				<th> <a href="?id=0" class="button new"> New </a> </th>
 			</tr>
 		</tfoot>
@@ -79,6 +79,7 @@
 				{
 					echo '<tr'.($obj->enabled?'':' class="ui-state-disabled"').'>';
 					echo '	<th>'.$obj->personnel_id.'</th>';
+					echo '	<td>'.$obj->rank.'</td>';
 					echo '	<td>'.$obj->lastname.', '.$obj->firstname.'</td>';
 					echo '	<td> <a href="?id='.$obj->personnel_id.'" class="button edit">Edit</a> </td>';
 					echo '</tr>';
