@@ -20,7 +20,7 @@ thead th { padding: 1ex 1ex; }
 
 nav ul li { float: right; list-style: none; margin-left: 1ex; }
 
-label { display:inline-block; width: 10em; }
-input, select, textarea { width: 50em; }
+label { display:inline-block; width: 10em; line-height: 2em; }
+input, select, textarea { width: 50em; border: 1px solid #ddd; padding: 0.5ex 0.5em; }
 input[type=checkbox] { width: auto; }
 button[type=submit] { float:right; }
