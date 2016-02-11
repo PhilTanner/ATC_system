@@ -3,9 +3,32 @@
 	$ATC = new ATC();
 	
 	$dates = $ATC->get_attendance( date('Y').'-01-01', date('Y').'-12-31' );
-	$users = $ATC->get_personnel(null);
+	$users = $ATC->get_personnel(null, 'ASC', ATC_USER_GROUP_PERSONNEL );
 
 	$calendar = $ATC->get_attendance_register( date('Y').'-01-01', date('Y').'-12-31' );
+
+	if( isset( $_POST['newdate'] ) && strtotime( $_POST['newdate'] ) )
+	{
+		try {
+			$ATC->add_parade_night( strtotime($_POST['newdate']) );
+		} catch (ATCExceptionInsufficientPermissions $e) {
+			header("HTTP/1.0 401 Unauthorised");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		} catch (ATCExceptionDBError $e) {
+			header("HTTP/1.0 500 Internal Server Error");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		} catch (ATCExceptionDBConn $e) {
+			header("HTTP/1.0 500 Internal Server Error");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		} catch (ATCException $e) {
+			header("HTTP/1.0 400 Bad Request");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		} catch (Exception $e) {
+			header("HTTP/1.0 500 Internal Server Error");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		}
+		exit();
+	}
 
 	$ATC->gui_output_page_header('Attendance');
 	
@@ -15,8 +38,8 @@
 			<tr>
 				<th colspan="2"> Name </th>
 				<?php
-					foreach( $dates as $obj )
-						echo '<th style="font-size:70%">'.date('M j', strtotime($obj->date)).'</th>'."\n".'				';
+					foreach( $dates as $paradenight )
+						echo '<th style="font-size:70%">'.date('M j', strtotime($paradenight->date)).'</th>'."\n".'				';
 				?>
 				<td> 
 					<a href="?id=0" class="button new"> New </a>
@@ -26,7 +49,7 @@
 		</thead>
 		<tfoot>
 			<tr>
-				<td colspan="<?=count($calendar)+3?>"><?= ($ATC->user_has_permission( ATC_USER_PERMISSION_ATTENDANCE_EDIT )?'<button type="submit" class="save">Save</button>':'')?></td>
+				<td colspan="<?=count($dates)+2?>"><?= ($ATC->user_has_permission( ATC_USER_PERMISSION_ATTENDANCE_EDIT )?'<button type="submit" class="save">Save</button>':'')?></td>
 			</tr>
 		</tfoot>
 		<tbody>
@@ -53,7 +76,72 @@
 	<script>
 		$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
 		$('button.save').button({ icons: { primary: 'ui-icon-disk' } });
-		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false });
+		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false }).click(function(){
+		   $('#dialog').html("<form name='newparadenight' id='newparadenight' method='post'><label for='newdate' style='width:auto;'>New parade night date</label><input type='date' id='newdate' name='newdate' value='<?=date("Y-m-d",strtotime('next '.ATC_SETTING_PARADE_NIGHT,strtotime($paradenight->date)))?>' style='width:auto' /></form>").dialog({
+			  modal: true,
+			  title: 'Enter new parade night date',
+			  buttons: {
+				Cancel: function() {
+				  $( this ).dialog( "close" );
+				},
+				Save: function() {
+					$.ajax({
+					   type: "POST",
+					   url: 'attendance.php',
+					   data: $("#newparadenight").serialize(),
+					   beforeSend: function()
+					   {
+						   $('#newparadenight').addClass('ui-state-disabled');
+					   },
+					   complete: function()
+					   {
+						   $('#newparadenight').removeClass('ui-state-disabled');
+					   },
+					   success: function(data)
+					   {
+						   location.reload(true);
+					   },
+					   error: function(data)
+					   {
+						   $('#dialog').dialog('destroy').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
+							  modal: true,
+							  //dialogClass: 'ui-state-error',
+							  title: 'Error!',
+							  buttons: {
+								Close: function() {
+								  $( this ).dialog( "close" );
+								}
+							  },
+							  close: function() { 
+								$( this ).dialog( "destroy" ); 
+								$('#save_indicator').fadeOut(1500, function(){ $('#save_indicator').remove() });
+							  },
+							  open: function() {
+								 $('.ui-dialog-titlebar').addClass('ui-state-error');
+							  }
+							}).filter('ui-dialog-titlebar');
+						   return false;
+					   }
+					 });
+				  	 
+				  $( this ).dialog( "close" );
+				}
+			  },
+			  close: function() { 
+				$( this ).dialog( "destroy" ); 
+			  },
+			  open: function() {
+			  	  $('#newdate').datepicker({ 
+			  	  	dateFormat: 'yy-mm-dd',
+					showOn: "button",
+					buttonImage: "calendar.gif",
+					buttonImageOnly: true,
+					buttonText: "Select date" 
+				  });
+			  }
+			})
+			return false;
+		});
 
 		var attendance = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $calendar )) ?>' );
 		

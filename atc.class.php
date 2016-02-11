@@ -43,6 +43,9 @@
 	define( 'ATC_ATTENDANCE_ON_LEAVE_SYMBOL',					"L" );
 	define( 'ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE_SYMBOL',		"o" );
 
+	define( 'ATC_SETTING_PARADE_NIGHT',							"Wednesday" );
+
+	
 	require_once 'config.php';
 	
 	class ATCException extends Exception {
@@ -78,11 +81,18 @@
 			self::$mysqli = new mysqli(DB_HOST, DB_USER, DB_PSWD, DB_NAME);
 			/* check connection */
 			if (mysqli_connect_errno())
-			    throw new ATCExceptionnDBConn(mysqli_connect_error());
+			    throw new ATCExceptionDBConn(mysqli_connect_error());
 			if(ATC_DEBUG) self::$currentuser = 1;
 		}
 		
-		/*
+		public function add_parade_night( $date )
+		{
+			$query = "INSERT INTO `attendance` (`date` ) VALUES ( '".date("Y-m-d",$date)."' );";
+			if ($result = self::$mysqli->query($query))	return true;
+			else throw new ATCExceptionDBError(self::$mysqli->error);
+		}
+
+/*
 		public function __destruct()
 		{
 			//self::$mysqli->close();
@@ -178,7 +188,7 @@
 			return $attendance;
 		}
 		
-		public function get_personnel( $id, $orderby = "ASC" )
+		public function get_personnel( $id, $orderby = "ASC", $access_rights=null )
 		{
 			$personnel = new stdClass();
 
@@ -193,7 +203,10 @@
 					if( is_null($id) )
 					{
 						$personnel = array();
-						$query = "SELECT * FROM `personnel`  ORDER BY `enabled` ASC, `lastname` ".htmlentities($orderby).", `firstname` ".htmlentities($orderby).", `personnel_id` ".htmlentities($orderby).";";
+						$query = "SELECT * FROM `personnel` ";
+						if( !is_null($access_rights) )
+							$query .= ' WHERE `access_rights` IN ('.htmlentities($access_rights).')';
+						$query .= "ORDER BY `enabled` ASC, `lastname` ".htmlentities($orderby).", `firstname` ".htmlentities($orderby).", `personnel_id` ".htmlentities($orderby).";";
 						
 						if ($result = self::$mysqli->query($query))
 						{
