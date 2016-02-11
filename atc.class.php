@@ -88,7 +88,11 @@
 		public function add_parade_night( $date )
 		{
 			$query = "INSERT INTO `attendance` (`date` ) VALUES ( '".date("Y-m-d",$date)."' );";
-			if ($result = self::$mysqli->query($query))	return true;
+			if ($result = self::$mysqli->query($query))
+			{
+				self::log_action( 'attendance', $query );
+				return true;
+			}
 			else throw new ATCExceptionDBError(self::$mysqli->error);
 		}
 
