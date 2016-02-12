@@ -141,3 +141,7 @@ ALTER TABLE `log_changes`
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 
 CREATE USER 'atc'@'localhost' IDENTIFIED BY 'ZIERIESs5ESa';
+GRANT SELECT, INSERT ON `atc`.`log_changes` TO 'atc'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON `atc`.`attendance` TO 'atc'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON `atc`.`attendance_register` TO 'atc'@'localhost';
+GRANT SELECT, INSERT, UPDATE, REFERENCES ON `atc`.`personnel` TO 'atc'@'localhost';
