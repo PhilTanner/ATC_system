@@ -252,5 +252,6 @@
 		}
 	</script>
 <?php
-	$ATC->gui_output_page_footer('Attendance');
+	if( !isset($_GET['id']) )
+		$ATC->gui_output_page_footer('Attendance');
 ?>
