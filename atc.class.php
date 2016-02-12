@@ -359,7 +359,7 @@
 				$(".navoptions ul li a.home").button({ icons: { primary: "ui-icon-home" } }).removeClass("ui-state-disabled")'.($title=='Home'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.personnel").button({ icons: { primary: "ui-icon-person" } }).removeClass("ui-state-disabled")'.($title=='Personnel'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.attendance").button({ icons: { primary: "ui-icon-clipboard" } }).removeClass("ui-state-disabled")'.($title=='Attendance'?'.addClass("ui-state-active")':'').';
-				$(".navoptions ul li a.activities").button({ icons: { primary: "ui-icon-image" } });
+				$(".navoptions ul li a.activities").button({ icons: { primary: "ui-icon-image" } }).removeClass("ui-state-disabled")'.($title=='Activities'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.finance").button({ icons: { primary: "ui-icon-cart" } });
 				$(".navoptions ul li a.stores").button({ icons: { primary: "ui-icon-tag" } });
 				$(".navoptions ul li a.training").button({ icons: { primary: "ui-icon-calendar" } });
@@ -375,7 +375,7 @@
 				<li> <a href="./" class="home">Home</a> </li>
 				<li> <a href="./personnel.php" class="personnel">Personnel</a> </li>
 				<li> <a href="./attendance.php" class="attendance">Attendance</a> </li>
-				<li> <a href="./" class="activities">Activities</a> </li>
+				<li> <a href="./activities.php" class="activities">Activities</a> </li>
 				<li> <a href="./" class="finance">Finance</a> </li>
 				<li> <a href="./" class="stores">Stores</a> </li>
 				<li> <a href="./" class="training">Training</a> </li>
