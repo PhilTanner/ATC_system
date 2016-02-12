@@ -3,10 +3,10 @@
 	$time = $mtime[1] + $mtime[0];
 	$timers = array(array($time, 0, 'Init'));
 
-	define( 'DB_USER', 'root' );
-	define( 'DB_PSWD', '' );
+	define( 'DB_USER', 'atc' );
+	define( 'DB_PSWD', 'ZIERIESs5ESa' );
 	define( 'DB_HOST', 'localhost' );
-	define( 'DB_NAME', 'ATC' );
+	define( 'DB_NAME', 'atc' );
 	
 	define( 'MONEYFORMAT', '%(#2.2n' );
 	
