@@ -80,7 +80,7 @@
 					echo '<tr'.($obj->enabled?'':' class="ui-state-disabled"').'>';
 					echo '	<th>'.$obj->personnel_id.'</th>';
 					echo '	<td>'.$obj->rank.'</td>';
-					echo '	<td>'.$obj->lastname.', '.$obj->firstname.'</td>';
+					echo '	<td><a href="?id='.$obj->personnel_id.'">'.$obj->lastname.', '.$obj->firstname.'</a></td>';
 					echo '	<td> <a href="?id='.$obj->personnel_id.'" class="button edit">Edit</a> </td>';
 					echo '</tr>';
 				}

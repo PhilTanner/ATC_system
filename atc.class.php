@@ -259,6 +259,32 @@
 			else throw new ATCExceptionDBError(self::$mysqli->error);
 		}
 		
+		public function set_attendance_register( $personnel_id, $date, $presence )
+		{
+			if( !(int)$personnel_id ) 
+				throw new ATCExceptionBadData('Invalid personnel ID');
+			if( !strtotime($date) )
+				throw new ATCExceptionBadData('Invalid date');
+			if( trim($presence) == "" )
+			{
+				$query = "DELETE FROM `attendance_register` WHERE `personnel_id` = ".(int)$personnel_id." AND `date` = '".date("Y-m-d",strtotime($date))."';";
+				if ($result = self::$mysqli->query($query))
+					self::log_action( 'attendance_register', $query );
+				else
+					throw new ATCExceptionDBError(self::$mysqli->error);
+				return true;
+			}
+			if( $presence != ATC_ATTENDANCE_PRESENT && $presence != ATC_ATTENDANCE_ON_LEAVE && $presence != ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE )
+				throw new ATCExceptionBadData('Unknown presence value');
+
+			$query = "INSERT INTO `attendance_register` (`personnel_id`, `date`, `presence`) VALUES ( ".(int)$personnel_id.", '".date("Y-m-d",strtotime($date))."', ".$presence.") ON DUPLICATE KEY UPDATE `presence` = VALUES(`presence`)";
+			if ($result = self::$mysqli->query($query))
+				self::log_action( 'attendance_register', $query );
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+			return true;
+		}
+		
 		public function set_personnel( &$user )
 		{
 			$query = "";
