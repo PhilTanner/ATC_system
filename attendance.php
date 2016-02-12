@@ -77,7 +77,7 @@
 		$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
 		$('button.save').button({ icons: { primary: 'ui-icon-disk' } });
 		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false }).click(function(){
-		   $('#dialog').html("<form name='newparadenight' id='newparadenight' method='post'><label for='newdate' style='width:auto;'>New parade night date</label><input type='date' id='newdate' name='newdate' value='<?=date("Y-m-d",strtotime('next '.ATC_SETTING_PARADE_NIGHT,strtotime($paradenight->date)))?>' style='width:auto' /></form>").dialog({
+		   $('#dialog').html("<form name='newparadenight' id='newparadenight' method='post'><label for='newdate' style='width:auto;'>New parade night date</label><input type='date' id='newdate' name='newdate' value='<?=date("Y-m-d",strtotime('next '.ATC_SETTING_PARADE_NIGHT,(isset($paradenight)?strtotime($paradenight->date):time())))?>' style='width:auto' /></form>").dialog({
 			  modal: true,
 			  title: 'Enter new parade night date',
 			  buttons: {
