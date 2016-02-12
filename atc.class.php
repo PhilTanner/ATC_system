@@ -31,6 +31,21 @@
 	define( 'ATC_USER_LEVEL_TREASURER',							ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_ACTIVITIES_VIEW + ATC_USER_PERMISSION_STORES_VIEW + ATC_USER_PERMISSION_FINANCE_EDIT );
 	define( 'ATC_USER_LEVEL_USC', 								ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_ACTIVITIES_VIEW + ATC_USER_PERMISSION_STORES_VIEW + ATC_USER_PERMISSION_FINANCE_VIEW );
 
+	define( 'ATC_USER_GROUP_OFFICERS',							ATC_USER_LEVEL_ADJUTANT.','.ATC_USER_LEVEL_STORES.','.ATC_USER_LEVEL_TRAINING.','.ATC_USER_LEVEL_CUCDR.','.ATC_USER_LEVEL_SUPOFF );
+	define( 'ATC_USER_GROUP_CADETS',							ATC_USER_LEVEL_CADET.','.ATC_USER_LEVEL_NCO );
+	define( 'ATC_USER_GROUP_PERSONNEL',							ATC_USER_GROUP_OFFICERS.','.ATC_USER_GROUP_CADETS );
+
+	define( 'ATC_ATTENDANCE_PRESENT',							0 );
+	define( 'ATC_ATTENDANCE_ON_LEAVE',							1 );
+	define( 'ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE',				2 );
+
+	define( 'ATC_ATTENDANCE_PRESENT_SYMBOL',					"X" );
+	define( 'ATC_ATTENDANCE_ON_LEAVE_SYMBOL',					"L" );
+	define( 'ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE_SYMBOL',		"o" );
+
+	define( 'ATC_SETTING_PARADE_NIGHT',							"Wednesday" );
+
+	
 	require_once 'config.php';
 	
 	class ATCException extends Exception {
@@ -66,11 +81,22 @@
 			self::$mysqli = new mysqli(DB_HOST, DB_USER, DB_PSWD, DB_NAME);
 			/* check connection */
 			if (mysqli_connect_errno())
-			    throw new ATCExceptionnDBConn(mysqli_connect_error());
+			    throw new ATCExceptionDBConn(mysqli_connect_error());
 			if(ATC_DEBUG) self::$currentuser = 1;
 		}
 		
-		/*
+		public function add_parade_night( $date )
+		{
+			$query = "INSERT INTO `attendance` (`date` ) VALUES ( '".date("Y-m-d",$date)."' );";
+			if ($result = self::$mysqli->query($query))
+			{
+				self::log_action( 'attendance', $query );
+				return true;
+			}
+			else throw new ATCExceptionDBError(self::$mysqli->error);
+		}
+
+/*
 		public function __destruct()
 		{
 			//self::$mysqli->close();
@@ -112,7 +138,61 @@
 			return $str;
 		}
 				
-		public function get_personnel( $id, $orderby = "ASC" )
+		public function get_attendance( $startdate, $enddate )
+		{
+			$startdate = strtotime($startdate);
+			$enddate = strtotime($enddate);
+
+			if(!self::user_has_permission( ATC_USER_PERMISSION_ATTENDANCE_VIEW ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = 'SELECT * FROM `attendance` WHERE `date` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" ORDER BY `date` ASC;';
+			
+			$dates = array();
+			if ($result = self::$mysqli->query($query))
+			{
+				while ( $obj = $result->fetch_object() )
+					$dates[] = $obj;
+			}	
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $dates;
+		}
+		
+		public function get_attendance_register( $startdate, $enddate )
+		{
+			$startdate = strtotime($startdate);
+			$enddate = strtotime($enddate);
+
+			if(!self::user_has_permission( ATC_USER_PERMISSION_ATTENDANCE_VIEW ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = '
+			SELECT	`attendance_register`.*,
+					`personnel`.`access_rights`
+			FROM 	`attendance_register` 
+					INNER JOIN `personnel` 
+						ON `attendance_register`.`personnel_id` = `personnel`.`personnel_id` 
+			WHERE 	`attendance_register`.`date` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" 
+					AND `personnel`.`access_rights` IN ('.ATC_USER_GROUP_PERSONNEL.') 
+					AND `personnel`.`enabled` = -1
+					AND `personnel`.`left_date` IS NULL 
+			ORDER BY `date` ASC;';
+
+			$attendance = array();
+			if ($result = self::$mysqli->query($query))
+			{
+				while ( $obj = $result->fetch_object() )
+					$attendance[] = $obj;
+			}	
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $attendance;
+		}
+		
+		public function get_personnel( $id, $orderby = "ASC", $access_rights=null )
 		{
 			$personnel = new stdClass();
 
@@ -127,7 +207,10 @@
 					if( is_null($id) )
 					{
 						$personnel = array();
-						$query = "SELECT * FROM `personnel`  ORDER BY `enabled` ASC, `lastname` ".htmlentities($orderby).", `firstname` ".htmlentities($orderby).", `personnel_id` ".htmlentities($orderby).";";
+						$query = "SELECT * FROM `personnel` ";
+						if( !is_null($access_rights) )
+							$query .= ' WHERE `access_rights` IN ('.htmlentities($access_rights).')';
+						$query .= "ORDER BY `enabled` ASC, `lastname` ".htmlentities($orderby).", `firstname` ".htmlentities($orderby).", `personnel_id` ".htmlentities($orderby).";";
 						
 						if ($result = self::$mysqli->query($query))
 						{
@@ -176,6 +259,32 @@
 			else throw new ATCExceptionDBError(self::$mysqli->error);
 		}
 		
+		public function set_attendance_register( $personnel_id, $date, $presence )
+		{
+			if( !(int)$personnel_id ) 
+				throw new ATCExceptionBadData('Invalid personnel ID');
+			if( !strtotime($date) )
+				throw new ATCExceptionBadData('Invalid date');
+			if( trim($presence) == "" )
+			{
+				$query = "DELETE FROM `attendance_register` WHERE `personnel_id` = ".(int)$personnel_id." AND `date` = '".date("Y-m-d",strtotime($date))."';";
+				if ($result = self::$mysqli->query($query))
+					self::log_action( 'attendance_register', $query );
+				else
+					throw new ATCExceptionDBError(self::$mysqli->error);
+				return true;
+			}
+			if( $presence != ATC_ATTENDANCE_PRESENT && $presence != ATC_ATTENDANCE_ON_LEAVE && $presence != ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE )
+				throw new ATCExceptionBadData('Unknown presence value');
+
+			$query = "INSERT INTO `attendance_register` (`personnel_id`, `date`, `presence`) VALUES ( ".(int)$personnel_id.", '".date("Y-m-d",strtotime($date))."', ".$presence.") ON DUPLICATE KEY UPDATE `presence` = VALUES(`presence`)";
+			if ($result = self::$mysqli->query($query))
+				self::log_action( 'attendance_register', $query );
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+			return true;
+		}
+		
 		public function set_personnel( &$user )
 		{
 			$query = "";
@@ -221,6 +330,10 @@
 		public function gui_output_page_footer( $title )
 		{
 			echo '
+		<footer>
+			<p> Built on the ATC system code available at <a target="blank" href="https://github.com/PhilTanner/ATC_system">https://github.com/PhilTanner/ATC_system</a> </p>
+			<img src="49squadron.png" style="position:absolute; bottom: 1em; right: 1em; z-index: -1;" />
+		</footer>
 	</body>
 </html>';
 		}
@@ -245,6 +358,11 @@
 				$(".navoptions ul li a").button().addClass("ui-state-disabled");
 				$(".navoptions ul li a.home").button({ icons: { primary: "ui-icon-home" } }).removeClass("ui-state-disabled")'.($title=='Home'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.personnel").button({ icons: { primary: "ui-icon-person" } }).removeClass("ui-state-disabled")'.($title=='Personnel'?'.addClass("ui-state-active")':'').';
+				$(".navoptions ul li a.attendance").button({ icons: { primary: "ui-icon-clipboard" } }).removeClass("ui-state-disabled")'.($title=='Attendance'?'.addClass("ui-state-active")':'').';
+				$(".navoptions ul li a.activities").button({ icons: { primary: "ui-icon-image" } });
+				$(".navoptions ul li a.finance").button({ icons: { primary: "ui-icon-cart" } });
+				$(".navoptions ul li a.stores").button({ icons: { primary: "ui-icon-tag" } });
+				$(".navoptions ul li a.training").button({ icons: { primary: "ui-icon-calendar" } });
 			});
 			
 		</script>
@@ -256,7 +374,7 @@
 			<ul>
 				<li> <a href="./" class="home">Home</a> </li>
 				<li> <a href="./personnel.php" class="personnel">Personnel</a> </li>
-				<li> <a href="./" class="attendance">Attendance</a> </li>
+				<li> <a href="./attendance.php" class="attendance">Attendance</a> </li>
 				<li> <a href="./" class="activities">Activities</a> </li>
 				<li> <a href="./" class="finance">Finance</a> </li>
 				<li> <a href="./" class="stores">Stores</a> </li>
@@ -267,7 +385,7 @@
 ';
 		}
 		
-		public function user_has_permission( $permission, $target )
+		public function user_has_permission( $permission, $target=null )
 		{
 			if(ATC_DEBUG) return true;
 		}

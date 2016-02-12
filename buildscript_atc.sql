@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 07, 2016 at 10:13 PM
+-- Generation Time: Feb 11, 2016 at 08:25 AM
 -- Server version: 10.1.9-MariaDB
 -- PHP Version: 5.5.30
 
@@ -19,6 +19,43 @@ SET time_zone = "+00:00";
 --
 -- Database: `atc`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `attendance`
+--
+
+CREATE TABLE `attendance` (
+  `date` date NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `attendance_register`
+--
+
+CREATE TABLE `attendance_register` (
+  `personnel_id` int(11) NOT NULL,
+  `date` date NOT NULL,
+  `time_in` time DEFAULT NULL,
+  `time_out` time DEFAULT NULL,
+  `presence` tinyint(4) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `log_changes`
+--
+
+CREATE TABLE `log_changes` (
+  `personnel_id` int(11) NOT NULL COMMENT 'User who performed update',
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `table_updated` varchar(255) NOT NULL COMMENT 'What table was affected',
+  `sql_executed` text NOT NULL COMMENT 'What was the SQL that was run'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Log of changes';
 
 -- --------------------------------------------------------
 
@@ -46,6 +83,26 @@ CREATE TABLE `personnel` (
 --
 
 --
+-- Indexes for table `attendance`
+--
+ALTER TABLE `attendance`
+  ADD PRIMARY KEY (`date`);
+
+--
+-- Indexes for table `attendance_register`
+--
+ALTER TABLE `attendance_register`
+  ADD PRIMARY KEY (`personnel_id`,`date`),
+  ADD KEY `date` (`date`);
+
+--
+-- Indexes for table `log_changes`
+--
+ALTER TABLE `log_changes`
+  ADD KEY `personnel_id_idx` (`personnel_id`),
+  ADD KEY `table_updated_idx` (`table_updated`);
+
+--
 -- Indexes for table `personnel`
 --
 ALTER TABLE `personnel`
@@ -61,7 +118,30 @@ ALTER TABLE `personnel`
 -- AUTO_INCREMENT for table `personnel`
 --
 ALTER TABLE `personnel`
-  MODIFY `personnel_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `personnel_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `attendance_register`
+--
+ALTER TABLE `attendance_register`
+  ADD CONSTRAINT `attendance_register_ibfk_1` FOREIGN KEY (`personnel_id`) REFERENCES `personnel` (`personnel_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `attendance_register_ibfk_2` FOREIGN KEY (`date`) REFERENCES `attendance` (`date`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `log_changes`
+--
+ALTER TABLE `log_changes`
+  ADD CONSTRAINT `log_changes_ibfk_1` FOREIGN KEY (`personnel_id`) REFERENCES `personnel` (`personnel_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+CREATE USER 'atc'@'localhost' IDENTIFIED BY 'ZIERIESs5ESa';
+GRANT SELECT, INSERT ON `atc`.`log_changes` TO 'atc'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON `atc`.`attendance` TO 'atc'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON `atc`.`attendance_register` TO 'atc'@'localhost';
+GRANT SELECT, INSERT, UPDATE, REFERENCES ON `atc`.`personnel` TO 'atc'@'localhost';

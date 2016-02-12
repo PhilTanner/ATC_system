@@ -87,79 +87,78 @@
 		
 		<script>
 			$(function(){
-					user = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $user )) ?>' );
+				user = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $user )) ?>' );
 
-					$('#personnel_id').val(user['personnel_id']);
-					$('#firstname').val(user['firstname']);
-					$('#lastname').val(user['lastname']);
-					$('#email').val(user['email']);
-					$('#created').val(user['created']);
-					$('#dob').val(user['dob']);
-					$('#access_rights').val( user['access_rights']);
-					$('#is_female').val( user['is_female']);
-					$('#joined_date').val(user['joined_date']);
-					$('#left_date').val(user['left_date']);
-					if( user['enabled'] == "-1" )
-						$('#enabled').prop('checked', true);
-					else
-						$('#enabled').prop('checked', false);
+				$('#personnel_id').val(user['personnel_id']);
+				$('#firstname').val(user['firstname']);
+				$('#lastname').val(user['lastname']);
+				$('#email').val(user['email']);
+				$('#created').val(user['created']);
+				$('#dob').val(user['dob']);
+				$('#access_rights').val( user['access_rights']);
+				$('#is_female').val( user['is_female']);
+				$('#joined_date').val(user['joined_date']);
+				$('#left_date').val(user['left_date']);
+				if( user['enabled'] == "-1" )
+					$('#enabled').prop('checked', true);
+				else
+					$('#enabled').prop('checked', false);
 
-					// Update our password settings for editing existing users for clarity
-					if( user['personnel_id'] )
-						$('#password').prop('required', false).prop('placeholder', 'Leave blank to keep current password').prev().html('Change password');
+				// Update our password settings for editing existing users for clarity
+				if( user['personnel_id'] )
+					$('#password').prop('required', false).prop('placeholder', 'Leave blank to keep current password').prev().html('Change password');
 
-					$('#personalform button[type=submit]').button({icons: { primary: "ui-icon-disk" }});
-					$('#personalform').submit(function(e) {
-						
-						e.preventDefault(); // stop the submit button actually submitting
-						
-						$.ajax({
-							   type: "POST",
-							   url: $('#personalform').attr('action'),
-							   data: $("#personalform").serialize(),
-							   beforeSend: function()
-							   {
-							   	   $('#personalform').addClass('ui-state-disabled');
-							   },
-							   complete: function()
-							   {
-							   	   $('#personalform').removeClass('ui-state-disabled');
-							   },
-							   success: function(data)
-							   {
-								   // When creating new users, redirect to the user page after creation, to continue editing.
-								   if( $('#personalform').attr('action') != $(data).filter('#personalform').attr('action') )
-								   	   // location.replace used to keep expected back button behaviour
-								   	   window.location.replace('personnel.php?id='+$(data).filter('#personalform').attr('action').match(/\d+/)[0]);
-								   $('<img src="save-ok.png" style="position: absolute; left: 70em; top: 12em" id="save_indicator" />').appendTo('#personalform').fadeOut(1500, function(){ $('#save_indicator').remove(); } );
-								   return false;
-							   },
-							   error: function(data)
-							   {
-								   $('<img src="save-fail.png" style="position: absolute; left: 70em; top: 12em" id="save_indicator" />').appendTo('#personalform');
-								   $('#dialog').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
-								      modal: true,
-								      //dialogClass: 'ui-state-error',
-								      title: 'Error!',
-									  buttons: {
-										Close: function() {
-										  $( this ).dialog( "close" );
-										}
-									  },
-									  close: function() { 
-									  	$( this ).dialog( "destroy" ); 
-									  	$('#save_indicator').fadeOut(1500, function(){ $('#save_indicator').remove() });
-									  },
-									  open: function() {
-									  	 $('.ui-dialog-titlebar').addClass('ui-state-error');
-									  }
-									}).filter('ui-dialog-titlebar');
-								   return false;
-							   }
-							 });
-						return false;						
+				$('#personalform button[type=submit]').button({icons: { primary: "ui-icon-disk" }});
+				$('#personalform').submit(function(e) {
+					
+					e.preventDefault(); // stop the submit button actually submitting
+					
+					$.ajax({
+						   type: "POST",
+						   url: $('#personalform').attr('action'),
+						   data: $("#personalform").serialize(),
+						   beforeSend: function()
+						   {
+							$('#personalform').addClass('ui-state-disabled');
+						   },
+						   complete: function()
+						   {
+							$('#personalform').removeClass('ui-state-disabled');
+						   },
+						   success: function(data)
+						   {
+							// When creating new users, redirect to the user page after creation, to continue editing.
+							if( $('#personalform').attr('action') != $(data).filter('#personalform').attr('action') )
+								// location.replace used to keep expected back button behaviour
+								window.location.replace('personnel.php?id='+$(data).filter('#personalform').attr('action').match(/\d+/)[0]);
+							$('<img src="save-ok.png" style="position: absolute; left: 70em; top: 12em" id="save_indicator" />').appendTo('#personalform').fadeOut(1500, function(){ $('#save_indicator').remove(); } );
+							return false;
+						   },
+						   error: function(data)
+						   {
+							$('<img src="save-fail.png" style="position: absolute; left: 70em; top: 12em" id="save_indicator" />').appendTo('#personalform');
+							$('#dialog').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
+							      modal: true,
+							      //dialogClass: 'ui-state-error',
+							      title: 'Error!',
+								  buttons: {
+									Close: function() {
+									  $( this ).dialog( "close" );
+									}
+								  },
+								  close: function() { 
+									$( this ).dialog( "destroy" ); 
+									$('#save_indicator').fadeOut(1500, function(){ $('#save_indicator').remove() });
+								  },
+								  open: function() {
+									 $('.ui-dialog-titlebar').addClass('ui-state-error');
+								  }
+								}).filter('ui-dialog-titlebar');
+							return false;
+						}
 					});
-						
+					return false;						
+				});
 			});
 		</script>
 
