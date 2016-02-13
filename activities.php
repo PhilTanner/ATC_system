@@ -2,10 +2,10 @@
 	require_once "atc.class.php";
 	$ATC = new ATC();
 	
-	if( isset( $_POST['newdate'] ) && strtotime( $_POST['newdate'] ) )
+	if( isset( $_POST['startdate'] ) && strtotime( $_POST['startdate'] ) )
 	{
 		try {
-			$ATC->add_parade_night( strtotime($_POST['newdate']) );
+			$ATC->add_activity( $_POST['startdate'],$_POST['enddate'], $_POST['title'], $_POST['location'], $_POST['status'] );
 		} catch (ATCExceptionInsufficientPermissions $e) {
 			header("HTTP/1.0 401 Unauthorised");
 			echo 'Caught exception: ',  $e->getMessage(), "\n";
@@ -71,54 +71,25 @@
 	</form>
 	<script>
 		$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
-		$('button.save').button({ icons: { primary: 'ui-icon-disk' } }).click(function(e){
-			e.preventDefault(); // stop the submit button actually submitting
-			$.ajax({
-				type: "POST",
-				url: "activity.php",
-				data: $("#attendanceregister").serialize(),
-				beforeSend: function()
-				{
-					$('#attendanceregister').addClass('ui-state-disabled');
-				},
-				complete: function()
-				{
-					$('#attendanceregister').removeClass('ui-state-disabled');
-				},
-				success: function(data)
-				{
-					// True to ensure we don't just use a cached version, but get a fresh copy from the server
-					//location.reload(true);
-				},
-				error: function(data)
-				{
-					$('<img src="save-fail.png" style="position: absolute; left: 70em; top: 12em" id="save_indicator" />').appendTo('#personalform');
-					$('#dialog').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
-					      modal: true,
-					      //dialogClass: 'ui-state-error',
-					      title: 'Error!',
-						  buttons: {
-							Close: function() {
-							  $( this ).dialog( "close" );
-							}
-						  },
-						  close: function() { 
-							$( this ).dialog( "destroy" ); 
-							$('#save_indicator').fadeOut(1500, function(){ $('#save_indicator').remove() });
-						  },
-						  open: function() {
-							 $('.ui-dialog-titlebar').addClass('ui-state-error');
-						  }
-						}).filter('ui-dialog-titlebar');
-					return false;
-				}
-			});
-			return false;						
-		});
+		
 		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false }).click(function(){
-			$('#dialog').html("<form name='newparadenight' id='newparadenight' method='post'><label for='newdate' style='width:auto;'>New parade night date</label><input type='date' id='newdate' name='newdate' value='<?=date("Y-m-d",strtotime('next '.ATC_SETTING_PARADE_NIGHT,(isset($paradenight)?strtotime($paradenight->date):time())))?>' style='width:auto' /></form>").dialog({
+			$('#dialog').html("<form name='newactivity' id='newactivity' method='post'>"+
+				"<label for='startdate' style='width:auto;'>Assemble date/time</label><br />"+
+				"<input type='datetime-local' id='startdate' name='startdate' value='' style='width:auto' required='required' /><br />"+
+				"<label for='enddate' style='width:auto;'>Dispersal date/time</label><br />"+
+				"<input type='datetime-local' id='enddate' name='enddate' value='' style='width:auto' required='required' /><br />"+
+				"<label for='title' style='width:auto;'>Activity name</label><br />"+
+				"<input type='text' id='title' name='title' value='' style='width:auto' required='required' /><br />"+
+				"<label for='location' style='width:auto;'>Activity location</label><br />"+
+				"<input type='text' id='location' name='location' value='' style='width:auto' required='required' /><br />"+
+				"<label for='status' style='width:auto;'>Status</label><br />"+
+				"<select name='status' id='status' required='required' style='width:auto' >"+
+				"<option value='<?=ATC_ACTIVITY_RECOGNISED?>'>Recognised</option>"+
+				"<option value='<?=ATC_ACTIVITY_AUTHORISED?>'>Authorised</option>"+
+				"</select><br />"+
+				"</form>").dialog({
 			  modal: true,
-			  title: 'Enter new parade night date',
+			  title: 'Create new activity',
 			  buttons: {
 				Cancel: function() {
 				  $( this ).dialog( "close" );
@@ -126,15 +97,15 @@
 				Save: function() {
 					$.ajax({
 					   type: "POST",
-					   url: 'attendance.php',
-					   data: $("#newparadenight").serialize(),
+					   url: 'activities.php',
+					   data: $("#newactivity").serialize(),
 					   beforeSend: function()
 					   {
-						   $('#newparadenight').addClass('ui-state-disabled');
+						   $('#newactivity').addClass('ui-state-disabled');
 					   },
 					   complete: function()
 					   {
-						   $('#newparadenight').removeClass('ui-state-disabled');
+						   $('#newactivity').removeClass('ui-state-disabled');
 					   },
 					   success: function(data)
 					   {
@@ -171,13 +142,26 @@
 				$( this ).dialog( "destroy" ); 
 			  },
 			  open: function() {
-			  	  $('#newdate').datepicker({ 
-			  	  	dateFormat: 'yy-mm-dd',
+			  	  /*
+			  	  $('#startdate').datetimepicker({ 
+			  	  	dateFormat: 'dd/mm/yy',
 					showOn: "button",
 					buttonImage: "calendar.gif",
 					buttonImageOnly: true,
 					buttonText: "Select date" 
 				  });
+			  	  $('#enddate').datetimepicker({ 
+			  	  	dateFormat: 'yy-mm-dd H:i',
+					showOn: "button",
+					buttonImage: "calendar.gif",
+					buttonImageOnly: true,
+					buttonText: "Select date" 
+				  });
+				  */
+			  	  var names = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_activity_names() )) ?>' );
+				  $('#title').autocomplete({ source: names });
+			  	  var locations = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_activity_locations() )) ?>' );
+				  $('#location').autocomplete({ source: locations });
 			  }
 			})
 			return false;

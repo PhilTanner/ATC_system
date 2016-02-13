@@ -87,12 +87,51 @@
 			if(ATC_DEBUG) self::$currentuser = 1;
 		}
 		
+		public function add_activity( $startdate, $enddate, $title, $location, $status )
+		{
+			if(!self::user_has_permission( ATC_USER_PERMISSION_ACTIVITIES_EDIT ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+
+		    	if( !strtotime($startdate) )
+				throw new ATCExceptionBadData('Invalid startdate');
+			if( !strtotime($startdate) )
+				throw new ATCExceptionBadData('Invalid enddate');
+			if( $status != ATC_ACTIVITY_RECOGNISED && $status != ATC_ACTIVITY_AUTHORISED )
+				throw new ATCExceptionBadData('Unknown status value');
+				
+			$query = "
+				INSERT INTO `activities` (
+					`startdate`,
+					`enddate`,
+					`personnel_id`,
+					`title`,
+					`location`,
+					`status` 
+				) VALUES ( 
+					'".date("Y-m-d H:i",strtotime($startdate))."',
+					'".date("Y-m-d H:i",strtotime($enddate))."',
+					".self::$currentuser.",
+					'".self::$mysqli->real_escape_string($title)."', 
+					'".self::$mysqli->real_escape_string($location)."',
+					".(int)$status."
+				);";
+			if ($result = self::$mysqli->query($query))
+			{
+				self::log_action( 'activity', $query, self::$mysqli->insert_id );
+				return true;
+			}
+			else throw new ATCExceptionDBError(self::$mysqli->error);
+		}
+
 		public function add_parade_night( $date )
 		{
+			if(!self::user_has_permission( ATC_USER_PERMISSION_ATTENDANCE_EDIT ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
 			$query = "INSERT INTO `attendance` (`date` ) VALUES ( '".date("Y-m-d",$date)."' );";
 			if ($result = self::$mysqli->query($query))
 			{
-				self::log_action( 'attendance', $query );
+				self::log_action( 'attendance', $query, self::$mysqli->insert_id );
 				return true;
 			}
 			else throw new ATCExceptionDBError(self::$mysqli->error);
@@ -140,28 +179,6 @@
 			return $str;
 		}
 				
-		public function get_attendance( $startdate, $enddate )
-		{
-			$startdate = strtotime($startdate);
-			$enddate = strtotime($enddate);
-
-			if(!self::user_has_permission( ATC_USER_PERMISSION_ATTENDANCE_VIEW ))
-			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
-				
-			$query = 'SELECT * FROM `attendance` WHERE `date` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" ORDER BY `date` ASC;';
-			
-			$dates = array();
-			if ($result = self::$mysqli->query($query))
-			{
-				while ( $obj = $result->fetch_object() )
-					$dates[] = $obj;
-			}	
-			else
-				throw new ATCExceptionDBError(self::$mysqli->error);
-
-			return $dates;
-		}
-		
 		public function get_activities( $date=null, $days=365 )
 		{
 			if( is_null($date) ) $startdate = time()-(14*24*60*60);
@@ -189,6 +206,60 @@
 				throw new ATCExceptionDBError(self::$mysqli->error);
 
 			return $activities;
+		}
+		
+		public function get_activity_locations()
+		{
+			if(!self::user_has_permission( ATC_USER_PERMISSION_ACTIVITIES_VIEW ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = 'SELECT DISTINCT `location` FROM `activities` ORDER BY LOWER(`location`) ASC;';
+
+			$activities = array();
+			if ($result = self::$mysqli->query($query))
+				while ( $obj = $result->fetch_object() )
+					$activities[] = $obj->location;
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+			return $activities;
+		}
+		
+		public function get_activity_names()
+		{
+			if(!self::user_has_permission( ATC_USER_PERMISSION_ACTIVITIES_VIEW ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = 'SELECT DISTINCT `title` FROM 	`activities` ORDER BY LOWER(`title`) ASC;';
+
+			$activities = array();
+			if ($result = self::$mysqli->query($query))
+				while ( $obj = $result->fetch_object() )
+					$activities[] = $obj->title;
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+			return $activities;
+		}
+		
+		public function get_attendance( $startdate, $enddate )
+		{
+			$startdate = strtotime($startdate);
+			$enddate = strtotime($enddate);
+
+			if(!self::user_has_permission( ATC_USER_PERMISSION_ATTENDANCE_VIEW ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = 'SELECT * FROM `attendance` WHERE `date` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" ORDER BY `date` ASC;';
+			
+			$dates = array();
+			if ($result = self::$mysqli->query($query))
+			{
+				while ( $obj = $result->fetch_object() )
+					$dates[] = $obj;
+			}	
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $dates;
 		}
 		
 		public function get_attendance_register( $startdate, $enddate )
@@ -283,9 +354,9 @@
 		}
 		
 		// Keep a track of who's doing what, for later auditing.
-		private function log_action( $table_name, $sql_run )
+		private function log_action( $table_name, $sql_run, $idrow )
 		{
-			$query = "INSERT INTO `log_changes` (`personnel_id`, `sql_executed`, `table_updated` ) VALUES ( ".self::$currentuser.', "'.htmlentities($sql_run).'", "'.htmlentities($table_name).'" );';
+			$query = "INSERT INTO `log_changes` (`personnel_id`, `sql_executed`, `table_updated`, `row_updated` ) VALUES ( ".self::$currentuser.', "'.htmlentities($sql_run).'", "'.htmlentities($table_name).'", '.(int)$idrow.' );';
 			if ($result = self::$mysqli->query($query))	return true;
 			else throw new ATCExceptionDBError(self::$mysqli->error);
 		}
