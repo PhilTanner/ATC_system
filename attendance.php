@@ -151,7 +151,6 @@
 					return false;
 				}
 			});
-			console.log($("#attendanceregister").serialize());
 			return false;						
 		});
 		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false }).click(function(){
