@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 11, 2016 at 08:25 AM
+-- Generation Time: Feb 15, 2016 at 10:11 AM
 -- Server version: 10.1.9-MariaDB
 -- PHP Version: 5.5.30
 
@@ -19,6 +19,22 @@ SET time_zone = "+00:00";
 --
 -- Database: `atc`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `activities`
+--
+
+CREATE TABLE `activities` (
+  `activity_id` int(11) UNSIGNED NOT NULL,
+  `personnel_id` int(11) NOT NULL,
+  `startdate` datetime NOT NULL,
+  `enddate` datetime NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `location` varchar(255) NOT NULL,
+  `status` tinyint(3) UNSIGNED NOT NULL COMMENT 'NZCF Recognised/Authorised'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -41,7 +57,7 @@ CREATE TABLE `attendance_register` (
   `date` date NOT NULL,
   `time_in` time DEFAULT NULL,
   `time_out` time DEFAULT NULL,
-  `presence` tinyint(4) NOT NULL
+  `presence` tinyint(4) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -54,7 +70,8 @@ CREATE TABLE `log_changes` (
   `personnel_id` int(11) NOT NULL COMMENT 'User who performed update',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `table_updated` varchar(255) NOT NULL COMMENT 'What table was affected',
-  `sql_executed` text NOT NULL COMMENT 'What was the SQL that was run'
+  `sql_executed` text NOT NULL COMMENT 'What was the SQL that was run',
+  `row_updated` int(10) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Log of changes';
 
 -- --------------------------------------------------------
@@ -79,8 +96,24 @@ CREATE TABLE `personnel` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
+-- Dumping data for table `personnel`
+--
+
+INSERT INTO `personnel` (`personnel_id`, `firstname`, `lastname`, `is_female`, `email`, `dob`, `password`, `access_rights`, `created`, `joined_date`, `left_date`, `enabled`) VALUES
+(1, 'Phil', 'Tanner', 0, 'phil.tanner@49squadron.org.nz', '1975-09-17', 'sha256:1000:/8sO+9s6F7hZoRCW6CF7lyvtGU/aUGb2:E2Dxpue7Jh0qv1oL9JAfQTrE17aqjsL4', 100421, '2016-02-05 07:32:51', '2015-05-01', NULL, -1),
+(4, 'Sue', 'Tanner', -1, 'treasurer@49squadron.org.nz', '1966-06-09', 'sha256:1000:s52pl7UwRRa7Dk0wZ0+2zoo9tYFRJaax:bqeN5zaNm1lRazugRrJkDlaQ7CuB6bO4', 2261, '2016-02-06 06:38:40', '2015-04-01', NULL, -1),
+(22, 'Phil', 'Baker', 0, 'cucdr@49squadron.org.nz', '2016-01-01', 'sha256:1000:pAXirFBFeMXm/H+iqD2uMdGn9l1tWB9H:Hn1y+PkEflH/4bCMIIjkg4t+Rvczt4D9', 2135, '2016-02-08 02:45:14', '2016-01-01', NULL, -1);
+
+--
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `activities`
+--
+ALTER TABLE `activities`
+  ADD PRIMARY KEY (`activity_id`),
+  ADD KEY `personnel_id` (`personnel_id`);
 
 --
 -- Indexes for table `attendance`
@@ -115,6 +148,11 @@ ALTER TABLE `personnel`
 --
 
 --
+-- AUTO_INCREMENT for table `activities`
+--
+ALTER TABLE `activities`
+  MODIFY `activity_id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+--
 -- AUTO_INCREMENT for table `personnel`
 --
 ALTER TABLE `personnel`
@@ -122,6 +160,12 @@ ALTER TABLE `personnel`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `activities`
+--
+ALTER TABLE `activities`
+  ADD CONSTRAINT `activities_ibfk_1` FOREIGN KEY (`personnel_id`) REFERENCES `personnel` (`personnel_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `attendance_register`
@@ -139,6 +183,8 @@ ALTER TABLE `log_changes`
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
 
 CREATE USER 'atc'@'localhost' IDENTIFIED BY 'ZIERIESs5ESa';
 GRANT SELECT, INSERT ON `atc`.`log_changes` TO 'atc'@'localhost';

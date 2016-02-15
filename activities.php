@@ -45,8 +45,8 @@
 					?>
 				</tr>
 				<tr>
-					<th> Arrive </th>
-					<th> Depart </th>
+					<th> Assemble </th>
+					<th> Dispersal </th>
 					<th> OFF </th>
 					<th> CDT </th>
 				</tr>
