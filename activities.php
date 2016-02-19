@@ -56,7 +56,7 @@
 					foreach( $activities as $obj )
 					{
 						echo '<tr>';
-						echo '	<td><span class="ui-icon ui-icon-'.($obj->status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> '.$obj->title.'</td>';
+						echo '	<td><span class="ui-icon ui-icon-'.($obj->nzcf_status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> '.$obj->title.'</td>';
 						echo '	<td>'.date("j M, H:i", strtotime($obj->startdate)).'</td>';
 						echo '	<td>'.date("j M, H:i", strtotime($obj->enddate)).'</td>';
 						echo '	<td style="text-align:center;">'.$obj->officers_attending.'</td>';
@@ -160,7 +160,7 @@
 				  */
 			  	  var names = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_activity_names() )) ?>' );
 				  $('#title').autocomplete({ source: names });
-			  	  var locations = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_activity_locations() )) ?>' );
+			  	  var locations = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_locations() )) ?>' );
 				  $('#location').autocomplete({ source: locations });
 			  }
 			})

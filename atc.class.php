@@ -17,19 +17,21 @@
 	define( 'ATC_STORES_PERMISSION_EDIT',			ATC_STORES_PERMISSION_VIEW + 16384 );
 	define( 'ATC_ACTIVITIES_PERMISSION_VIEW',		32768 );
 	define( 'ATC_ACTIVITIES_PERMISSION_EDIT',		ATC_ACTIVITIES_PERMISSION_VIEW + 65536 );
+	define( 'ATC_LOCATIONS_PERMISSION_VIEW',		131072 );
+	define( 'ATC_LOCATIONS_PERMISSION_EDIT',		ATC_LOCATIONS_PERMISSION_VIEW + 262144 );
 
 	// Give admin everything we can think of in the future.
 	define( 'ATC_USER_LEVEL_ADMIN', 			16777215 );
 	define( 'ATC_USER_LEVEL_CADET', 			0 );
-	define( 'ATC_USER_LEVEL_NCO', 				ATC_USER_PERMISSION_PERSONNEL_VIEW );
+	define( 'ATC_USER_LEVEL_NCO', 				ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_LOCATIONS_PERMISSION_VIEW );
 	//define( 'ATC_USER_LEVEL_OFFICER', 			ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_ACTIVITIES_VIEW );
-	define( 'ATC_USER_LEVEL_ADJUTANT', 			ATC_USER_PERMISSION_PERSONNEL_EDIT + ATC_USER_PERMISSION_ATTENDANCE_EDIT + ATC_USER_PERMISSION_ACTIVITIES_EDIT + ATC_USER_PERMISSION_FINANCE_EDIT + ATC_USER_PERMISSION_STORES_VIEW + ATC_ACTIVITIES_PERMISSION_EDIT );
-	define( 'ATC_USER_LEVEL_STORES', 			ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_FINANCE_EDIT + ATC_USER_PERMISSION_STORES_EDIT );
-	define( 'ATC_USER_LEVEL_TRAINING', 			ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_FINANCE_VIEW + ATC_USER_PERMISSION_STORES_VIEW + ATC_ACTIVITIES_PERMISSION_EDIT );
-	define( 'ATC_USER_LEVEL_CUCDR', 			ATC_USER_PERMISSION_PERSONNEL_EDIT + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_ACTIVITIES_VIEW + ATC_USER_PERMISSION_FINANCE_VIEW + ATC_USER_PERMISSION_STORES_VIEW );
-	define( 'ATC_USER_LEVEL_SUPOFF', 			ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_ACTIVITIES_VIEW );
-	define( 'ATC_USER_LEVEL_TREASURER',			ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_ACTIVITIES_VIEW + ATC_USER_PERMISSION_STORES_VIEW + ATC_USER_PERMISSION_FINANCE_EDIT );
-	define( 'ATC_USER_LEVEL_USC', 				ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_ACTIVITIES_VIEW + ATC_USER_PERMISSION_STORES_VIEW + ATC_USER_PERMISSION_FINANCE_VIEW );
+	define( 'ATC_USER_LEVEL_ADJUTANT', 			ATC_USER_PERMISSION_PERSONNEL_EDIT + ATC_USER_PERMISSION_ATTENDANCE_EDIT + ATC_USER_PERMISSION_ACTIVITIES_EDIT + ATC_USER_PERMISSION_FINANCE_EDIT + ATC_USER_PERMISSION_STORES_VIEW + ATC_ACTIVITIES_PERMISSION_EDIT + ATC_LOCATIONS_PERMISSION_EDIT);
+	define( 'ATC_USER_LEVEL_STORES', 			ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_FINANCE_EDIT + ATC_USER_PERMISSION_STORES_EDIT + ATC_LOCATIONS_PERMISSION_VIEW );
+	define( 'ATC_USER_LEVEL_TRAINING', 			ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_FINANCE_VIEW + ATC_USER_PERMISSION_STORES_VIEW + ATC_ACTIVITIES_PERMISSION_EDIT + ATC_LOCATIONS_PERMISSION_EDIT );
+	define( 'ATC_USER_LEVEL_CUCDR', 			ATC_USER_PERMISSION_PERSONNEL_EDIT + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_ACTIVITIES_VIEW + ATC_USER_PERMISSION_FINANCE_VIEW + ATC_USER_PERMISSION_STORES_VIEW + ATC_LOCATIONS_PERMISSION_VIEW );
+	define( 'ATC_USER_LEVEL_SUPOFF', 			ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_ACTIVITIES_VIEW + ATC_LOCATIONS_PERMISSION_VIEW );
+	define( 'ATC_USER_LEVEL_TREASURER',			ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_ACTIVITIES_VIEW + ATC_USER_PERMISSION_STORES_VIEW + ATC_USER_PERMISSION_FINANCE_EDIT + ATC_LOCATIONS_PERMISSION_VIEW );
+	define( 'ATC_USER_LEVEL_USC', 				ATC_USER_PERMISSION_PERSONNEL_VIEW + ATC_USER_PERMISSION_ATTENDANCE_VIEW + ATC_USER_PERMISSION_ACTIVITIES_VIEW + ATC_USER_PERMISSION_STORES_VIEW + ATC_USER_PERMISSION_FINANCE_VIEW + ATC_LOCATIONS_PERMISSION_VIEW );
 
 	define( 'ATC_USER_GROUP_OFFICERS',			ATC_USER_LEVEL_ADJUTANT.','.ATC_USER_LEVEL_STORES.','.ATC_USER_LEVEL_TRAINING.','.ATC_USER_LEVEL_CUCDR.','.ATC_USER_LEVEL_SUPOFF );
 	define( 'ATC_USER_GROUP_CADETS',			ATC_USER_LEVEL_CADET.','.ATC_USER_LEVEL_NCO );
@@ -44,6 +46,9 @@
 
 	define( 'ATC_ACTIVITY_RECOGNISED',			0 );
 	define( 'ATC_ACTIVITY_AUTHORISED',			1 );
+
+	define( 'ATC_DRESS_CODE_BLUES',				0 );
+	define( 'ATC_DRESS_CODE_DPM',				1 );
 
 	define( 'ATC_SETTING_PARADE_NIGHT',			"Wednesday" );
 
@@ -189,11 +194,14 @@
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
 				
 			$query = '
-				SELECT	`activities`.*,
+				SELECT	`activity`.*,
+					`activity_type`.*,
 					0 AS `officers_attending`,
 					0 AS `cadets_attending`
-				FROM 	`activities` 
-				WHERE 	`activities`.`startdate` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" 
+				FROM 	`activity` 
+					INNER JOIN `activity_type`
+						ON `activity`.`activity_type_id` = `activity_type`.`activity_type_id`
+				WHERE 	`activity`.`startdate` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" 
 				ORDER BY `startdate` ASC;';
 
 			$activities = array();
@@ -208,28 +216,12 @@
 			return $activities;
 		}
 		
-		public function get_activity_locations()
-		{
-			if(!self::user_has_permission( ATC_USER_PERMISSION_ACTIVITIES_VIEW ))
-			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
-				
-			$query = 'SELECT DISTINCT `location` FROM `activities` ORDER BY LOWER(`location`) ASC;';
-
-			$activities = array();
-			if ($result = self::$mysqli->query($query))
-				while ( $obj = $result->fetch_object() )
-					$activities[] = $obj->location;
-			else
-				throw new ATCExceptionDBError(self::$mysqli->error);
-			return $activities;
-		}
-		
 		public function get_activity_names()
 		{
 			if(!self::user_has_permission( ATC_USER_PERMISSION_ACTIVITIES_VIEW ))
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
 				
-			$query = 'SELECT DISTINCT `title` FROM 	`activities` ORDER BY LOWER(`title`) ASC;';
+			$query = 'SELECT DISTINCT `title` FROM 	`activity` ORDER BY LOWER(`title`) ASC;';
 
 			$activities = array();
 			if ($result = self::$mysqli->query($query))
@@ -292,6 +284,22 @@
 				throw new ATCExceptionDBError(self::$mysqli->error);
 
 			return $attendance;
+		}
+		
+		public function get_locations()
+		{
+			if(!self::user_has_permission( ATC_LOCATIONS_PERMISSION_VIEW ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = 'SELECT * FROM `location` ORDER BY LOWER(`name`) ASC;';
+
+			$activities = array();
+			if ($result = self::$mysqli->query($query))
+				while ( $obj = $result->fetch_object() )
+					$activities[] = $obj;
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+			return $activities;
 		}
 		
 		public function get_personnel( $id, $orderby = "ASC", $access_rights=null )
