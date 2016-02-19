@@ -41,7 +41,7 @@
 					<th colspan="2"> Attendance </th>
 					<?php
 						if( !isset($_GET['id']) && $ATC->user_has_permission(ATC_USER_PERMISSION_ACTIVITIES_EDIT) )
-							echo '<td><a href="?id=0" class="button new"> New </a></td>';
+							echo '<td><span href="?id=0" class="button new"> New </span></td>';
 					?>
 				</tr>
 				<tr>
@@ -72,7 +72,7 @@
 	<script>
 		$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
 		
-		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false }).click(function(){
+		$('span.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false }).click(function(){
 			$('#dialog').html("<form name='newactivity' id='newactivity' method='post'>"+
 				"<label for='startdate' style='width:auto;'>Assemble date/time</label><br />"+
 				"<input type='datetime-local' id='startdate' name='startdate' value='' style='width:auto' required='required' /><br />"+
@@ -82,88 +82,106 @@
 				"<input type='text' id='title' name='title' value='' style='width:auto' required='required' /><br />"+
 				"<label for='location' style='width:auto;'>Activity location</label><br />"+
 				"<input type='text' id='location' name='location' value='' style='width:auto' required='required' /><br />"+
+				"<input type='hidden' id='location_id' name='location_id' value='' /><br />"+
 				"<label for='status' style='width:auto;'>Status</label><br />"+
 				"<select name='status' id='status' required='required' style='width:auto' >"+
 				"<option value='<?=ATC_ACTIVITY_RECOGNISED?>'>Recognised</option>"+
 				"<option value='<?=ATC_ACTIVITY_AUTHORISED?>'>Authorised</option>"+
 				"</select><br />"+
 				"</form>").dialog({
-			  modal: true,
-			  title: 'Create new activity',
-			  buttons: {
-				Cancel: function() {
-				  $( this ).dialog( "close" );
-				},
-				Save: function() {
-					$.ajax({
-					   type: "POST",
-					   url: 'activities.php',
-					   data: $("#newactivity").serialize(),
-					   beforeSend: function()
-					   {
-						   $('#newactivity').addClass('ui-state-disabled');
-					   },
-					   complete: function()
-					   {
-						   $('#newactivity').removeClass('ui-state-disabled');
-					   },
-					   success: function(data)
-					   {
-					   	   // True to ensure we don't just use a cached version, but get a fresh copy from the server
-						   location.reload(true);
-					   },
-					   error: function(data)
-					   {
-						   $('#dialog').dialog('destroy').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
-							  modal: true,
-							  //dialogClass: 'ui-state-error',
-							  title: 'Error!',
-							  buttons: {
-								Close: function() {
-								  $( this ).dialog( "close" );
-								}
-							  },
-							  close: function() { 
-								$( this ).dialog( "destroy" ); 
-								$('#save_indicator').fadeOut(1500, function(){ $('#save_indicator').remove() });
-							  },
-							  open: function() {
-								 $('.ui-dialog-titlebar').addClass('ui-state-error');
-							  }
-							}).filter('ui-dialog-titlebar');
-						   return false;
-					   }
-					 });
-				  	 
-				  $( this ).dialog( "close" );
+				  modal: true,
+				  title: 'Create new activity',
+				  buttons: {
+					Cancel: function() {
+					  $( this ).dialog( "close" );
+					},
+					Save: function() {
+						$.ajax({
+						   type: "POST",
+						   url: 'activities.php',
+						   data: $("#newactivity").serialize(),
+						   beforeSend: function()
+						   {
+							   $('#newactivity').addClass('ui-state-disabled');
+						   },
+						   complete: function()
+						   {
+							   $('#newactivity').removeClass('ui-state-disabled');
+						   },
+						   success: function(data)
+						   {
+							   // True to ensure we don't just use a cached version, but get a fresh copy from the server
+							   location.reload(true);
+						   },
+						   error: function(data)
+						   {
+							   $('#dialog').dialog('destroy').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
+								  modal: true,
+								  //dialogClass: 'ui-state-error',
+								  title: 'Error!',
+								  buttons: {
+									Close: function() {
+									  $( this ).dialog( "close" );
+									}
+								  },
+								  close: function() { 
+									$( this ).dialog( "destroy" ); 
+									$('#save_indicator').fadeOut(1500, function(){ $('#save_indicator').remove() });
+								  },
+								  open: function() {
+									 $('.ui-dialog-titlebar').addClass('ui-state-error');
+								  }
+								}).filter('ui-dialog-titlebar');
+							   return false;
+						   }
+						 });
+						 
+					  $( this ).dialog( "close" );
+					}
+				  },
+				  close: function() { 
+					$( this ).dialog( "destroy" ); 
+				  },
+				  open: function() {
+					  /*
+					  $('#startdate').datetimepicker({ 
+						dateFormat: 'dd/mm/yy',
+						showOn: "button",
+						buttonImage: "calendar.gif",
+						buttonImageOnly: true,
+						buttonText: "Select date" 
+					  });
+					  $('#enddate').datetimepicker({ 
+						dateFormat: 'yy-mm-dd H:i',
+						showOn: "button",
+						buttonImage: "calendar.gif",
+						buttonImageOnly: true,
+						buttonText: "Select date" 
+					  });
+					  */
+					  var names = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_activity_names() )) ?>' );
+					  $('#title').autocomplete({ source: names, minLength: 0 });
+					  var locations = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_locations() )) ?>' );
+					  $('#location').autocomplete({ 
+						minLength: 0,
+						source: locations,
+						focus: function( event, ui ) {
+							$( "#location" ).val( ui.item.name );
+							return false;
+						},
+						select: function( event, ui ) {
+							$( "#location" ).val( ui.item.name );
+							$( "#location_id" ).val( ui.item.location_id );
+							
+							return false;
+						}
+					}).data( "autocomplete" )._renderItem = function( ul, item ) {
+						return $( "<li>" )
+						.append( "<a>" + item.name + (item.address?"<br>(" + item.address + ")":"")+"</a>" )
+						.appendTo( ul );
+					} 
 				}
-			  },
-			  close: function() { 
-				$( this ).dialog( "destroy" ); 
-			  },
-			  open: function() {
-			  	  /*
-			  	  $('#startdate').datetimepicker({ 
-			  	  	dateFormat: 'dd/mm/yy',
-					showOn: "button",
-					buttonImage: "calendar.gif",
-					buttonImageOnly: true,
-					buttonText: "Select date" 
-				  });
-			  	  $('#enddate').datetimepicker({ 
-			  	  	dateFormat: 'yy-mm-dd H:i',
-					showOn: "button",
-					buttonImage: "calendar.gif",
-					buttonImageOnly: true,
-					buttonText: "Select date" 
-				  });
-				  */
-			  	  var names = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_activity_names() )) ?>' );
-				  $('#title').autocomplete({ source: names });
-			  	  var locations = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_locations() )) ?>' );
-				  $('#location').autocomplete({ source: locations });
-			  }
-			})
+			});
 			return false;
 		});
 
