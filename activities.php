@@ -5,7 +5,7 @@
 	if( isset( $_POST['startdate'] ) && strtotime( $_POST['startdate'] ) )
 	{
 		try {
-			$ATC->add_activity( $_POST['startdate'],$_POST['enddate'], $_POST['title'], $_POST['location'], $_POST['status'] );
+			$ATC->add_activity( $_POST['startdate'], $_POST['enddate'], $_POST['title'], $_POST['location_id'], $_POST['personnel_id'], $_POST['activity_type_id'], $_POST['dress_code'] );
 		} catch (ATCExceptionInsufficientPermissions $e) {
 			header("HTTP/1.0 401 Unauthorised");
 			echo 'Caught exception: ',  $e->getMessage(), "\n";
@@ -76,18 +76,24 @@
 		
 		$('span.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false }).click(function(){
 			$('#dialog').html("<form name='newactivity' id='newactivity' method='post'>"+
-				"<label for='startdate' style='width:auto;'>Assemble date/time</label><br />"+
-				"<input type='datetime-local' id='startdate' name='startdate' value='' style='width:auto' required='required' /><br />"+
-				"<label for='enddate' style='width:auto;'>Dispersal date/time</label><br />"+
-				"<input type='datetime-local' id='enddate' name='enddate' value='' style='width:auto' required='required' /><br />"+
-				"<label for='title' style='width:auto;'>Activity name</label><br />"+
-				"<input type='text' id='title' name='title' value='' style='width:auto' required='required' /><br />"+
-				"<label for='location' style='width:auto;'>Activity location</label><br />"+
-				"<input type='text' id='location' name='location' value='' style='width:auto' required='required' /><br />"+
-				"<label for='activity_type' style='width:auto;'>Type of activity</label><br />"+
-				"<input type='text' id='activity_type' name='activity_type' value='' style='width:auto' required='required' /><br />"+
-				"<label for='personnel_id' style='width:auto;'>Organising Staff</label><br />"+
-				"<input type='text' id='personnel_name' name='personnel_name' value='' style='width:auto' required='required' /><br />"+
+				"<label for='startdate'>Assemble date/time</label><br />"+
+				"<input type='datetime-local' id='startdate' name='startdate' value='' required='required' /><br />"+
+				"<label for='enddate'>Dispersal date/time</label><br />"+
+				"<input type='datetime-local' id='enddate' name='enddate' value='' required='required' /><br />"+
+				"<label for='title'>Activity name</label><br />"+
+				"<input type='text' id='title' name='title' value='' required='required' /><br />"+
+				"<label for='location'>Activity location</label><br />"+
+				"<input type='text' id='location' name='location' value='' required='required' /><br />"+
+				"<label for='activity_type'>Type of activity</label><br />"+
+				"<input type='text' id='activity_type' name='activity_type' value='' required='required' /><br />"+
+				"<label for='personnel_id'>Organising Staff</label><br />"+
+				"<input type='text' id='personnel_name' name='personnel_name' value='' required='required' /><br />"+
+				"<label for='dress_code'>Dress code</label><br />"+
+				"<select name='dress_code' id='dress_code'>"+
+				"<option value='<?=ATC_DRESS_CODE_BLUES?>'>No 6 Blues</option>"+
+				"<option value='<?=ATC_DRESS_CODE_DPM?>'>DPM</option>"+
+				"<option value='<?=ATC_DRESS_CODE_BLUES_AND_DPM?>'>Mix</option>"+
+				"</select><br />"+
 				"<input type='hidden' id='location_id' name='location_id' value='' />"+
 				"<input type='hidden' id='activity_type_id' name='activity_type_id' value='' />"+
 				"<input type='hidden' id='personnel_id' name='personnel_id' value='' />"+

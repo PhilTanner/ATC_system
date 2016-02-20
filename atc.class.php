@@ -20,7 +20,6 @@
 	define( 'ATC_USER_LEVEL_ADMIN', 			16777215 );
 	define( 'ATC_USER_LEVEL_CADET', 			0 );
 	define( 'ATC_USER_LEVEL_NCO', 				ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_LOCATIONS_VIEW );
-	//define( 'ATC_USER_LEVEL_OFFICER', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW );
 	define( 'ATC_USER_LEVEL_ADJUTANT', 			ATC_PERMISSION_PERSONNEL_EDIT + ATC_PERMISSION_ATTENDANCE_EDIT + ATC_PERMISSION_ACTIVITIES_EDIT + ATC_PERMISSION_FINANCE_EDIT + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_EDIT);
 	define( 'ATC_USER_LEVEL_STORES', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_FINANCE_EDIT + ATC_PERMISSION_STORES_EDIT + ATC_PERMISSION_LOCATIONS_VIEW );
 	define( 'ATC_USER_LEVEL_TRAINING', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_FINANCE_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_EDIT );
@@ -45,6 +44,7 @@
 
 	define( 'ATC_DRESS_CODE_BLUES',				0 );
 	define( 'ATC_DRESS_CODE_DPM',				1 );
+	define( 'ATC_DRESS_CODE_BLUES_AND_DPM',			2 );
 
 	define( 'ATC_SETTING_PARADE_NIGHT',			"Wednesday" );
 
@@ -97,11 +97,11 @@
 				throw new ATCExceptionBadData('Invalid startdate');
 			if( !strtotime($startdate) )
 				throw new ATCExceptionBadData('Invalid enddate');
-			if( $status != ATC_ACTIVITY_RECOGNISED && $status != ATC_ACTIVITY_AUTHORISED )
-				throw new ATCExceptionBadData('Unknown status value');
+			if( $dress_code != ATC_DRESS_CODE_BLUES && $dress_code != ATC_DRESS_CODE_DPM && $dress_code != ATC_DRESS_CODE_BLUES_AND_DPM )
+				throw new ATCExceptionBadData('Unknown dress code value');
 				
 			$query = "
-				INSERT INTO `activities` (
+				INSERT INTO `activity` (
 					`startdate`,
 					`enddate`,
 					`personnel_id`,

@@ -23,6 +23,9 @@ nav ul li { float: right; list-style: none; margin-left: 1ex; }
 
 label { display:inline-block; width: 10em; line-height: 2em; }
 input, select, textarea { width: 50em; border: 1px solid #ddd; padding: 0.5ex 0.5em; }
+.ui-dialog-content label { width:auto; }
+.ui-dialog-content input, .ui-widget-content select, .ui-widget-content textarea { width: auto; }
+
 input[type=checkbox] { width: auto; }
 button[type=submit] { float:right; }
 td.attendance select { width: auto; font-size: 70%; }
