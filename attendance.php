@@ -82,7 +82,7 @@
 			</thead>
 			<tfoot>
 				<tr>
-					<td colspan="<?=count($dates)+2?>"><?= ($ATC->user_has_permission( ATC_USER_PERMISSION_ATTENDANCE_EDIT )?'<button type="submit" class="save">Save</button>':'')?></td>
+					<td colspan="<?=count($dates)+2?>"><?= ($ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT )?'<button type="submit" class="save">Save</button>':'')?></td>
 				</tr>
 			</tfoot>
 			<tbody>
@@ -223,12 +223,12 @@
 
 		var attendance = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $calendar )) ?>' );
 		
-		if( <?= $ATC->user_has_permission( ATC_USER_PERMISSION_ATTENDANCE_EDIT ) ?> )
+		if( <?= $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ) ?> )
 		{
 			$.each(attendance, function(index, value){
 				$('#'+value['personnel_id']+'_'+value['date']).val(value['presence']);
 			});
-		} else if( <?= $ATC->user_has_permission( ATC_USER_PERMISSION_ATTENDANCE_VIEW ) ?> ) {
+		} else if( <?= $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ) ?> ) {
 			$('td.attendance').empty();
 			$.each(attendance, function(index, value){
 				var symbol="";

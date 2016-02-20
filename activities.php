@@ -37,10 +37,11 @@
 			<thead>
 				<tr>
 					<th rowspan="2"> Activity </th>
+					<th rowspan="2"> Lead </th>
 					<th colspan="2"> Date </th>
 					<th colspan="2"> Attendance </th>
 					<?php
-						if( !isset($_GET['id']) && $ATC->user_has_permission(ATC_USER_PERMISSION_ACTIVITIES_EDIT) )
+						if( !isset($_GET['id']) && $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) )
 							echo '<td><span href="?id=0" class="button new"> New </span></td>';
 					?>
 				</tr>
@@ -57,11 +58,12 @@
 					{
 						echo '<tr>';
 						echo '	<td><span class="ui-icon ui-icon-'.($obj->nzcf_status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> '.$obj->title.'</td>';
+						echo '	<td>'.$obj->rank.' '.$obj->lastname.', '.$obj->firstname.'</td>';
 						echo '	<td>'.date("j M, H:i", strtotime($obj->startdate)).'</td>';
 						echo '	<td>'.date("j M, H:i", strtotime($obj->enddate)).'</td>';
 						echo '	<td style="text-align:center;">'.$obj->officers_attending.'</td>';
 						echo '	<td style="text-align:center;">'.$obj->cadets_attending.'</td>';
-						if( !isset($_GET['id']) && $ATC->user_has_permission(ATC_USER_PERMISSION_ACTIVITIES_EDIT) )
+						if( !isset($_GET['id']) && $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) )
 							echo '	<td><a href="?id='.$obj->activity_id.'" class="edit">Edit</a></td>';
 						echo '</tr>';
 					}
@@ -82,12 +84,13 @@
 				"<input type='text' id='title' name='title' value='' style='width:auto' required='required' /><br />"+
 				"<label for='location' style='width:auto;'>Activity location</label><br />"+
 				"<input type='text' id='location' name='location' value='' style='width:auto' required='required' /><br />"+
-				"<input type='hidden' id='location_id' name='location_id' value='' /><br />"+
-				"<label for='status' style='width:auto;'>Status</label><br />"+
-				"<select name='status' id='status' required='required' style='width:auto' >"+
-				"<option value='<?=ATC_ACTIVITY_RECOGNISED?>'>Recognised</option>"+
-				"<option value='<?=ATC_ACTIVITY_AUTHORISED?>'>Authorised</option>"+
-				"</select><br />"+
+				"<label for='activity_type' style='width:auto;'>Type of activity</label><br />"+
+				"<input type='text' id='activity_type' name='activity_type' value='' style='width:auto' required='required' /><br />"+
+				"<label for='personnel_id' style='width:auto;'>Organising Staff</label><br />"+
+				"<input type='text' id='personnel_name' name='personnel_name' value='' style='width:auto' required='required' /><br />"+
+				"<input type='hidden' id='location_id' name='location_id' value='' />"+
+				"<input type='hidden' id='activity_type_id' name='activity_type_id' value='' />"+
+				"<input type='hidden' id='personnel_id' name='personnel_id' value='' />"+
 				"</form>").dialog({
 				  modal: true,
 				  title: 'Create new activity',
@@ -159,10 +162,10 @@
 						buttonText: "Select date" 
 					  });
 					  */
-					  var names = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_activity_names() )) ?>' );
-					  $('#title').autocomplete({ source: names, minLength: 0 });
-					  var locations = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_locations() )) ?>' );
-					  $('#location').autocomplete({ 
+					var names = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_activity_names() )) ?>' );
+					$('#title').autocomplete({ source: names, minLength: 0 });
+					var locations = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_locations() )) ?>' );
+					$('#location').autocomplete({ 
 						minLength: 0,
 						source: locations,
 						focus: function( event, ui ) {
@@ -180,6 +183,44 @@
 						.append( "<a>" + item.name + (item.address?"<br>(" + item.address + ")":"")+"</a>" )
 						.appendTo( ul );
 					} 
+					var activity_types = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_activity_types() )) ?>' );
+					$('#activity_type').autocomplete({ 
+						minLength: 0,
+						source: activity_types,
+						focus: function( event, ui ) {
+							$( "#activity_type" ).val( ui.item.type );
+							return false;
+						},
+						select: function( event, ui ) {
+							$( "#activity_type" ).val( ui.item.type );
+							$( "#activity_type_id" ).val( ui.item.activity_type_id );
+							
+							return false;
+						}
+					}).data( "autocomplete" )._renderItem = function( ul, item ) {
+						return $( "<li>" )
+						.append( "<a>" + item.type + (item.nzcf_status==<?=ATC_ACTIVITY_RECOGNISED?>?" (Recognised)":" (Authorised)")+"</a>" )
+						.appendTo( ul );
+					} 
+					var officers = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_personnel(null,'ASC',ATC_USER_GROUP_OFFICERS) )) ?>' );
+					$('#personnel_name').autocomplete({ 
+						minLength: 0,
+						source: officers,
+						focus: function( event, ui ) {
+							$( "#personnel_name" ).val( ui.item.lastname+", "+ui.item.firstname );
+							return false;
+						},
+						select: function( event, ui ) {
+							$( "#personnel_name" ).val( ui.item.lastname+", "+ui.item.firstname );
+							$( "#personnel_id" ).val( ui.item.personnel_id );
+							return false;
+						}
+					}).data( "autocomplete" )._renderItem = function( ul, item ) {
+						return $( "<li>" )
+						.append( "<a>" + item.rank + " " + item.lastname + ", " + item.firstname +"</a>" )
+						.appendTo( ul );
+					} 
+					
 				}
 			});
 			return false;
