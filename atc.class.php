@@ -15,15 +15,16 @@
 	define( 'ATC_PERMISSION_STORES_EDIT',			ATC_PERMISSION_STORES_VIEW + 4096 );
 	define( 'ATC_PERMISSION_LOCATIONS_VIEW',		8192 );
 	define( 'ATC_PERMISSION_LOCATIONS_EDIT',		ATC_PERMISSION_LOCATIONS_VIEW + 16384 );
+	define( 'ATC_PERMISSION_ACTIVITY_TYPE_EDIT',		32768 );
 
 	// Give admin everything we can think of in the future.
 	define( 'ATC_USER_LEVEL_ADMIN', 			16777215 );
 	define( 'ATC_USER_LEVEL_CADET', 			0 );
 	define( 'ATC_USER_LEVEL_NCO', 				ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_LOCATIONS_VIEW );
-	define( 'ATC_USER_LEVEL_ADJUTANT', 			ATC_PERMISSION_PERSONNEL_EDIT + ATC_PERMISSION_ATTENDANCE_EDIT + ATC_PERMISSION_ACTIVITIES_EDIT + ATC_PERMISSION_FINANCE_EDIT + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_EDIT);
+	define( 'ATC_USER_LEVEL_ADJUTANT', 			ATC_PERMISSION_PERSONNEL_EDIT + ATC_PERMISSION_ATTENDANCE_EDIT + ATC_PERMISSION_ACTIVITIES_EDIT + ATC_PERMISSION_FINANCE_EDIT + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_EDIT + ATC_PERMISSION_ACTIVITY_TYPE_EDIT);
 	define( 'ATC_USER_LEVEL_STORES', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_FINANCE_EDIT + ATC_PERMISSION_STORES_EDIT + ATC_PERMISSION_LOCATIONS_VIEW );
-	define( 'ATC_USER_LEVEL_TRAINING', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_FINANCE_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_EDIT );
-	define( 'ATC_USER_LEVEL_CUCDR', 			ATC_PERMISSION_PERSONNEL_EDIT + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_FINANCE_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_VIEW );
+	define( 'ATC_USER_LEVEL_TRAINING', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_FINANCE_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_EDIT + ATC_PERMISSION_ACTIVITY_TYPE_EDIT );
+	define( 'ATC_USER_LEVEL_CUCDR', 			ATC_PERMISSION_PERSONNEL_EDIT + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_FINANCE_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_VIEW + ATC_PERMISSION_ACTIVITY_TYPE_EDIT );
 	define( 'ATC_USER_LEVEL_SUPOFF', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_LOCATIONS_VIEW );
 	define( 'ATC_USER_LEVEL_TREASURER',			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_FINANCE_EDIT + ATC_PERMISSION_LOCATIONS_VIEW );
 	define( 'ATC_USER_LEVEL_USC', 				ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_FINANCE_VIEW + ATC_PERMISSION_LOCATIONS_VIEW );
@@ -64,7 +65,7 @@
 				$first = reset($t);
 				$class = $first["class"];
 			}
-			return sprintf("EXCEPTION:PKBASC:%s", $class, htmlentities($this->getMessage()));
+			return sprintf("EXCEPTION:PKBASC:%s", $class, self::$mysqli->real_escape_string($this->getMessage()));
 		}
 	}
 	class ATCExceptionBadData extends ATCException {}
@@ -99,7 +100,18 @@
 				throw new ATCExceptionBadData('Invalid enddate');
 			if( $dress_code != ATC_DRESS_CODE_BLUES && $dress_code != ATC_DRESS_CODE_DPM && $dress_code != ATC_DRESS_CODE_BLUES_AND_DPM )
 				throw new ATCExceptionBadData('Unknown dress code value');
-				
+
+			$officers = self::get_personnel(null,'ASC',ATC_USER_GROUP_OFFICERS);
+			$isofficer = false;
+			foreach( $officers as $officer )
+				if( $officer->personnel_id == $personnel_id )
+				{
+					$isofficer = true;
+					break;
+				}
+			if( !$isofficer )
+				throw new ATCExceptionBadData('Personnel needs to be an officer');
+
 			$query = "
 				INSERT INTO `activity` (
 					`startdate`,
@@ -338,8 +350,8 @@
 						$personnel = array();
 						$query = "SELECT * FROM `personnel` ";
 						if( !is_null($access_rights) )
-							$query .= ' WHERE `access_rights` IN ('.htmlentities($access_rights).') ';
-						$query .= "ORDER BY `enabled` ASC, `lastname` ".htmlentities($orderby).", `firstname` ".htmlentities($orderby).", `personnel_id` ".htmlentities($orderby).";";
+							$query .= ' WHERE `access_rights` IN ('.self::$mysqli->real_escape_string($access_rights).') ';
+						$query .= "ORDER BY `enabled` ASC, `lastname` ".self::$mysqli->real_escape_string($orderby).", `firstname` ".self::$mysqli->real_escape_string($orderby).", `personnel_id` ".self::$mysqli->real_escape_string($orderby).";";
 
 						if ($result = self::$mysqli->query($query))
 						{
@@ -383,9 +395,40 @@
 		// Keep a track of who's doing what, for later auditing.
 		private function log_action( $table_name, $sql_run, $idrow )
 		{
-			$query = "INSERT INTO `log_changes` (`personnel_id`, `sql_executed`, `table_updated`, `row_updated` ) VALUES ( ".self::$currentuser.', "'.htmlentities($sql_run).'", "'.htmlentities($table_name).'", '.(int)$idrow.' );';
+			$query = "INSERT INTO `log_changes` (`personnel_id`, `sql_executed`, `table_updated`, `row_updated` ) VALUES ( ".self::$currentuser.', "'.self::$mysqli->real_escape_string($sql_run).'", "'.self::$mysqli->real_escape_string($table_name).'", '.(int)$idrow.' );';
 			if ($result = self::$mysqli->query($query))	return true;
 			else throw new ATCExceptionDBError(self::$mysqli->error);
+		}
+		
+		public function set_activity_type( $activity_type_id, $type, $status=null )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITY_TYPE_EDIT ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to edit this activity_type");
+			if( !strlen(trim($type)) )
+				throw new ATCExceptionBadData('Invalid activity type');
+
+			if( !$activity_type_id )
+			{
+				$query = 'INSERT INTO `activity_type` (`type`, `nzcf_status` ) VALUES ( "'.self::$mysqli->real_escape_string($type).'", '.(is_null($status)?ATC_ACTIVITY_RECOGNISED:(int)$status).' );';
+				if ($result = self::$mysqli->query($query))
+				{
+					$activity_type_id = self::$mysqli->insert_id;
+					self::log_action( 'activity_type', $query, $activity_type_id );
+					return $activity_type_id;
+				} else 
+					throw new ATCExceptionDBError(self::$mysqli->error);
+			} else {
+				$query .= 'UPDATE `activity_type` SET `type` = "'.self::$mysqli->real_escape_string($type).'"'.(is_null($status)?'':',`nzcf_status` = '.(int)$status).' WHERE activity_type_id = '.(int)$activity_type_id.' LIMIT 1;';
+
+				if ($result = self::$mysqli->query($query))
+				{
+					self::log_action( 'activity_type', $query, $activity_type_id );
+					return $activity_type_id;
+				} else
+					throw new ATCExceptionDBError(self::$mysqli->error);
+				
+			}
+			return false;
 		}
 		
 		public function set_attendance_register( $personnel_id, $date, $presence )
@@ -398,7 +441,7 @@
 			{
 				$query = "DELETE FROM `attendance_register` WHERE `personnel_id` = ".(int)$personnel_id." AND `date` = '".date("Y-m-d",strtotime($date))."';";
 				if ($result = self::$mysqli->query($query))
-					self::log_action( 'attendance_register', $query );
+					self::log_action( 'attendance_register', $query, $personnel_id );
 				else
 					throw new ATCExceptionDBError(self::$mysqli->error);
 				return true;
@@ -408,10 +451,41 @@
 
 			$query = "INSERT INTO `attendance_register` (`personnel_id`, `date`, `presence`) VALUES ( ".(int)$personnel_id.", '".date("Y-m-d",strtotime($date))."', ".$presence.") ON DUPLICATE KEY UPDATE `presence` = VALUES(`presence`)";
 			if ($result = self::$mysqli->query($query))
-				self::log_action( 'attendance_register', $query );
+				self::log_action( 'attendance_register', $query, $personnel_id );
 			else
 				throw new ATCExceptionDBError(self::$mysqli->error);
 			return true;
+		}
+		
+		public function set_location( $location_id, $name, $address )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_LOCATIONS_EDIT ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to edit this location");
+			if( !strlen(trim($name)) )
+				throw new ATCExceptionBadData('Invalid name');
+
+			if( !$location_id )
+			{
+				$query = 'INSERT INTO `location` (`name`, `address` ) VALUES ( "'.self::$mysqli->real_escape_string($name).'", "'.self::$mysqli->real_escape_string($address).'" );';
+				if ($result = self::$mysqli->query($query))
+				{
+					$location_id = self::$mysqli->insert_id;
+					self::log_action( 'location', $query, $location_id );
+					return $location_id;
+				} else 
+					throw new ATCExceptionDBError(self::$mysqli->error);
+			} else {
+				$query = 'UPDATE `location` SET `name` = "'.self::$mysqli->real_escape_string($name).'", `address` = "'.self::$mysqli->real_escape_string($address).'" WHERE location_id = '.(int)$location_id.' LIMIT 1;';
+
+				if ($result = self::$mysqli->query($query))
+				{
+					self::log_action( 'location', $query, $location_id );
+					return $location_id;
+				} else
+					throw new ATCExceptionDBError(self::$mysqli->error);
+				
+			}
+			return false;
 		}
 		
 		public function set_personnel( &$user )
@@ -422,21 +496,21 @@
 				
 			if( !$user->personnel_id )
 			{
-				$query .= "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `dob`, `password`, `joined_date`, `left_date`, `access_rights`, `is_female`, `enabled` ) VALUES ( ";
-				$query .= '"'.htmlentities($user->firstname).'", "'.htmlentities($user->lastname).'", "'.htmlentities($user->email).'", "'.date('Y-m-d',strtotime($user->dob)).'", ';
-				$query .= '"'.htmlentities(create_hash($user->password)).'", "'.date('Y-m-d',strtotime($user->joined_date)).'", '.(strtotime($user->left_date)?'"'.date('Y-m-d',strtotime($user->left_date)).'"':'NULL').', '.(int)$user->access_rights.', ';
+				$query = "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `dob`, `password`, `joined_date`, `left_date`, `access_rights`, `is_female`, `enabled` ) VALUES ( ";
+				$query .= '"'.self::$mysqli->real_escape_string($user->firstname).'", "'.self::$mysqli->real_escape_string($user->lastname).'", "'.self::$mysqli->real_escape_string($user->email).'", "'.date('Y-m-d',strtotime($user->dob)).'", ';
+				$query .= '"'.self::$mysqli->real_escape_string(create_hash($user->password)).'", "'.date('Y-m-d',strtotime($user->joined_date)).'", '.(strtotime($user->left_date)?'"'.date('Y-m-d',strtotime($user->left_date)).'"':'NULL').', '.(int)$user->access_rights.', ';
 				$query .= (int)$user->is_female.', '.(isset($user->enabled)&&$user->enabled==-1?-1:0).' );';
 				if ($result = self::$mysqli->query($query))
 				{
 					$user->personnel_id = self::$mysqli->insert_id;
-					self::log_action( 'personnel', $query );
+					self::log_action( 'personnel', $query, $user->personnel_id );
 					return true;
 				} else 
 					throw new ATCExceptionDBError(self::$mysqli->error);
 			} else {
-				$query .= 'UPDATE `personnel` SET `firstname` = "'.htmlentities($user->firstname).'", `lastname` = "'.htmlentities($user->lastname).'", `email` = "'.htmlentities($user->email).'", `dob` = "'.date('Y-m-d',strtotime($user->dob)).'", ';
+				$query = 'UPDATE `personnel` SET `firstname` = "'.self::$mysqli->real_escape_string($user->firstname).'", `lastname` = "'.self::$mysqli->real_escape_string($user->lastname).'", `email` = "'.self::$mysqli->real_escape_string($user->email).'", `dob` = "'.date('Y-m-d',strtotime($user->dob)).'", ';
 				if( strlen(trim($user->password)) ) 
-					 $query .= '`password` = "'.htmlentities(create_hash($user->password)).'", ';
+					 $query .= '`password` = "'.self::$mysqli->real_escape_string(create_hash($user->password)).'", ';
 				$query .= '`joined_date` = "'.date('Y-m-d',strtotime($user->joined_date)).'", ';
 				if( strtotime($user->left_date) )
 					$query .= '`left_date` = "'.date('Y-m-d',strtotime($user->left_date)).'", ';
@@ -447,7 +521,7 @@
 
 				if ($result = self::$mysqli->query($query))
 				{
-					self::log_action( 'personnel', $query );
+					self::log_action( 'personnel', $query, $user->personnel_id );
 					return true;
 				} else
 					throw new ATCExceptionDBError(self::$mysqli->error);
