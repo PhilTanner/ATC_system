@@ -35,8 +35,13 @@
 	
 	$activities = $ATC->get_activities();
 
-	if( !isset($_GET['id']) )
-		$ATC->gui_output_page_header('Activities');
+	if( isset($_GET['id']) )
+	{
+		echo json_encode($ATC->get_activity($_GET["id"]));
+		exit();
+	}
+	
+	$ATC->gui_output_page_header('Activities');
 	
 ?>
 	<form name="activitylist" id="activitylist" method="POST">
@@ -71,8 +76,8 @@
 						echo '	<td>'.date("j M, H:i", strtotime($obj->enddate)).'</td>';
 						echo '	<td style="text-align:center;">'.$obj->officers_attending.'</td>';
 						echo '	<td style="text-align:center;">'.$obj->cadets_attending.'</td>';
-						//if( !isset($_GET['id']) && $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) )
-						//	echo '	<td><a href="?id='.$obj->activity_id.'" class="button edit">Edit</a></td>';
+						if( !isset($_GET['id']) && $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) )
+							echo '	<td><a href="?id='.$obj->activity_id.'" class="button edit">Edit</a></td>';
 						echo '</tr>';
 					}
 				?>
@@ -83,6 +88,7 @@
 		$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
 		
 		$('a.button.edit').button({ icons: { primary: 'ui-icon-pencil' }, text: false }).click(function(){
+			var href = $(this).attr("href");
 			$('#dialog').html("<form name='editactivity' id='editactivity' method='post'>"+
 				"<label for='startdate'>Assemble date/time</label><br />"+
 				"<input type='datetime-local' id='startdate' name='startdate' value='' required='required' /><br />"+
@@ -102,6 +108,7 @@
 				"<option value='<?=ATC_DRESS_CODE_DPM?>'>DPM</option>"+
 				"<option value='<?=ATC_DRESS_CODE_BLUES_AND_DPM?>'>Mix</option>"+
 				"</select><br />"+
+				"<input type='hidden' id='activity_id' name='activity_id' value='' />"+
 				"<input type='hidden' id='location_id' name='location_id' value='' />"+
 				"<input type='hidden' id='activity_type_id' name='activity_type_id' value='' />"+
 				"<input type='hidden' id='personnel_id' name='personnel_id' value='' />"+
@@ -160,6 +167,7 @@
 					$( this ).dialog( "destroy" ); 
 				  },
 				  open: function() {
+				  	$('#editactivity input, #editactivity select, #editactivity label').attr('disabled', 'disabled').addClass('ui-state-disabled');
 					var names = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_activity_names() )) ?>' );
 					$('#title').autocomplete({ source: names, minLength: 0 });
 					var locations = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_locations() )) ?>' );
@@ -217,7 +225,33 @@
 						return $( "<li>" )
 						.append( "<a>" + item.rank + " " + item.lastname + ", " + item.firstname +"</a>" )
 						.appendTo( ul );
-					} 
+					}
+					
+					$.ajax({
+						type: "POST",
+						url: 'activities.php'+href,
+						dataType: "json",
+						success: function(data)
+						{
+							console.log(data[0]);
+							$('#activity_id').val(data[0].activity_id);
+							$('#activity_type').val(data[0].type+" ("+(data[0].nzcf_status==<?=ATC_ACTIVITY_RECOGNISED?>?'Recognised':'Authorised')+")");
+							$('#activity_type_id').val(data[0].activity_type_id);
+							$('#enddate').val(data[0].enddate);
+							$('#location_id').val(data[0].location_id);
+							$('#location').val(data[0].name);
+							$('#personnel_id').val(data[0].personnel_id);
+							$('#startdate').val(data[0].startdate);
+							$('#title').val(data[0].title);
+							$('#type').val(data[0].type);
+							$('#personnel_name').val(data[0].rank+" "+data[0].lastname+", "+data[0].firstname);
+							$('#editactivity input, #editactivity select, #editactivity label').removeAttr('disabled').removeClass('ui-state-disabled');
+						},
+						error: function(data)
+						{
+							$('#dialog').dialog('close');
+						}
+					});
 					
 				}
 			});
@@ -384,6 +418,5 @@
 
 	</script>
 <?php
-	if( !isset($_GET['id']) )
-		$ATC->gui_output_page_footer('Activities');
+	$ATC->gui_output_page_footer('Activities');
 ?>

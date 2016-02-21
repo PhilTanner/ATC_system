@@ -1,6 +1,8 @@
 <?php
 	define( 'ATC_DEBUG', 					1 );
+	define( 'ATC_SETTING_PARADE_NIGHT',			"Wednesday" );
 
+	// Permissions structure, as a bitmask
 	define( 'ATC_PERMISSION_PERSONNEL_VIEW', 		1 );
 	define( 'ATC_PERMISSION_PERSONNEL_EDIT',		ATC_PERMISSION_PERSONNEL_VIEW + 2 );
 	define( 'ATC_PERMISSION_ATTENDANCE_VIEW', 		4 );
@@ -47,9 +49,6 @@
 	define( 'ATC_DRESS_CODE_DPM',				1 );
 	define( 'ATC_DRESS_CODE_BLUES_AND_DPM',			2 );
 
-	define( 'ATC_SETTING_PARADE_NIGHT',			"Wednesday" );
-
-	
 	require_once 'config.php';
 	
 	class ATCException extends Exception {
@@ -72,7 +71,6 @@
 	class ATCExceptionDBConn extends ATCException {}
 	class ATCExceptionDBError extends ATCExceptionDBConn {}
 	class ATCExceptionInsufficientPermissions extends ATCException {}
-	
 	
 	class ATC
 	{
@@ -218,6 +216,42 @@
 						ON `activity`.`personnel_id` = `personnel`.`personnel_id`
 				WHERE 	`activity`.`startdate` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" 
 				ORDER BY `startdate` ASC;';
+
+			$activities = array();
+			if ($result = self::$mysqli->query($query))
+			{
+				while ( $obj = $result->fetch_object() )
+					$activities[] = $obj;
+			}	
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $activities;
+		}
+		
+		public function get_activity( $id )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_VIEW ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = '
+				SELECT	`activity`.*,
+					`activity_type`.*,
+					`location`.*,
+					`personnel`.`firstname`,
+					`personnel`.`lastname`,
+					" " AS `rank`,
+					0 AS `officers_attending`,
+					0 AS `cadets_attending`
+				FROM 	`activity` 
+					INNER JOIN `activity_type`
+						ON `activity`.`activity_type_id` = `activity_type`.`activity_type_id`
+					INNER JOIN `personnel`
+						ON `activity`.`personnel_id` = `personnel`.`personnel_id`
+					INNER JOIN `location`
+						ON `activity`.`location_id` = `location`.`location_id`
+				WHERE 	`activity`.`activity_id` = '.(int)$id.' 
+				LIMIT 1;';
 
 			$activities = array();
 			if ($result = self::$mysqli->query($query))
@@ -592,7 +626,6 @@
 		{
 			if(ATC_DEBUG) return true;
 		}
-		
 		
 	}
 ?>
