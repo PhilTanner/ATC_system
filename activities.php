@@ -77,7 +77,10 @@
 						echo '	<td style="text-align:center;">'.$obj->officers_attending.'</td>';
 						echo '	<td style="text-align:center;">'.$obj->cadets_attending.'</td>';
 						if( !isset($_GET['id']) && $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) )
-							echo '	<td><a href="?id='.$obj->activity_id.'" class="button edit">Edit</a></td>';
+						{
+							echo '	<td><a href="?id='.$obj->activity_id.'" class="button edit">Edit</a>';
+							echo '<a href="?id='.$obj->activity_id.'" class="button delete">Delete</a></td>';
+						}
 						echo '</tr>';
 					}
 				?>
@@ -87,6 +90,7 @@
 	<script>
 		$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
 		
+		$('a.button.delete').button({ icons:{ primary: 'ui-icon-trash' }, text: false }).addClass('ui-state-error');
 		$('a.button.edit').button({ icons: { primary: 'ui-icon-pencil' }, text: false }).click(function(){
 			var href = $(this).attr("href");
 			$('#dialog').html("<form name='editactivity' id='editactivity' method='post'>"+
@@ -108,6 +112,8 @@
 				"<option value='<?=ATC_DRESS_CODE_DPM?>'>DPM</option>"+
 				"<option value='<?=ATC_DRESS_CODE_BLUES_AND_DPM?>'>Mix</option>"+
 				"</select><br />"+
+				"<fieldset id='attendees'><legend>Attendees</legend><ol class='dragdrop attendees'></ol></fieldset>"+
+				"<fieldset id='non_attendees'><legend>Non-Attendees</legend><ol class='dragdrop attendees'></ol></fieldset>"+
 				"<input type='hidden' id='activity_id' name='activity_id' value='' />"+
 				"<input type='hidden' id='location_id' name='location_id' value='' />"+
 				"<input type='hidden' id='activity_type_id' name='activity_type_id' value='' />"+
@@ -226,7 +232,10 @@
 						.append( "<a>" + item.rank + " " + item.lastname + ", " + item.firstname +"</a>" )
 						.appendTo( ul );
 					}
+					$.each(officers, function(key, officer){ $('#non_attendees ol.dragdrop').append('<li id="'+officer.personnel_id+'">'+officer.rank+' '+officer.firstname+' '+officer.lastname+'</li>'); });
+					$('#attendees ol.dragdrop,#non_attendees ol.dragdrop').sortable({ connectWith: ".dragdrop.attendees" }).disableSelection();
 					
+					// Populate our formfields with the data from this activity
 					$.ajax({
 						type: "POST",
 						url: 'activities.php'+href,

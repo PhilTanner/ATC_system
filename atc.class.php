@@ -586,6 +586,7 @@
 		<link href="atc.css" rel="stylesheet">
 		<script type="text/javascript" src="jquery-ui-1.9.2.custom/js/jquery-1.8.3.js"></script>
 		<script type="text/javascript" src="jquery-ui-1.9.2.custom/js/jquery-ui-1.9.2.custom.js"></script>
+		<script type="text/javascript" src="touchpunch.furf.com_jqueryui-touch.js"></script>
 		<script type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
 		
 		<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
