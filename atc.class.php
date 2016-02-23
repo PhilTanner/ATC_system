@@ -2,6 +2,8 @@
 	define( 'ATC_DEBUG', 					1 );
 	define( 'ATC_SETTING_PARADE_NIGHT',			"Wednesday" );
 	define( 'ATC_SETTING_DATETIME_INPUT',         "Y-m-d\TH:i");
+	define( 'ATC_SETTING_FULL_DISPLAY_NAME',		'CONCAT("RNK, ", `personnel`.`lastname`,", ",`personnel`.`firstname`)' );
+	define( 'ATC_SETTING_DISPLAY_NAME',		'CONCAT(`personnel`.`lastname`,", ",`personnel`.`firstname`)' );
 
 	// Permissions structure, as a bitmask
 	define( 'ATC_PERMISSION_PERSONNEL_VIEW', 		1 );
@@ -243,6 +245,37 @@
 			return $activities;
 		}
 		
+		public function get_activity_attendance( $id )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_VIEW ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			if( !self::user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW) )
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			
+			$query = '
+				SELECT	`activity_register`.*,
+					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
+					" " AS rank
+				FROM 	`activity_register`
+					INNER JOIN `personnel`
+						ON `activity_register`.`personnel_id` = `personnel`.`personnel_id`
+				WHERE 	`activity_register`.`activity_id` = '.(int)$id.'
+				ORDER BY `personnel`.`lastname`, `personnel`.`firstname`;';
+
+			$attendees = array();
+			if ($result = self::$mysqli->query($query))
+				while ( $obj = $result->fetch_object() )
+				{
+					if(!is_null($obj->presence))
+						$obj->presence = (int)$obj->presence;
+					$attendees[] = $obj;
+				}
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $attendees;
+		}
+		
 		public function get_activity_names()
 		{
 			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_VIEW ))
@@ -362,7 +395,9 @@
 						$personnel = array();
 						$query = "SELECT * FROM `personnel` ";
 						if( !is_null($access_rights) )
-							$query .= ' WHERE `access_rights` IN ('.self::$mysqli->real_escape_string($access_rights).') ';
+							$query .= ' WHERE `access_rights` IN ('.self::$mysqli->real_escape_string($access_rights).')  AND `personnel_id` > 0 ';
+						else 
+							$query .= ' WHERE `personnel_id` > 0 ';
 						$query .= "ORDER BY `enabled` ASC, `lastname` ".self::$mysqli->real_escape_string($orderby).", `firstname` ".self::$mysqli->real_escape_string($orderby).", `personnel_id` ".self::$mysqli->real_escape_string($orderby).";";
 
 						if ($result = self::$mysqli->query($query))

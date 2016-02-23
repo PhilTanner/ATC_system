@@ -2,43 +2,94 @@
 	require_once "atc.class.php";
 	$ATC = new ATC();
 	
-	if( isset( $_POST['startdate'] ) && strtotime( $_POST['startdate'] ) )
+	if($_SERVER['REQUEST_METHOD'] == 'POST')
 	{
-		try {
-			$ATC->set_activity( 
-				$_POST['activity_id'],
-				$_POST['startdate'], 
-				$_POST['enddate'], 
-				$_POST['title'], 
-				$ATC->set_location( $_POST['location_id'], $_POST['location'], null ), 
-				$_POST['personnel_id'], 
-				$ATC->set_activity_type( $_POST['activity_type_id'], $_POST['activity_type'], null ), 
-				$_POST['dress_code'],
-				$_POST['attendees'] 
-			);
-		} catch (ATCExceptionInsufficientPermissions $e) {
-			header("HTTP/1.0 401 Unauthorised");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-		} catch (ATCExceptionDBError $e) {
-			header("HTTP/1.0 500 Internal Server Error");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-		} catch (ATCExceptionDBConn $e) {
-			header("HTTP/1.0 500 Internal Server Error");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-		} catch (ATCException $e) {
-			header("HTTP/1.0 400 Bad Request");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-		} catch (Exception $e) {
-			header("HTTP/1.0 500 Internal Server Error");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		if( isset( $_POST['startdate'] ) && strtotime( $_POST['startdate'] ) )
+		{
+			try {
+				$ATC->set_activity( 
+					$_POST['activity_id'],
+					$_POST['startdate'], 
+					$_POST['enddate'], 
+					$_POST['title'], 
+					$ATC->set_location( $_POST['location_id'], $_POST['location'], null ), 
+					$_POST['personnel_id'], 
+					$ATC->set_activity_type( $_POST['activity_type_id'], $_POST['activity_type'], null ), 
+					$_POST['dress_code'],
+					$_POST['attendees'] 
+				);
+			} catch (ATCExceptionInsufficientPermissions $e) {	
+				header("HTTP/1.0 401 Unauthorised");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			} catch (ATCExceptionDBError $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			} catch (ATCExceptionDBConn $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			} catch (ATCException $e) {
+				header("HTTP/1.0 400 Bad Request");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			} catch (Exception $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			}
 		}
 		exit();
 	}
 	
-	$activities = $ATC->get_activities();
-
-	if( isset($_GET['id']) )
+	if( isset($_GET['id']) && isset($_GET['action']) && $_GET['action']=='attendance' )
 	{
+		$activity = $ATC->get_activity((int)$_GET["id"]);
+		$activity = $activity[0];
+		$users = $ATC->get_activity_attendance((int)$_GET['id']);
+	if( !is_array($users) )
+	{
+		$foo[] = $users;
+		$users = $foo;
+	}
+	
+?>
+	<form name="attendanceregister" id="attendanceregister" method="POST">
+		<input type="hidden" name="attendance_register" value="1" />
+		<table>
+			<thead>
+				<tr>
+					<th colspan="2"> Name </th>
+					<th> <?= $activity->title ?> Attendance </th>
+					<th> Note </th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					foreach( $users as $obj )
+					{
+						echo '<tr>';	
+						echo '	<td>'.$obj->rank.'</td>';
+						echo '	<td>'.$obj->display_name.'</td>';
+						
+						echo '<td class="attendance user'.$obj->personnel_id.'"><select name="'.$obj->personnel_id.'" id="'.$obj->personnel_id.'">';
+						echo '	<option value=""'.(is_null($obj->personnel_id)?' selected="selected"':'').'></option>';
+						echo '	<option value="'.ATC_ATTENDANCE_PRESENT.'"'.($obj->presence===ATC_ATTENDANCE_PRESENT?' selected="selected"':'').'>'.ATC_ATTENDANCE_PRESENT_SYMBOL.'</option>';
+						echo '	<option value="'.ATC_ATTENDANCE_ON_LEAVE.'"'.($obj->presence===ATC_ATTENDANCE_ON_LEAVE?' selected="selected"':'').'>'.ATC_ATTENDANCE_ON_LEAVE_SYMBOL.'</option>';
+						echo '	<option value="'.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE.'"'.($obj->presence===ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE?' selected="selected"':'').'>'.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE_SYMBOL.'</option>';
+						echo '</select></td>';
+						echo '	<td><input type="text" name="note_'.$obj->personnel_id.'_'.$obj->activity_id.'" id="note_'.$obj->personnel_id.'_'.$obj->activity_id.'" value="'.htmlentities($obj->note).'" maxlength="255" /></td>';
+						echo '</tr>';
+					}
+				?>
+			</tbody>
+		</table>
+	</form>
+	<script>
+		$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
+		$('button.save').button({ icons: { primary: 'ui-icon-disk' } }).click(function(e){
+			e.preventDefault(); // stop the submit button actually submitting
+		});
+	</script>
+<?php
+		exit();
+	} elseif( isset($_GET['id']) ) {
 		$activity = $ATC->get_activity((int)$_GET["id"]);
 		$activity = $activity[0];
 ?>
@@ -150,6 +201,7 @@
 	}
 	
 	$ATC->gui_output_page_header('Activities');
+	$activities = $ATC->get_activities();
 	
 ?>
 	<form name="activitylist" id="activitylist" method="POST">
@@ -163,7 +215,7 @@
 					<th colspan="2"> Attendance </th>
 					<?php
 						if( !isset($_GET['id']) && $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) )
-							echo '<td><span href="?id=0" class="button new"> New </span></td>';
+							echo '<td><a href="?id=0" class="button new"> New </a></td>';
 					?>
 				</tr>
 				<tr>
@@ -187,7 +239,10 @@
 						if( !isset($_GET['id']) && $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) )
 						{
 							echo '	<td><a href="?id='.$obj->activity_id.'" class="button edit">Edit</a>';
-							echo '<a href="?id='.$obj->activity_id.'" class="button delete">Delete</a></td>';
+							//echo '<a href="?id='.$obj->activity_id.'" class="button delete">Delete</a>';
+							if( $ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW) )
+								echo '<a href="?id='.$obj->activity_id.'&action=attendance" class="button attendance">Attendance</a>';
+							echo '</td>';
 						}
 						echo '</tr>';
 					}
@@ -198,11 +253,14 @@
 	<script>
 		$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
 		
-		$('a.button.delete').button({ icons:{ primary: 'ui-icon-trash' }, text: false }).addClass('ui-state-error');
-		$('a.button.edit').button({ icons: { primary: 'ui-icon-pencil' }, text: false }).click(function(e){
+		//$('a.button.delete').button({ icons:{ primary: 'ui-icon-trash' }, text: false }).addClass('ui-state-error');
+		$('a.button.edit').button({ icons: { primary: 'ui-icon-pencil' }, text: false });
+		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false });
+		$('#activitylist a.button.attendance').button({ icons: { primary: 'ui-icon-clipboard' }, text: false });
+		$('a.button.edit, a.button.new, #activitylist a.button.attendance').click(function(e){
 			e.preventDefault(); // stop the link actually firing
 			var href = $(this).attr("href");
-			$('#dialog').load(href).dialog({
+			$('#dialog').empty().load(href).dialog({
 				modal: true,
 				width: 600,
 				title: 'Edit activity details',
@@ -266,67 +324,6 @@
 				
 					
 				}
-			});
-			return false;
-		});
-
-		$('span.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false }).click(function(e){
-			e.preventDefault(); // stop the link actually firing
-			$('#dialog').load('?id=0').dialog({
-				  modal: true,
-				width: 600,
-				  title: 'Create new activity',
-				  buttons: {
-					Cancel: function() {
-					  $( this ).dialog( "close" );
-					},
-					Save: function() {
-						$.ajax({
-						   type: "POST",
-						   url: 'activities.php',
-						   data: $("#newactivity").serialize(),
-						   beforeSend: function()
-						   {
-							   $('#newactivity').addClass('ui-state-disabled');
-						   },
-						   complete: function()
-						   {
-							   $('#newactivity').removeClass('ui-state-disabled');
-						   },
-						   success: function(data)
-						   {
-							   // True to ensure we don't just use a cached version, but get a fresh copy from the server
-							   location.reload(true);
-						   },
-						   error: function(data)
-						   {
-							   $('#dialog').dialog('destroy').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
-								  modal: true,
-								  //dialogClass: 'ui-state-error',
-								  title: 'Error!',
-								  buttons: {
-									Close: function() {
-									  $( this ).dialog( "close" );
-									}
-								  },
-								  close: function() { 
-									$( this ).dialog( "destroy" ); 
-									$('#save_indicator').fadeOut(1500, function(){ $('#save_indicator').remove() });
-								  },
-								  open: function() {
-									 $('.ui-dialog-titlebar').addClass('ui-state-error');
-								  }
-								}).filter('ui-dialog-titlebar');
-							   return false;
-						   }
-						 });
-						 
-					  $( this ).dialog( "close" );
-					}
-				  },
-				  close: function() { 
-					$( this ).dialog( "destroy" ); 
-				  }
 			});
 			return false;
 		});
