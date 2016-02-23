@@ -26,6 +26,23 @@ input, select, textarea { width: 50em; border: 1px solid #ddd; padding: 0.5ex 0.
 .ui-dialog-content label { width:auto; }
 .ui-dialog-content input, .ui-widget-content select, .ui-widget-content textarea { width: auto; }
 
+.ui-dialog-content ol.dragdrop {
+border: 1px solid #eee;
+
+    min-height: 20px;
+    list-style-type: none;
+    margin: 0;
+    padding: 5px 0 0 0;
+    margin-right: 10px;
+}
+ol.dragdrop li {
+	    margin: 0 5px 5px 5px;
+    padding: 5px;
+    font-size: 1.2em;
+
+}
+#attendees, #non_attendees {     float: left;  width:45%; }
+
 input[type=checkbox] { width: auto; }
 button[type=submit] { float:right; }
 td.attendance select { width: auto; font-size: 70%; }

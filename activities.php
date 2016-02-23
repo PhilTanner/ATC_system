@@ -120,6 +120,7 @@
 				"<input type='hidden' id='personnel_id' name='personnel_id' value='' />"+
 				"</form>").dialog({
 				  modal: true,
+					width: 600,
 				  title: 'Edit activity details',
 				  buttons: {
 					Cancel: function() {
