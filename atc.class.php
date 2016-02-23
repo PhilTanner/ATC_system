@@ -1,6 +1,7 @@
 <?php
 	define( 'ATC_DEBUG', 					1 );
 	define( 'ATC_SETTING_PARADE_NIGHT',			"Wednesday" );
+	define( 'ATC_SETTING_DATETIME_INPUT',         "Y-m-d\TH:i");
 
 	// Permissions structure, as a bitmask
 	define( 'ATC_PERMISSION_PERSONNEL_VIEW', 		1 );
@@ -87,55 +88,6 @@
 			if(ATC_DEBUG) self::$currentuser = 1;
 		}
 		
-		public function add_activity( $startdate, $enddate, $title, $location_id, $personnel_id, $activity_type_id, $dress_code )
-		{
-			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_EDIT ))
-			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
-
-		    	if( !strtotime($startdate) )
-				throw new ATCExceptionBadData('Invalid startdate');
-			if( !strtotime($startdate) )
-				throw new ATCExceptionBadData('Invalid enddate');
-			if( $dress_code != ATC_DRESS_CODE_BLUES && $dress_code != ATC_DRESS_CODE_DPM && $dress_code != ATC_DRESS_CODE_BLUES_AND_DPM )
-				throw new ATCExceptionBadData('Unknown dress code value');
-
-			$officers = self::get_personnel(null,'ASC',ATC_USER_GROUP_OFFICERS);
-			$isofficer = false;
-			foreach( $officers as $officer )
-				if( $officer->personnel_id == $personnel_id )
-				{
-					$isofficer = true;
-					break;
-				}
-			if( !$isofficer )
-				throw new ATCExceptionBadData('Personnel needs to be an officer');
-
-			$query = "
-				INSERT INTO `activity` (
-					`startdate`,
-					`enddate`,
-					`personnel_id`,
-					`title`,
-					`location_id`,
-					`activity_type_id`,
-					`dress_code`
-				) VALUES ( 
-					'".date("Y-m-d H:i",strtotime($startdate))."',
-					'".date("Y-m-d H:i",strtotime($enddate))."',
-					".(int)$personnel_id.",
-					'".self::$mysqli->real_escape_string($title)."', 
-					".(int)$location_id.",
-					".(int)$activity_type_id.",
-					".(int)$dress_code."
-				);";
-			if ($result = self::$mysqli->query($query))
-			{
-				self::log_action( 'activity', $query, self::$mysqli->insert_id );
-				return true;
-			}
-			else throw new ATCExceptionDBError(self::$mysqli->error);
-		}
-
 		public function add_parade_night( $date )
 		{
 			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ))
@@ -207,25 +159,49 @@
 					`personnel`.`firstname`,
 					`personnel`.`lastname`,
 					" " AS `rank`,
-					0 AS `officers_attending`,
-					0 AS `cadets_attending`
+					(
+						SELECT	COUNT(`personnel`.`personnel_id`)
+						FROM	`activity_register`
+							INNER JOIN `personnel`
+								ON `personnel`.`personnel_id` = `activity_register`.`personnel_id`
+						WHERE	`activity_register`.`activity_id` = `activity`.`activity_id`
+							AND `personnel`.`access_rights` IN ('.ATC_USER_GROUP_OFFICERS.')
+					) AS `officers_attending`,
+					(
+						SELECT	COUNT(`personnel`.`personnel_id`)
+						FROM	`activity_register`
+							INNER JOIN `personnel`
+								ON `personnel`.`personnel_id` = `activity_register`.`personnel_id`
+						WHERE	`activity_register`.`activity_id` = `activity`.`activity_id`
+							AND `personnel`.`access_rights` IN ('.ATC_USER_GROUP_CADETS.')
+					) AS `cadets_attending`,
+					(
+						SELECT	GROUP_CONCAT(DISTINCT `personnel_id` SEPARATOR ",")
+						FROM 	`activity_register`
+						GROUP BY `activity_id`
+						HAVING	`activity_id` = `activity`.`activity_id`
+					) AS `attendees`
 				FROM 	`activity` 
 					INNER JOIN `activity_type`
 						ON `activity`.`activity_type_id` = `activity_type`.`activity_type_id`
 					INNER JOIN `personnel`
 						ON `activity`.`personnel_id` = `personnel`.`personnel_id`
 				WHERE 	`activity`.`startdate` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" 
+					AND `activity`.`activity_id` > 0
 				ORDER BY `startdate` ASC;';
 
 			$activities = array();
 			if ($result = self::$mysqli->query($query))
 			{
 				while ( $obj = $result->fetch_object() )
+				{
+					$obj->attendees = explode(',', $obj->attendees);
 					$activities[] = $obj;
+				}
 			}	
 			else
 				throw new ATCExceptionDBError(self::$mysqli->error);
-
+			
 			return $activities;
 		}
 		
@@ -257,7 +233,11 @@
 			if ($result = self::$mysqli->query($query))
 			{
 				while ( $obj = $result->fetch_object() )
+				{
+					$obj->startdate = date(ATC_SETTING_DATETIME_INPUT, strtotime($obj->startdate));
+					$obj->enddate = date(ATC_SETTING_DATETIME_INPUT, strtotime($obj->enddate));
 					$activities[] = $obj;
+				}
 			}	
 			else
 				throw new ATCExceptionDBError(self::$mysqli->error);
@@ -270,7 +250,7 @@
 			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_VIEW ))
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
 				
-			$query = 'SELECT DISTINCT `title` FROM 	`activity` ORDER BY LOWER(`title`) ASC;';
+			$query = 'SELECT DISTINCT `title` FROM 	`activity` WHERE `activity`.`activity_id` > 0 ORDER BY LOWER(`title`) ASC;';
 
 			$activities = array();
 			if ($result = self::$mysqli->query($query))
@@ -434,6 +414,79 @@
 			else throw new ATCExceptionDBError(self::$mysqli->error);
 		}
 		
+		public function set_activity( $activity_id, $startdate, $enddate, $title, $location_id, $personnel_id, $activity_type_id, $dress_code, $attendees )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_EDIT ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+
+			if( !strtotime($startdate) )
+				throw new ATCExceptionBadData('Invalid startdate');
+			if( !strtotime($startdate) )
+				throw new ATCExceptionBadData('Invalid enddate');
+			if( $dress_code != ATC_DRESS_CODE_BLUES && $dress_code != ATC_DRESS_CODE_DPM && $dress_code != ATC_DRESS_CODE_BLUES_AND_DPM )
+				throw new ATCExceptionBadData('Unknown dress code value');
+
+			$officers = self::get_personnel(null,'ASC',ATC_USER_GROUP_OFFICERS);
+			$isofficer = false;
+			foreach( $officers as $officer )
+			{
+				if( $officer->personnel_id == $personnel_id )
+				{
+					$isofficer = true;
+					break;
+				}
+			}
+			if( !$isofficer )
+				throw new ATCExceptionBadData('Personnel needs to be an officer');
+
+			if( !(int)$activity_id )
+			{
+				$query = "
+					INSERT INTO `activity` (
+						`startdate`,
+						`enddate`,
+						`personnel_id`,
+						`title`,
+						`location_id`,
+						`activity_type_id`,
+						`dress_code`
+					) VALUES ( 
+						'".date("Y-m-d H:i",strtotime($startdate))."',
+						'".date("Y-m-d H:i",strtotime($enddate))."',
+						".(int)$personnel_id.",
+						'".self::$mysqli->real_escape_string($title)."', 
+						".(int)$location_id.",
+						".(int)$activity_type_id.",
+						".(int)$dress_code."
+					);";
+				if ($result = self::$mysqli->query($query))
+				{
+					self::log_action( 'activity', $query, self::$mysqli->insert_id );
+					return true;
+				}
+				else throw new ATCExceptionDBError(self::$mysqli->error);
+			} else {
+				$query = "
+					UPDATE `activity` SET 
+						`startdate` = '".date("Y-m-d H:i",strtotime($startdate))."',
+						`enddate` = '".date("Y-m-d H:i",strtotime($enddate))."',
+						`personnel_id` = ".(int)$personnel_id.",
+						`title` = '".self::$mysqli->real_escape_string($title)."', 
+						`location_id` = ".(int)$location_id.",
+						`activity_type_id` = ".(int)$activity_type_id.",
+						`dress_code` = ".(int)$dress_code."
+					WHERE `activity_id` = ".(int)$activity_id."
+					LIMIT 1;";
+				if ($result = self::$mysqli->query($query))
+				{
+					self::log_action( 'activity', $query, (int)$activity_id );
+					return true;
+				}
+				else throw new ATCExceptionDBError(self::$mysqli->error);
+			
+			}
+		}
+
 		public function set_activity_type( $activity_type_id, $type, $status=null )
 		{
 			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITY_TYPE_EDIT ))
