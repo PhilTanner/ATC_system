@@ -174,13 +174,7 @@
 								ON `personnel`.`personnel_id` = `activity_register`.`personnel_id`
 						WHERE	`activity_register`.`activity_id` = `activity`.`activity_id`
 							AND `personnel`.`access_rights` IN ('.ATC_USER_GROUP_CADETS.')
-					) AS `cadets_attending`,
-					(
-						SELECT	GROUP_CONCAT(DISTINCT `personnel_id` SEPARATOR ",")
-						FROM 	`activity_register`
-						GROUP BY `activity_id`
-						HAVING	`activity_id` = `activity`.`activity_id`
-					) AS `attendees`
+					) AS `cadets_attending`
 				FROM 	`activity` 
 					INNER JOIN `activity_type`
 						ON `activity`.`activity_type_id` = `activity_type`.`activity_type_id`
@@ -195,7 +189,6 @@
 			{
 				while ( $obj = $result->fetch_object() )
 				{
-					$obj->attendees = explode(',', $obj->attendees);
 					$activities[] = $obj;
 				}
 			}	
@@ -217,8 +210,12 @@
 					`personnel`.`firstname`,
 					`personnel`.`lastname`,
 					" " AS `rank`,
-					0 AS `officers_attending`,
-					0 AS `cadets_attending`
+					(
+						SELECT	GROUP_CONCAT(DISTINCT `personnel_id` SEPARATOR ",")
+						FROM 	`activity_register`
+						GROUP BY `activity_id`
+						HAVING	`activity_id` = `activity`.`activity_id`
+					) AS `attendees`
 				FROM 	`activity` 
 					INNER JOIN `activity_type`
 						ON `activity`.`activity_type_id` = `activity_type`.`activity_type_id`
@@ -236,6 +233,7 @@
 				{
 					$obj->startdate = date(ATC_SETTING_DATETIME_INPUT, strtotime($obj->startdate));
 					$obj->enddate = date(ATC_SETTING_DATETIME_INPUT, strtotime($obj->enddate));
+					$obj->attendees = explode(',', $obj->attendees);
 					$activities[] = $obj;
 				}
 			}	
@@ -461,8 +459,13 @@
 					);";
 				if ($result = self::$mysqli->query($query))
 				{
-					self::log_action( 'activity', $query, self::$mysqli->insert_id );
-					return true;
+					$activity_id = self::$mysqli->insert_id;
+					self::log_action( 'activity', $query, $activity_id );
+					$attendees = explode(',', $attendees);
+					foreach($attendees as $personnel_id)
+						if( $personnel_id )
+							self::$mysqli->query("INSERT INTO `activity_register` (`activity_id`, `personnel_id`) VALUES (".(int)$activity_id.", ".(int)$personnel_id.");");
+					return $activity_id;
 				}
 				else throw new ATCExceptionDBError(self::$mysqli->error);
 			} else {
@@ -480,7 +483,12 @@
 				if ($result = self::$mysqli->query($query))
 				{
 					self::log_action( 'activity', $query, (int)$activity_id );
-					return true;
+					$attendees = explode(",", $attendees);
+					self::$mysqli->query("DELETE FROM `activity_register` WHERE `activity_id` = ".(int)$activity_id.";");
+					foreach($attendees as $personnel_id)
+						if( $personnel_id )
+							self::$mysqli->query("INSERT INTO `activity_register` (`activity_id`, `personnel_id`) VALUES (".(int)$activity_id.", ".(int)$personnel_id.");");
+					return (int)$activity_id;
 				}
 				else throw new ATCExceptionDBError(self::$mysqli->error);
 			
@@ -505,7 +513,7 @@
 				} else 
 					throw new ATCExceptionDBError(self::$mysqli->error);
 			} else {
-				$query .= 'UPDATE `activity_type` SET `type` = "'.self::$mysqli->real_escape_string($type).'"'.(is_null($status)?'':',`nzcf_status` = '.(int)$status).' WHERE activity_type_id = '.(int)$activity_type_id.' LIMIT 1;';
+				$query = 'UPDATE `activity_type` SET `type` = "'.self::$mysqli->real_escape_string($type).'"'.(is_null($status)?'':',`nzcf_status` = '.(int)$status).' WHERE activity_type_id = '.(int)$activity_type_id.' LIMIT 1;';
 
 				if ($result = self::$mysqli->query($query))
 				{

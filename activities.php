@@ -136,9 +136,9 @@
 		if( person.personnel_id > 0 )
 		{
 			if( attendees.indexOf( person.personnel_id ) >= 0 )
-				$('#non_attendees ol.dragdrop').append('<li personnel_id="'+person.personnel_id+'">'+person.rank+' '+person.lastname+', '+person.firstname+'</li>'); 
-			else
 				$('#attendees ol.dragdrop').append('<li personnel_id="'+person.personnel_id+'">'+person.rank+' '+person.lastname+', '+person.firstname+'</li>'); 
+			else
+				$('#non_attendees ol.dragdrop').append('<li personnel_id="'+person.personnel_id+'">'+person.rank+' '+person.lastname+', '+person.firstname+'</li>'); 
 		}
 	});
 	$('#attendees ol.dragdrop,#non_attendees ol.dragdrop').sortable({ connectWith: ".dragdrop.attendees" }).disableSelection();
@@ -202,11 +202,6 @@
 		$('a.button.edit').button({ icons: { primary: 'ui-icon-pencil' }, text: false }).click(function(e){
 			e.preventDefault(); // stop the link actually firing
 			var href = $(this).attr("href");
-			var attendees = '&attendees=0';
-			$.each($('#attendees ol.dragdrop.attendees li'), function(key, element){
-				attendees += ","+element.attr(personnel_id);
-			});
-			
 			$('#dialog').load(href).dialog({
 				modal: true,
 				width: 600,
@@ -216,6 +211,11 @@
 						$( this ).dialog( "close" );
 					},
 					Save: function() {
+						var attendees = '&attendees=0';
+						$('#attendees ol.dragdrop li').each(function(index){
+							attendees += ","+$(this).attr('personnel_id');
+						});
+						
 						$.ajax({
 						   type: "POST",
 						   url: 'activities.php',
@@ -256,7 +256,7 @@
 						   }
 						 });
 						 
-					  $( this ).dialog( "close" );
+						$( this ).dialog( "close" );
 					}
 				  },
 				  close: function() { 
