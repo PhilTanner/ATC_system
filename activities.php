@@ -34,6 +34,36 @@
 				header("HTTP/1.0 500 Internal Server Error");
 				echo 'Caught exception: ',  $e->getMessage(), "\n";
 			}
+		} elseif ( isset($_POST["attendance_register"]) ) {
+			try {
+				$register = array();
+				foreach( $_POST as $key => $value)
+				{
+					if( substr($key, 0, strlen('attendance_')) == 'attendance_' )
+					{
+						$foo = explode("_", $key);
+						// Exclude the attendance_register entry, only go if we've got a real person record
+						if( (int)$foo[1] )
+							$register[] = array('personnel_id' => $foo[1], 'attendance' => $value, 'note' => $_POST['note_'.$foo[1]]);
+					}
+				}
+				$ATC->set_activity_attendance( (int)$_POST['activity_id'], $register );
+			} catch (ATCExceptionInsufficientPermissions $e) {	
+				header("HTTP/1.0 401 Unauthorised");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			} catch (ATCExceptionDBError $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			} catch (ATCExceptionDBConn $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			} catch (ATCException $e) {
+				header("HTTP/1.0 400 Bad Request");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			} catch (Exception $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			}
 		}
 		exit();
 	}
@@ -43,14 +73,14 @@
 		$activity = $ATC->get_activity((int)$_GET["id"]);
 		$activity = $activity[0];
 		$users = $ATC->get_activity_attendance((int)$_GET['id']);
-	if( !is_array($users) )
-	{
-		$foo[] = $users;
-		$users = $foo;
-	}
+		if( !is_array($users) )
+		{
+			$foo[] = $users;
+			$users = $foo;
+		}
 	
 ?>
-	<form name="attendanceregister" id="attendanceregister" method="POST">
+	<form name="editactivity" id="editactivity" method="POST">
 		<input type="hidden" name="attendance_register" value="1" />
 		<table>
 			<thead>
@@ -68,13 +98,16 @@
 						echo '	<td>'.$obj->rank.'</td>';
 						echo '	<td>'.$obj->display_name.'</td>';
 						
-						echo '<td class="attendance user'.$obj->personnel_id.'"><select name="'.$obj->personnel_id.'" id="'.$obj->personnel_id.'">';
-						echo '	<option value=""'.(is_null($obj->personnel_id)?' selected="selected"':'').'></option>';
-						echo '	<option value="'.ATC_ATTENDANCE_PRESENT.'"'.($obj->presence===ATC_ATTENDANCE_PRESENT?' selected="selected"':'').'>'.ATC_ATTENDANCE_PRESENT_SYMBOL.'</option>';
-						echo '	<option value="'.ATC_ATTENDANCE_ON_LEAVE.'"'.($obj->presence===ATC_ATTENDANCE_ON_LEAVE?' selected="selected"':'').'>'.ATC_ATTENDANCE_ON_LEAVE_SYMBOL.'</option>';
-						echo '	<option value="'.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE.'"'.($obj->presence===ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE?' selected="selected"':'').'>'.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE_SYMBOL.'</option>';
-						echo '</select></td>';
-						echo '	<td><input type="text" name="note_'.$obj->personnel_id.'_'.$obj->activity_id.'" id="note_'.$obj->personnel_id.'_'.$obj->activity_id.'" value="'.htmlentities($obj->note).'" maxlength="255" /></td>';
+						echo '<td class="attendance user'.$obj->personnel_id.'">';
+						echo '	<input type="hidden" id="activity_id" name="activity_id" value="'.$activity->activity_id.'" />';
+						echo '	<select name="attendance_'.$obj->personnel_id.'" id="attendance_'.$obj->personnel_id.'">';
+						echo '		<option value=""'.(is_null($obj->personnel_id)?' selected="selected"':'').'></option>';
+						echo '		<option value="'.ATC_ATTENDANCE_PRESENT.'"'.($obj->presence===ATC_ATTENDANCE_PRESENT?' selected="selected"':'').'>'.ATC_ATTENDANCE_PRESENT_SYMBOL.'</option>';
+						echo '		<option value="'.ATC_ATTENDANCE_ON_LEAVE.'"'.($obj->presence===ATC_ATTENDANCE_ON_LEAVE?' selected="selected"':'').'>'.ATC_ATTENDANCE_ON_LEAVE_SYMBOL.'</option>';
+						echo '		<option value="'.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE.'"'.($obj->presence===ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE?' selected="selected"':'').'>'.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE_SYMBOL.'</option>';
+						echo '	</select>';
+						echo '</td>';
+						echo '<td><input type="text" name="note_'.$obj->personnel_id.'" id="note_'.$obj->personnel_id.'" value="'.htmlentities($obj->note).'" maxlength="255" /></td>';
 						echo '</tr>';
 					}
 				?>
@@ -83,9 +116,6 @@
 	</form>
 	<script>
 		$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
-		$('button.save').button({ icons: { primary: 'ui-icon-disk' } }).click(function(e){
-			e.preventDefault(); // stop the submit button actually submitting
-		});
 	</script>
 <?php
 		exit();

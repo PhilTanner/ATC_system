@@ -519,7 +519,9 @@
 				{
 					self::log_action( 'activity', $query, (int)$activity_id );
 					$attendees = explode(",", $attendees);
-					self::$mysqli->query("DELETE FROM `activity_register` WHERE `activity_id` = ".(int)$activity_id.";");
+					// Remove everyone, simpler than working out who has been dragged out of the box
+					// But only remove them if they're not recorded as attending already. At that point, not sure what we do, but DB leaves them alone
+					self::$mysqli->query("DELETE FROM `activity_register` WHERE `activity_id` = ".(int)$activity_id." AND `presence` IS NULL;");
 					foreach($attendees as $personnel_id)
 						if( $personnel_id )
 							self::$mysqli->query("INSERT INTO `activity_register` (`activity_id`, `personnel_id`) VALUES (".(int)$activity_id.", ".(int)$personnel_id.");");
@@ -528,6 +530,37 @@
 				else throw new ATCExceptionDBError(self::$mysqli->error);
 			
 			}
+		}
+
+		public function set_activity_attendance( $activity_id, $register )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_EDIT ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+
+			if( !is_array($register) )
+				throw new ATCExceptionBadData('Invalid registration details');
+
+			if( !(int)$activity_id )
+				throw new ATCExceptionBadData('Invalid activity identifier');
+			
+			foreach( $register as $key => $value )
+			{
+				$personnel_id = (int)$value['personnel_id'];
+				$presence = $value['attendance'];
+				if( $presence == '' )
+					$presence = 'NULL';
+				$note = $value['note'];
+				
+				if( $presence != ATC_ATTENDANCE_PRESENT && $presence != ATC_ATTENDANCE_ON_LEAVE && $presence != ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE )
+					throw new ATCExceptionBadData('Unknown presence value');
+
+				$query = "INSERT INTO `activity_register` (`personnel_id`, `activity_id`, `presence`, `note`) VALUES ( ".(int)$personnel_id.", ".(int)$activity_id.", ".$presence.", '".self::$mysqli->real_escape_string($note)."') ON DUPLICATE KEY UPDATE `presence` = ".$presence.", `note` = '".self::$mysqli->real_escape_string($note)."';";
+				
+				if ($result = self::$mysqli->query($query))
+					self::log_action( 'activity_register', $query, $activity_id );
+				else throw new ATCExceptionDBError(self::$mysqli->error);
+			}
+			return $activity_id;
 		}
 
 		public function set_activity_type( $activity_type_id, $type, $status=null )
