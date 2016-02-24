@@ -42,17 +42,16 @@
 		
 		<script>
 			$(function(){					
-					$('#personnelform div:first').load( $('#personnelform h2:first').attr('href'), function(){
-	
-						$('#personnelform').accordion({ 
-							header: 'h2', 
-							changestart:function( event, ui )
-										{
-											// There's a delay after load to set height, to allow the DOM to update properly
-											ui.newContent.load(ui.newHeader.attr('href'), function(){ setTimeout( function(){ $('#personnelform').accordion('resize'); },500); });
-										} 
-						});
+				$('#personnelform div:first').load( $('#personnelform h2:first').attr('href'), function(){
+					$('#personnelform').accordion({ 
+						header: 'h2', 
+						changestart:function( event, ui )
+						{
+							// There's a delay after load to set height, to allow the DOM to update properly
+							ui.newContent.load(ui.newHeader.attr('href'), function(){ setTimeout( function(){ $('#personnelform').accordion('resize'); },500); });
+						} 
 					});
+				});
 			});
 			
 		</script>

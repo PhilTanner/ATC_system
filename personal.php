@@ -37,8 +37,7 @@
 		}
 	}
 
-	//var_dump($user);
-	if( is_object($user) && $ATC->user_has_permission(ATC_USER_PERMISSION_PERSONNEL_VIEW, $id ) )
+	if( is_object($user) && $ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW, $id ) )
 	{	
 ?>
 
