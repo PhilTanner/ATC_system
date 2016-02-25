@@ -3,11 +3,13 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Feb 24, 2016 at 02:32 AM
+-- Generation Time: Feb 26, 2016 at 08:43 AM
 -- Server version: 5.1.67-andiunpam
 -- PHP Version: 5.6.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET AUTOCOMMIT = 0;
+START TRANSACTION;
 SET time_zone = "+00:00";
 
 
@@ -26,6 +28,7 @@ SET time_zone = "+00:00";
 -- Table structure for table `activity`
 --
 
+DROP TABLE IF EXISTS `activity`;
 CREATE TABLE IF NOT EXISTS `activity` (
   `activity_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `personnel_id` int(11) NOT NULL,
@@ -41,25 +44,13 @@ CREATE TABLE IF NOT EXISTS `activity` (
   KEY `activity_type_id` (`activity_type_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=11 ;
 
---
--- Dumping data for table `activity`
---
-
-INSERT INTO `activity` (`activity_id`, `personnel_id`, `startdate`, `enddate`, `title`, `location_id`, `activity_type_id`, `dress_code`) VALUES
-(0, 0, '0000-00-00 00:00:00', '0000-00-00 00:00:00', '', 0, 0, 0),
-(1, 1, '2016-02-21 00:00:00', '2016-02-14 13:00:00', 'Waikanae Carnival', 2, 2, 0),
-(4, 1, '2016-12-31 12:59:00', '2016-12-31 01:00:00', 'Waikanae show', 1, 2, 0),
-(5, 1, '2016-12-31 12:59:00', '2016-12-31 12:58:00', 'Shoot', 1, 1, 0),
-(6, 1, '2016-02-22 17:36:00', '2016-03-22 17:36:00', 'Gliding', 3, 3, 1),
-(9, 1, '2016-03-01 07:00:00', '2016-03-01 15:00:00', 'test', 1, 6, 0),
-(10, 1, '2016-04-01 07:00:00', '2016-05-01 09:00:00', 'testing2', 1, 2, 0);
-
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `activity_register`
 --
 
+DROP TABLE IF EXISTS `activity_register`;
 CREATE TABLE IF NOT EXISTS `activity_register` (
   `personnel_id` int(10) unsigned NOT NULL,
   `activity_id` int(10) unsigned NOT NULL,
@@ -74,6 +65,7 @@ CREATE TABLE IF NOT EXISTS `activity_register` (
 -- Table structure for table `activity_type`
 --
 
+DROP TABLE IF EXISTS `activity_type`;
 CREATE TABLE IF NOT EXISTS `activity_type` (
   `activity_type_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `type` varchar(100) NOT NULL,
@@ -81,23 +73,13 @@ CREATE TABLE IF NOT EXISTS `activity_type` (
   PRIMARY KEY (`activity_type_id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=7 ;
 
---
--- Dumping data for table `activity_type`
---
-
-INSERT INTO `activity_type` (`activity_type_id`, `type`, `nzcf_status`) VALUES
-(0, '', 0),
-(1, 'Shoot', 0),
-(2, 'Profile raising', 1),
-(3, 'Flying', 0),
-(6, 'Testing', 0);
-
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `activity_type_document`
 --
 
+DROP TABLE IF EXISTS `activity_type_document`;
 CREATE TABLE IF NOT EXISTS `activity_type_document` (
   `activity_type_id` int(11) unsigned NOT NULL,
   `document_id` int(11) unsigned NOT NULL,
@@ -112,24 +94,11 @@ CREATE TABLE IF NOT EXISTS `activity_type_document` (
 -- Table structure for table `attendance`
 --
 
+DROP TABLE IF EXISTS `attendance`;
 CREATE TABLE IF NOT EXISTS `attendance` (
   `date` date NOT NULL,
   PRIMARY KEY (`date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `attendance`
---
-
-INSERT INTO `attendance` (`date`) VALUES
-('2016-02-03'),
-('2016-02-10'),
-('2016-02-17'),
-('2016-02-24'),
-('2016-03-02'),
-('2016-03-09'),
-('2016-03-16'),
-('2016-03-23');
 
 -- --------------------------------------------------------
 
@@ -137,6 +106,7 @@ INSERT INTO `attendance` (`date`) VALUES
 -- Table structure for table `attendance_register`
 --
 
+DROP TABLE IF EXISTS `attendance_register`;
 CREATE TABLE IF NOT EXISTS `attendance_register` (
   `personnel_id` int(11) NOT NULL,
   `date` date NOT NULL,
@@ -147,24 +117,13 @@ CREATE TABLE IF NOT EXISTS `attendance_register` (
   KEY `date` (`date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Dumping data for table `attendance_register`
---
-
-INSERT INTO `attendance_register` (`personnel_id`, `date`, `time_in`, `time_out`, `presence`) VALUES
-(1, '2016-02-03', NULL, NULL, 0),
-(1, '2016-02-10', NULL, NULL, 0),
-(1, '2016-02-17', NULL, NULL, 0),
-(3, '2016-02-03', NULL, NULL, 0),
-(3, '2016-02-10', NULL, NULL, 0),
-(3, '2016-02-17', NULL, NULL, 0);
-
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `document`
 --
 
+DROP TABLE IF EXISTS `document`;
 CREATE TABLE IF NOT EXISTS `document` (
   `document_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `nzcf_code` varchar(10) NOT NULL,
@@ -182,23 +141,14 @@ CREATE TABLE IF NOT EXISTS `document` (
 -- Table structure for table `location`
 --
 
+DROP TABLE IF EXISTS `location`;
 CREATE TABLE IF NOT EXISTS `location` (
   `location_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `address` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`location_id`),
   UNIQUE KEY `loc_name` (`name`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=5 ;
-
---
--- Dumping data for table `location`
---
-
-INSERT INTO `location` (`location_id`, `name`, `address`) VALUES
-(0, '', NULL),
-(1, 'No 49 Squadron Unit HQ', ''),
-(2, 'Waikanae Showground', ''),
-(3, 'Matamata', '');
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=4 ;
 
 -- --------------------------------------------------------
 
@@ -206,6 +156,7 @@ INSERT INTO `location` (`location_id`, `name`, `address`) VALUES
 -- Table structure for table `location_document`
 --
 
+DROP TABLE IF EXISTS `location_document`;
 CREATE TABLE IF NOT EXISTS `location_document` (
   `location_document_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `location_id` int(11) unsigned NOT NULL,
@@ -225,6 +176,7 @@ CREATE TABLE IF NOT EXISTS `location_document` (
 -- Table structure for table `log_changes`
 --
 
+DROP TABLE IF EXISTS `log_changes`;
 CREATE TABLE IF NOT EXISTS `log_changes` (
   `personnel_id` int(11) NOT NULL COMMENT 'User who performed update',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -235,16 +187,13 @@ CREATE TABLE IF NOT EXISTS `log_changes` (
   KEY `table_updated_idx` (`table_updated`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Log of changes';
 
---
--- Dumping data for table `log_changes`
---
-
 -- --------------------------------------------------------
 
 --
 -- Table structure for table `personnel`
 --
 
+DROP TABLE IF EXISTS `personnel`;
 CREATE TABLE IF NOT EXISTS `personnel` (
   `personnel_id` int(11) NOT NULL AUTO_INCREMENT,
   `firstname` varchar(50) NOT NULL,
@@ -261,15 +210,23 @@ CREATE TABLE IF NOT EXISTS `personnel` (
   PRIMARY KEY (`personnel_id`),
   UNIQUE KEY `uniq_email` (`email`),
   KEY `email` (`email`,`password`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=5 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=6 ;
+
+-- --------------------------------------------------------
 
 --
--- Dumping data for table `personnel`
+-- Table structure for table `user_session`
 --
 
-INSERT INTO `personnel` (`personnel_id`, `firstname`, `lastname`, `is_female`, `email`, `dob`, `password`, `access_rights`, `created`, `joined_date`, `left_date`, `enabled`) VALUES
-(0, '', '', 0, '', '0000-00-00', '', 0, '2016-02-23 04:36:48', '0000-00-00', NULL, -1),
-(1, 'Phil', 'Tanner', 0, 'phil.tanner@49squadron.org.nz', '1975-09-17', 'sha256:1000:/8sO+9s6F7hZoRCW6CF7lyvtGU/aUGb2:E2Dxpue7Jh0qv1oL9JAfQTrE17aqjsL4', 59647, '2016-02-05 07:32:51', '2015-05-01', NULL, -1);
+DROP TABLE IF EXISTS `user_session`;
+CREATE TABLE IF NOT EXISTS `user_session` (
+  `personnel_id` int(11) unsigned NOT NULL,
+  `session_code` varchar(64) NOT NULL,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `user_agent` varchar(128) DEFAULT NULL,
+  `ip_address` int(11) DEFAULT NULL,
+  PRIMARY KEY (`session_code`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 --
 -- Constraints for dumped tables
@@ -309,19 +266,8 @@ ALTER TABLE `location_document`
 --
 ALTER TABLE `log_changes`
   ADD CONSTRAINT `log_changes_ibfk_1` FOREIGN KEY (`personnel_id`) REFERENCES `personnel` (`personnel_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-
-CREATE USER 'atc'@'localhost' IDENTIFIED BY 'ZIERIESs5ESa';
-GRANT SELECT, INSERT ON `atc`.`log_changes` TO 'atc'@'localhost';
-GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON `atc`.`attendance` TO 'atc'@'localhost';
-GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON `atc`.`attendance_register` TO 'atc'@'localhost';
-GRANT SELECT, INSERT, UPDATE, REFERENCES ON `atc`.`personnel` TO 'atc'@'localhost';
-GRANT SELECT, INSERT, UPDATE, REFERENCES ON `atc`.`location` TO 'atc'@'localhost';
-GRANT SELECT, INSERT, UPDATE, REFERENCES ON `atc`.`activity-type` TO 'atc'@'localhost';
-GRANT SELECT, INSERT, UPDATE, REFERENCES ON `atc`.`activity` TO 'atc'@'localhost';
-GRANT SELECT, INSERT, UPDATE, REFERENCES ON `atc`.`activity_type_document` TO 'atc'@'localhost';
-GRANT SELECT, INSERT, UPDATE, REFERENCES ON `atc`.`document` TO 'atc'@'localhost';
-GRANT SELECT, INSERT, UPDATE, REFERENCES ON `atc`.`location_document` TO 'atc'@'localhost';
