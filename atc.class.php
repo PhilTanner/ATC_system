@@ -21,6 +21,8 @@
 	define( 'ATC_PERMISSION_LOCATIONS_VIEW',		8192 );
 	define( 'ATC_PERMISSION_LOCATIONS_EDIT',		ATC_PERMISSION_LOCATIONS_VIEW + 16384 );
 	define( 'ATC_PERMISSION_ACTIVITY_TYPE_EDIT',		32768 );
+	define( 'ATC_PERMISSION_TRAINING_VIEW',		65536 );
+	define( 'ATC_PERMISSION_TRAINING_EDIT',		ATC_PERMISSION_LOCATIONS_VIEW + 131072 );
 
 	// Give admin everything we can think of in the future.
 	define( 'ATC_USER_LEVEL_ADMIN', 			16777215 );
@@ -28,7 +30,7 @@
 	define( 'ATC_USER_LEVEL_NCO', 				ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_LOCATIONS_VIEW );
 	define( 'ATC_USER_LEVEL_ADJUTANT', 			ATC_PERMISSION_PERSONNEL_EDIT + ATC_PERMISSION_ATTENDANCE_EDIT + ATC_PERMISSION_ACTIVITIES_EDIT + ATC_PERMISSION_FINANCE_EDIT + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_EDIT + ATC_PERMISSION_ACTIVITY_TYPE_EDIT);
 	define( 'ATC_USER_LEVEL_STORES', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_FINANCE_EDIT + ATC_PERMISSION_STORES_EDIT + ATC_PERMISSION_LOCATIONS_VIEW );
-	define( 'ATC_USER_LEVEL_TRAINING', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_FINANCE_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_EDIT + ATC_PERMISSION_ACTIVITY_TYPE_EDIT );
+	define( 'ATC_USER_LEVEL_TRAINING', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_FINANCE_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_EDIT + ATC_PERMISSION_ACTIVITY_TYPE_EDIT + ATC_PERMISSION_TRAINING_EDIT);
 	define( 'ATC_USER_LEVEL_CUCDR', 			ATC_PERMISSION_PERSONNEL_EDIT + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_FINANCE_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_VIEW + ATC_PERMISSION_ACTIVITY_TYPE_EDIT );
 	define( 'ATC_USER_LEVEL_SUPOFF', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_LOCATIONS_VIEW );
 	define( 'ATC_USER_LEVEL_TREASURER',			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_FINANCE_EDIT + ATC_PERMISSION_LOCATIONS_VIEW );
@@ -74,12 +76,13 @@
 	class ATCExceptionDBConn extends ATCException {}
 	class ATCExceptionDBError extends ATCExceptionDBConn {}
 	class ATCExceptionInsufficientPermissions extends ATCException {}
+	class ATCExceptionInvalidUserSession extends ATCExceptionInsufficientPermissions {}
 	
 	class ATC
 	{
 		protected static $mysqli;
 		protected static $currentuser;
-		public static $dbUpToDate = false;
+		protected static $currentpermissions;
 		
 		public function __construct()
 		{
@@ -87,7 +90,21 @@
 			/* check connection */
 			if (mysqli_connect_errno())
 			    throw new ATCExceptionDBConn(mysqli_connect_error());
-			if(ATC_DEBUG) self::$currentuser = 1;
+			
+			if( isset($_COOKIE['sessid']) )
+			{
+				try {
+					$details = self::check_user_session($_COOKIE['sessid']);
+					self::$currentuser = $details->personnel_id;
+					self::$currentpermissions = $details->access_rights; 
+					if(!self::$currentuser && substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
+						header('Location: login.php', true, 302);
+				} catch (ATCExceptionInvalidUserSession $e) {
+					if(substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
+						header('Location: login.php', true, 302);
+				}
+			}
+			//if(ATC_DEBUG) self::$currentuser = 1;
 		}
 		
 		public function add_parade_night( $date )
@@ -102,6 +119,20 @@
 				return true;
 			}
 			else throw new ATCExceptionDBError(self::$mysqli->error);
+		}
+
+		public function check_user_session( $session )
+		{
+			$query = "SELECT * FROM `user_session` INNER JOIN `personnel` ON `user_session`.`personnel_id` = `personnel`.`personnel_id` WHERE `session_code` = '".self::$mysqli->real_escape_string($session)."' LIMIT 1;";
+			if ($result = self::$mysqli->query($query))	
+			{
+				if ( $obj = $result->fetch_object() )
+				{
+					return $obj;
+				} else throw new ATCExceptionInvalidUserSession('Unknown session');
+			}
+			else throw new ATCExceptionDBError(self::$mysqli->error);
+			return false;
 		}
 
 /*
@@ -144,6 +175,11 @@
 					break;
 			}
 			return $str;
+		}
+		
+		public function current_user_id()
+		{
+			return self::$currentuser;
 		}
 				
 		public function get_activities( $date=null, $days=365 )
@@ -447,6 +483,48 @@
 			else throw new ATCExceptionDBError(self::$mysqli->error);
 		}
 		
+		public function login( $username, $password )
+		{
+			$query = "SELECT `password` AS `correct_hash`, `personnel_id` FROM `personnel` WHERE `email` = '".self::$mysqli->real_escape_string($username)."' LIMIT 1;";
+			if ($result = self::$mysqli->query($query))	
+			{
+				if ( $obj = $result->fetch_object() )
+				{
+					if( validate_password($password, $obj->correct_hash) )
+					{
+						// TODO - catch unlikely key conflict to existing user
+						$uniqueid = bin2hex(openssl_random_pseudo_bytes(32));
+						$query = "INSERT INTO `user_session` (`personnel_id`, `session_code`, `user_agent`, `ip_address` ) VALUES ( ".$obj->personnel_id.", '".self::$mysqli->real_escape_string($uniqueid)."', '".self::$mysqli->real_escape_string($_SERVER['HTTP_USER_AGENT'])."', ".ip2long($_SERVER['REMOTE_ADDR'])." );";
+						if ($result = self::$mysqli->query($query))
+						{
+							setcookie( 'sessid', $uniqueid, time()+60*60*24*30 );
+							return true;
+						} else throw new ATCExceptionDBError(self::$mysqli->error);
+					} else throw new ATCExceptionInsufficientPermissions('Unknown username or password');
+				} else throw new ATCExceptionInsufficientPermissions('Unknown username or password');
+			}
+			else throw new ATCExceptionDBError(self::$mysqli->error);
+			return false;
+		}
+		
+		public function logout( $sessid=null )
+		{
+			if( is_null($sessid) )
+				$sessid = $_COOKIE['sessid'];
+				
+			$query = "DELETE FROM `user_session` WHERE `session_code` =  '".self::$mysqli->real_escape_string($sessid)."'";
+			// Only allow non user editors to log out their own user. People with this permission can log out anyone else
+			if(self::user_has_permission( ATC_PERMISSION_PERSONNEL_EDIT ))
+				$query .= " AND `personnel_id` = ".(int)self::$currentuser;
+			$query .= " LIMIT 1;";
+
+			if ($result = self::$mysqli->query($query))	
+				self::log_action( 'user_session', $query, 0 );
+			else throw new ATCExceptionDBError(self::$mysqli->error);
+			return true;
+		}
+		
+		
 		public function set_activity( $activity_id, $startdate, $enddate, $title, $location_id, $personnel_id, $activity_type_id, $dress_code, $attendees )
 		{
 			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_EDIT ))
@@ -723,13 +801,15 @@
 		<script type="text/javascript">
 			$(function(){
 				$(".navoptions ul li a").button().addClass("ui-state-disabled");
-				$(".navoptions ul li a.home").button({ icons: { primary: "ui-icon-home" } }).removeClass("ui-state-disabled")'.($title=='Home'?'.addClass("ui-state-active")':'').';
-				$(".navoptions ul li a.personnel").button({ icons: { primary: "ui-icon-person" } }).removeClass("ui-state-disabled")'.($title=='Personnel'?'.addClass("ui-state-active")':'').';
-				$(".navoptions ul li a.attendance").button({ icons: { primary: "ui-icon-clipboard" } }).removeClass("ui-state-disabled")'.($title=='Attendance'?'.addClass("ui-state-active")':'').';
-				$(".navoptions ul li a.activities").button({ icons: { primary: "ui-icon-image" } }).removeClass("ui-state-disabled")'.($title=='Activities'?'.addClass("ui-state-active")':'').';
+				$(".navoptions ul li a.home").button({ icons: { primary: "ui-icon-home" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Home'?'.addClass("ui-state-active")':'').';
+				$(".navoptions ul li a.personnel").button({ icons: { primary: "ui-icon-person" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Personnel'?'.addClass("ui-state-active")':'').';
+				$(".navoptions ul li a.attendance").button({ icons: { primary: "ui-icon-clipboard" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Attendance'?'.addClass("ui-state-active")':'').';
+				$(".navoptions ul li a.activities").button({ icons: { primary: "ui-icon-image" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Activities'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.finance").button({ icons: { primary: "ui-icon-cart" } });
 				$(".navoptions ul li a.stores").button({ icons: { primary: "ui-icon-tag" } });
 				$(".navoptions ul li a.training").button({ icons: { primary: "ui-icon-calendar" } });
+				$(".navoptions ul li a.logout").button({ icons: { primary: "ui-icon-unlocked" } }).removeClass("ui-state-disabled");
+				$(".navoptions ul li a.login").button({ icons: { primary: "ui-icon-locked" } })'.(self::$currentuser?'':'.removeClass("ui-state-disabled")').($title=='Login'?'.addClass("ui-state-active")':'').';
 			});
 			
 		</script>
@@ -740,12 +820,15 @@
 		<nav class="navoptions">
 			<ul>
 				<li> <a href="./" class="home">Home</a> </li>
-				<li> <a href="./personnel.php" class="personnel">Personnel</a> </li>
-				<li> <a href="./attendance.php" class="attendance">Attendance</a> </li>
-				<li> <a href="./activities.php" class="activities">Activities</a> </li>
-				<li> <a href="./" class="finance">Finance</a> </li>
-				<li> <a href="./" class="stores">Stores</a> </li>
-				<li> <a href="./" class="training">Training</a> </li>
+				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW)?'<li> <a href="./personnel.php" class="personnel">Personnel</a> </li>':'').'
+				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ATTENDANCE_VIEW)?'<li> <a href="./attendance.php" class="attendance">Attendance</a> </li>':'').'
+				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ACTIVITIES_VIEW)?'<li> <a href="./activities.php" class="activities">Activities</a> </li>':'').'
+				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW)?'<li> <a href="./" class="finance">Finance</a> </li>':'').'
+				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_STORES_VIEW)?'<li> <a href="./" class="stores">Stores</a> </li>':'').'
+				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_TRAINING_VIEW)?'<li> <a href="./" class="training">Training</a> </li>':'').'
+				'.(self::$currentuser?'<li> <a href="./logout.php" class="logout">Logout</a> </li>':'').'
+				'.(!self::$currentuser?'<li> <a href="./login.php" class="login">Login</a> </li>':'').'
+				
 			</ul>
 		</nav>
 		<h1> <!-- ATC --> '.$title.' </h1>
@@ -754,7 +837,26 @@
 		
 		public function user_has_permission( $permission, $target=null )
 		{
-			if(ATC_DEBUG) return true;
+			if( is_null($target) )
+			{
+				if( self::$currentpermissions & $permission ) 
+					return true;
+			} else {
+				// If we have the global permission, we're good anyway
+				if( self::$currentpermissions & $permission ) 
+					return true;
+				switch($permission)
+				{
+					case ATC_PERMISSION_PERSONNEL_VIEW:
+						// If we're wanting to view our own user, we're all good.
+						if( $target == self::$currentuser )
+							return true;
+						break;
+					default:
+						return false;
+				}
+			}
+			return false;
 		}
 		
 	}
