@@ -24,6 +24,15 @@
 	define( 'ATC_PERMISSION_TRAINING_VIEW',		65536 );
 	define( 'ATC_PERMISSION_TRAINING_EDIT',		ATC_PERMISSION_LOCATIONS_VIEW + 131072 );
 
+	/*var_dump( ATC_PERMISSION_PERSONNEL_EDIT );
+	var_dump( (ATC_PERMISSION_PERSONNEL_VIEW << 1) + ATC_PERMISSION_PERSONNEL_VIEW );
+	var_dump( ATC_PERMISSION_ATTENDANCE_VIEW );
+	var_dump( ATC_PERMISSION_PERSONNEL_VIEW << 2 );
+	var_dump( ATC_PERMISSION_ATTENDANCE_EDIT );
+	var_dump( (ATC_PERMISSION_ATTENDANCE_VIEW << 1) + ATC_PERMISSION_ATTENDANCE_VIEW  );
+	var_dump( ATC_PERMISSION_ACTIVITIES_VIEW );
+	var_dump( ATC_PERMISSION_PERSONNEL_VIEW << 4 ); */
+	
 	// Give admin everything we can think of in the future.
 	define( 'ATC_USER_LEVEL_ADMIN', 			16777215 );
 	define( 'ATC_USER_LEVEL_CADET', 			0 );
@@ -181,7 +190,25 @@
 		{
 			return self::$currentuser;
 		}
+		
+		public function delete_activity( $id )
+		{
+			// Also don't allow deletes of default values
+			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_EDIT ) || !(int)$id )
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
 				
+			$query = 'DELETE FROM `activity` WHERE `activity`.`activity_id` = '.(int)$id.' LIMIT 1;';
+
+			if ($result = self::$mysqli->query($query))
+			{
+				self::log_action( 'activity', $query, (int)$id );
+				return true;
+			} else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return false;
+		}
+		
 		public function get_activities( $date=null, $days=365 )
 		{
 			if( is_null($date) ) $startdate = time()-(14*24*60*60);
@@ -414,7 +441,7 @@
 			return $activities;
 		}
 		
-		public function get_personnel( $id, $orderby = "ASC", $access_rights=null )
+		public function get_personnel( $id, $orderby = "ASC", $access_rights=null, $showdisabled=true )
 		{
 			$personnel = new stdClass();
 
@@ -434,6 +461,8 @@
 							$query .= ' WHERE `access_rights` IN ('.self::$mysqli->real_escape_string($access_rights).')  AND `personnel_id` > 0 ';
 						else 
 							$query .= ' WHERE `personnel_id` > 0 ';
+						if( !(bool)$showdisabled )
+							$query .= "AND `enabled` = -1 ";
 						$query .= "ORDER BY `enabled` ASC, `lastname` ".self::$mysqli->real_escape_string($orderby).", `firstname` ".self::$mysqli->real_escape_string($orderby).", `personnel_id` ".self::$mysqli->real_escape_string($orderby).";";
 
 						if ($result = self::$mysqli->query($query))
@@ -776,6 +805,7 @@
 			echo '
 		<footer>
 			<p> Built on the ATC system code available at <a target="blank" href="https://github.com/PhilTanner/ATC_system">https://github.com/PhilTanner/ATC_system</a> </p>
+			'.(ATC_DEBUG?'<p style="font-size:75%;">DEBUG INFO: Logged in as user: '.self::$currentuser.' - access rights: '.self::$currentpermissions.'</p>':'').'
 			<!-- <img src="49squadron.png" style="position:absolute; bottom: 1em; right: 1em; z-index: -1;" /> -->
 		</footer>
 	</body>

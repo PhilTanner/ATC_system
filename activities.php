@@ -66,6 +66,26 @@
 			}
 		}
 		exit();
+	} elseif ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
+		try {
+			$ATC->delete_activity( (int)$_GET['id'] );
+		} catch (ATCExceptionInsufficientPermissions $e) {	
+			header("HTTP/1.0 401 Unauthorised");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		} catch (ATCExceptionDBError $e) {
+			header("HTTP/1.0 500 Internal Server Error");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		} catch (ATCExceptionDBConn $e) {
+			header("HTTP/1.0 500 Internal Server Error");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		} catch (ATCException $e) {
+			header("HTTP/1.0 400 Bad Request");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		} catch (Exception $e) {
+			header("HTTP/1.0 500 Internal Server Error");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		}
+		exit();
 	}
 	
 	if( isset($_GET['id']) && isset($_GET['action']) && $_GET['action']=='attendance' )
@@ -269,9 +289,9 @@
 						if( !isset($_GET['id']) && $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) )
 						{
 							echo '	<td><a href="?id='.$obj->activity_id.'" class="button edit">Edit</a>';
-							//echo '<a href="?id='.$obj->activity_id.'" class="button delete">Delete</a>';
 							if( $ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW) )
 								echo '<a href="?id='.$obj->activity_id.'&action=attendance" class="button attendance">Attendance</a>';
+							echo '	<a href="?id='.$obj->activity_id.'" class="button delete">Delete</a>';
 							echo '</td>';
 						}
 						echo '</tr>';
@@ -283,7 +303,36 @@
 	<script>
 		$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
 		
-		//$('a.button.delete').button({ icons:{ primary: 'ui-icon-trash' }, text: false }).addClass('ui-state-error');
+		$('a.button.delete').button({ icons:{ primary: 'ui-icon-trash' }, text: false }).addClass('ui-state-error').click(function(e){
+			e.preventDefault(); // stop the link actually firing
+			var href = $(this).attr("href");
+			$('#dialog').html("Are you absolutely sure you want to delete this activity?<p>There is <strong>no undo to this action</strong>!").dialog({
+				modal: true,
+				title: "<span class='ui-icon ui-icon-alert' style='float:left; margin: 0;'>!</span>Warning!",
+				buttons: {
+					Cancel: function() {
+						$( this ).dialog( "close" );
+					},
+					Delete: function() {
+						$.ajax({
+						   type: "DELETE",
+						   url: href,
+						   success: function(data)
+						   {
+							   // True to ensure we don't just use a cached version, but get a fresh copy from the server
+							   location.reload(true);
+						   }
+						 });
+					}
+			 	},
+				 close: function() { 
+					$( this ).dialog( "destroy" ); 
+				 },
+				 open: function() {
+					$('.ui-dialog-titlebar').addClass('ui-state-highlight');
+				}
+			});
+		});
 		$('a.button.edit').button({ icons: { primary: 'ui-icon-pencil' }, text: false });
 		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false });
 		$('#activitylist a.button.attendance').button({ icons: { primary: 'ui-icon-clipboard' }, text: false });
@@ -323,7 +372,7 @@
 						   },
 						   error: function(data)
 						   {
-							   $('#dialog').dialog('destroy').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
+							   $('#dialog').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
 								  modal: true,
 								  //dialogClass: 'ui-state-error',
 								  title: 'Error!',

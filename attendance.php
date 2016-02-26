@@ -54,7 +54,7 @@
 	}
 
 	$dates = $ATC->get_attendance( date('Y').'-01-01', date('Y').'-12-31' );
-	$users = $ATC->get_personnel((isset($_GET['id'])?(int)$_GET['id']:null), 'ASC', (isset($_GET['id'])?null:ATC_USER_GROUP_PERSONNEL) );
+	$users = $ATC->get_personnel((isset($_GET['id'])?(int)$_GET['id']:null), 'ASC', (isset($_GET['id'])?null:ATC_USER_GROUP_PERSONNEL), false );
 	if( !is_array($users) )
 	{
 		$foo[] = $users;
@@ -181,7 +181,7 @@
 					   },
 					   error: function(data)
 					   {
-						   $('#dialog').dialog('destroy').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
+						   $('#dialog').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
 							  modal: true,
 							  //dialogClass: 'ui-state-error',
 							  title: 'Error!',
