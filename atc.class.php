@@ -464,7 +464,7 @@
 				$(".navoptions ul li a.activities").button({ icons: { primary: "ui-icon-image" } }).removeClass("ui-state-disabled")'.($title=='Activities'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.finance").button({ icons: { primary: "ui-icon-cart" } });
 				$(".navoptions ul li a.stores").button({ icons: { primary: "ui-icon-tag" } });
-				$(".navoptions ul li a.training").button({ icons: { primary: "ui-icon-calendar" } });
+				$(".navoptions ul li a.training").button({ icons: { primary: "ui-icon-calendar" } }).removeClass("ui-state-disabled")'.($title=='Training'?'.addClass("ui-state-active")':'').';;
 			});
 			
 		</script>
@@ -480,7 +480,7 @@
 				<li> <a href="./activities.php" class="activities">Activities</a> </li>
 				<li> <a href="./" class="finance">Finance</a> </li>
 				<li> <a href="./" class="stores">Stores</a> </li>
-				<li> <a href="./" class="training">Training</a> </li>
+				<li> <a href="./training.php" class="training">Training</a> </li>
 			</ul>
 		</nav>
 		<h1> ATC '.$title.' </h1>
