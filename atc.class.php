@@ -62,6 +62,17 @@
 	define( 'ATC_DRESS_CODE_BLUES',				0 );
 	define( 'ATC_DRESS_CODE_DPM',				1 );
 	define( 'ATC_DRESS_CODE_BLUES_AND_DPM',			2 );
+	
+	define( 'ATC_NOK_TYPE_MOTHER',				0 );
+	define( 'ATC_NOK_TYPE_FATHER',				1 );
+	define( 'ATC_NOK_TYPE_STEPMOTHER',			2 );
+	define( 'ATC_NOK_TYPE_STEPFATHER',			3 );
+	define( 'ATC_NOK_TYPE_SPOUSE',				4 );
+	define( 'ATC_NOK_TYPE_SIBLING',				5 );
+	define( 'ATC_NOK_TYPE_DOMPTNR',				6 );
+	define( 'ATC_NOK_TYPE_OTHER',				7 );
+	define( 'ATC_NOK_TYPE_GRANDMOTHER',			8 );
+	define( 'ATC_NOK_TYPE_GRANDFATHER',			9 );
 
 	require_once 'config.php';
 	
@@ -441,6 +452,30 @@
 			return $activities;
 		}
 		
+		public function get_nok( $for_personnel_id, $nok_id=null )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $for_personnel_id ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this user");
+				
+			$query = '
+			SELECT	*
+			FROM 	`next_of_kin`
+			WHERE 	`personnel_id` = '.(int)$for_personnel_id.'
+			ORDER BY `sort_order`, `lastname`,`firstname` ASC;';
+
+			$nok = array();
+			if ($result = self::$mysqli->query($query))
+			{
+				while ( $obj = $result->fetch_object() )
+					$nok[] = $obj;
+			}	
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $nok;
+		}
+		
+		
 		public function get_personnel( $id, $orderby = "ASC", $access_rights=null, $showdisabled=true )
 		{
 			$personnel = new stdClass();
@@ -751,6 +786,89 @@
 				{
 					self::log_action( 'location', $query, $location_id );
 					return $location_id;
+				} else
+					throw new ATCExceptionDBError(self::$mysqli->error);
+				
+			}
+			return false;
+		}
+		
+		public function set_next_of_kin( $nokid, $personnel_id, $firstname, $lastname, $relationship, $email, $mobile, $home, $address1, $address2, $city, $postcode, $sortorder=0 )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_PERSONNEL_EDIT, $personnel_id ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to edit this user");
+			
+			if( !strlen(trim($firstname)) )
+				throw new ATCExceptionBadData('Invalid first name');
+			if( !strlen(trim($lastname)) )
+				throw new ATCExceptionBadData('Invalid last name');
+			if( !strlen(trim($email)) )
+				throw new ATCExceptionBadData('Invalid email');
+			if( !strlen(trim($mobile)) )
+				throw new ATCExceptionBadData('Invalid mobile');
+			if( !strlen(trim($address1)) )
+				throw new ATCExceptionBadData('Invalid address line 1');
+			if( !strlen(trim($city)) )
+				throw new ATCExceptionBadData('Invalid city');
+
+			if( !$nokid )
+			{
+				$query = '
+					INSERT INTO `next_of_kin` (
+						`personnel_id`, 
+						`firstname`, 
+						`lastname`, 
+						`email`, 
+						`relationship`, 
+						`mobile_number`, 
+						`home_number`, 
+						`address1`, 
+						`address2`, 
+						`city`, 
+						`postcode`, 
+						`sort_order`
+					) VALUES (
+						'.(int)$personnel_id.',
+						"'.self::$mysqli->real_escape_string($firstname).'", 
+						"'.self::$mysqli->real_escape_string($lastname).'", 
+						"'.self::$mysqli->real_escape_string($email).'", 
+						'.(int)$relationship.', 
+						"'.self::$mysqli->real_escape_string($mobile).'", 
+						"'.self::$mysqli->real_escape_string($home).'", 
+						"'.self::$mysqli->real_escape_string($address1).'", 
+						"'.self::$mysqli->real_escape_string($address2).'", 
+						"'.self::$mysqli->real_escape_string($city).'", 
+						'.(int)$postcode.', 
+						'.(int)$sortorder.'
+					);';
+				if ($result = self::$mysqli->query($query))
+				{
+					$nok_id = self::$mysqli->insert_id;
+					self::log_action( 'location', $query, $nok_id );
+					return $nok_id;
+				} else 
+					throw new ATCExceptionDBError(self::$mysqli->error);
+			} else {
+				$query = '
+					UPDATE `next_of_kin` SET 
+						`personnel_id` = '.(int)$personnel_id.',
+						`firstname` = "'.self::$mysqli->real_escape_string($firstname).'", 
+						`lastname` = "'.self::$mysqli->real_escape_string($lastname).'", 
+						`email` = "'.self::$mysqli->real_escape_string($email).'", 
+						`relationship` = '.(int)$relationship.', 
+						`mobile_number` = "'.self::$mysqli->real_escape_string($mobile).'", 
+						`home_number` = "'.self::$mysqli->real_escape_string($home).'", 
+						`address1` = "'.self::$mysqli->real_escape_string($address1).'", 
+						`address2` = "'.self::$mysqli->real_escape_string($address2).'", 
+						`city` = "'.self::$mysqli->real_escape_string($city).'", 
+						`postcode` = '.(int)$postcode.',
+						`sort_order` = '.(int)$sortorder.'
+					WHERE `kin_id` = '.(int)$nokid.'
+					LIMIT 1;';
+				if ($result = self::$mysqli->query($query))
+				{
+					self::log_action( 'location', $query, (int)$nokid );
+					return $nokid;
 				} else
 					throw new ATCExceptionDBError(self::$mysqli->error);
 				

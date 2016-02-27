@@ -17,8 +17,8 @@
 			<div id="personal">
 			</div>
 	
-			<h2> Contact details </h2>
-			<div id="contact">
+			<h2 href="nok.php?id=<?=$user->personnel_id?>"> Next of Kin </h2>
+			<div id="nok">
 			</div>
 	
 			<h2 href="attendance.php?id=<?=$user->personnel_id?>"> Attendance </h2>
