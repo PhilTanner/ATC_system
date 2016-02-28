@@ -139,6 +139,128 @@
 	</script>
 <?php
 		exit();
+	} elseif( isset($_GET['id']) && isset($_GET['action']) && $_GET['action']=='contactsheet' ) {
+		$activity = $ATC->get_activity((int)$_GET["id"]);
+		$activity = $activity[0];
+		
+		$attendees = $ATC->get_activity_attendance((int)$_GET['id']);
+		foreach( $attendees as $attendee )
+			$attendee->nok = $ATC->get_nok((int)$attendee->personnel_id);
+	
+		require('./fpdf17/fpdf.php');
+	
+		class PDF extends FPDF
+		{
+			// Page header
+			function Header()
+			{
+				global $activity; 
+				
+				$this->SetTextColor(0);
+				$this->Image('49squadron.png',185,5,25);
+				$this->SetFont('Arial','B',15);
+				$this->Cell(0,8, $activity->title.' ('.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($activity->startdate)).'-'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($activity->enddate)).')',0,1,'C');
+				$this->SetFont('Arial','',8);
+				$this->Cell(0,6,$activity->name.' '.$activity->address,0,1,'C');
+				$this->SetFont('Arial','B',10);
+				$this->Cell(0,6,'Main point of contact: '.$activity->rank.' '.$activity->firstname.' '.$activity->lastname.' '.$activity->cellphone,0,1,'C');
+				// Line break
+				$this->Ln(10);
+			}
+		}
+
+		// Instanciation of inherited class
+		$pdf = new PDF();
+		$pdf->AliasNbPages();
+		$pdf->SetLeftMargin(20);
+		$pdf->AddPage();
+	
+		$pdf->SetFont('Arial','B',9);
+		$pdf->SetTextColor(0);
+	
+		$pdf->Cell(35,5,'Attendee',1);
+		$pdf->Cell(30,5,'Contact #',1);
+		$pdf->Cell(45,5,'Next of Kin',1);
+		$pdf->Cell(30,5,'Mobile phone',1);
+		$pdf->Cell(30,5,'Home phone',1);
+		$pdf->Cell(1,5,'',0,1);
+
+		foreach( $attendees as $attendee )
+		{
+			
+			$pdf->SetFont('Arial','',9);
+			$pdf->SetTextColor(0);
+	
+			$pdf->Cell(35,5,$attendee->rank.' '.$attendee->display_name,1);
+			$pdf->Cell(30,5,$attendee->cellphone,1);
+			$n = 0;
+			foreach($attendee->nok as $nok )
+			{
+				$n++;
+				if($n > 1 )
+				{
+					$pdf->Cell(1,5,'',0,1);
+					$pdf->Cell(65,5,'',0);
+				}
+				switch( $nok->relationship )
+				{
+					case ATC_NOK_TYPE_MOTHER:
+						$relation = 'Mother';
+						break;
+					case ATC_NOK_TYPE_FATHER:
+						$relation = 'Father';
+						break;
+					case ATC_NOK_TYPE_STEPMOTHER:
+						$relation = 'Step-Mother';
+						break;
+					case ATC_NOK_TYPE_STEPFATHER:
+						$relation = 'Step-Father';
+						break;
+					case ATC_NOK_TYPE_SPOUSE:
+						$relation = 'Spouse';
+						break;
+					case ATC_NOK_TYPE_SIBLING:
+						$relation = 'Sibling';
+						break;
+					case ATC_NOK_TYPE_DOMPTNR:
+						$relation = 'Domestic Partner';
+						break;
+					case ATC_NOK_TYPE_OTHER:
+						$relation = 'Other';
+						break;
+					case ATC_NOK_TYPE_GRANDMOTHER:
+						$relation = 'Grandmother';
+						break;
+					case ATC_NOK_TYPE_GRANDFATHER:
+						$relation = 'Grandfather';
+						break;
+					default:
+						$relation = 'Unknown';
+				}
+				$pdf->Cell(45,5,$nok->firstname.' '.$nok->lastname.' ('.$relation.')',1);
+				$pdf->Cell(30,5,$nok->mobile_number,1);
+				$pdf->Cell(30,5,$nok->home_number,1);
+			}
+
+			$pdf->Cell(1,5,'',0,1);
+		}
+
+	
+		// $pdf->AddPage(); // Pagebreak
+		
+			
+	$pdf = $pdf->Output($activity->title.'.pdf','D');
+
+/*
+		echo '<h1>'.$activity->title.' ('.$activity->name.' '.$activity->address.')</h1>';
+		echo '<h2>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($activity->startdate)).' &ndash; '.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($activity->enddate)).' </h2>';
+		echo '<p> Main point of contact: '.$activity->rank.' '.$activity->firstname.' '.$activity->lastname.' '.$activity->cellphone.'</p>';
+		
+		var_dump($activity);
+		var_dump($attendees);
+		*/
+		
+		exit();
 	} elseif( isset($_GET['id']) ) {
 		$activity = $ATC->get_activity((int)$_GET["id"]);
 		$activity = $activity[0];
@@ -282,15 +404,18 @@
 						echo '<tr>';
 						echo '	<td><span class="ui-icon ui-icon-'.($obj->nzcf_status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> '.$obj->title.'</td>';
 						echo '	<td>'.$obj->rank.' '.$obj->lastname.', '.$obj->firstname.'</td>';
-						echo '	<td>'.date("j M, H:i", strtotime($obj->startdate)).'</td>';
-						echo '	<td>'.date("j M, H:i", strtotime($obj->enddate)).'</td>';
+						echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->startdate)).'</td>';
+						echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->enddate)).'</td>';
 						echo '	<td style="text-align:center;">'.$obj->officers_attending.'</td>';
 						echo '	<td style="text-align:center;">'.$obj->cadets_attending.'</td>';
 						if( !isset($_GET['id']) && $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) )
 						{
 							echo '	<td><a href="?id='.$obj->activity_id.'" class="button edit">Edit</a>';
 							if( $ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW) )
+							{
 								echo '<a href="?id='.$obj->activity_id.'&action=attendance" class="button attendance">Attendance</a>';
+								echo '<a href="?id='.$obj->activity_id.'&action=contactsheet" class="button contactsheet">Contacts</a>';
+							}
 							echo '	<a href="?id='.$obj->activity_id.'" class="button delete">Delete</a>';
 							echo '</td>';
 						}
@@ -334,6 +459,7 @@
 			});
 		});
 		$('a.button.edit').button({ icons: { primary: 'ui-icon-pencil' }, text: false });
+		$('a.button.contactsheet').button({ icons: { primary: 'ui-icon-contact' }, text: false });
 		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false });
 		$('#activitylist a.button.attendance').button({ icons: { primary: 'ui-icon-clipboard' }, text: false });
 		$('a.button.edit, a.button.new, #activitylist a.button.attendance').click(function(e){

@@ -2,6 +2,7 @@
 	define( 'ATC_DEBUG', 					1 );
 	define( 'ATC_SETTING_PARADE_NIGHT',			"Wednesday" );
 	define( 'ATC_SETTING_DATETIME_INPUT',         "Y-m-d\TH:i");
+	define( 'ATC_SETTING_DATETIME_OUTPUT',         "j M, H:i");
 	define( 'ATC_SETTING_FULL_DISPLAY_NAME',		'CONCAT("RNK, ", `personnel`.`lastname`,", ",`personnel`.`firstname`)' );
 	define( 'ATC_SETTING_DISPLAY_NAME',		'CONCAT(`personnel`.`lastname`,", ",`personnel`.`firstname`)' );
 
@@ -286,6 +287,7 @@
 					`personnel`.`firstname`,
 					`personnel`.`lastname`,
 					" " AS `rank`,
+					" " AS `cellphone`,
 					(
 						SELECT	GROUP_CONCAT(DISTINCT `personnel_id` SEPARATOR ",")
 						FROM 	`activity_register`
@@ -329,7 +331,8 @@
 			$query = '
 				SELECT	`activity_register`.*,
 					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
-					" " AS rank
+					" " AS `rank`,
+					" " AS `cellphone`
 				FROM 	`activity_register`
 					INNER JOIN `personnel`
 						ON `activity_register`.`personnel_id` = `personnel`.`personnel_id`
@@ -434,6 +437,19 @@
 				throw new ATCExceptionDBError(self::$mysqli->error);
 
 			return $attendance;
+		}
+		
+		public function get_location( $id=0 )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_LOCATIONS_VIEW ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = 'SELECT * FROM `location` WHERE `location_id` = '.(int)$id.' LIMIT 1;';
+
+			if ($result = self::$mysqli->query($query))
+				return $result->fetch_object();
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
 		}
 		
 		public function get_locations()
@@ -996,7 +1012,8 @@
 				switch($permission)
 				{
 					case ATC_PERMISSION_PERSONNEL_VIEW:
-						// If we're wanting to view our own user, we're all good.
+					case ATC_PERMISSION_PERSONNEL_EDIT:
+						// If we're wanting to view/edit our own user, we're all good.
 						if( $target == self::$currentuser )
 							return true;
 						break;
