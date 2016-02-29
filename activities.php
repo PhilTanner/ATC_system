@@ -194,7 +194,7 @@
 			$pdf->SetTextColor(0);
 	
 			$pdf->Cell(35,5,$attendee->rank.' '.$attendee->display_name,1);
-			$pdf->Cell(30,5,$attendee->cellphone,1);
+			$pdf->Cell(30,5,$attendee->mobile_phone,1);
 			$n = 0;
 			foreach($attendee->nok as $nok )
 			{
