@@ -53,8 +53,8 @@
 	if(ATC_DEBUG)
 	{
 ?>
-	add mufti<br/>
-	Add edit activity permission if it's their activity
+	
+	Current user login sessions<br />
 	
 	<h2> Outstanding documentation </h2>
 	<ol>
@@ -74,6 +74,7 @@
 		<li> Activities with unknown start/end dates </li>
 		<li> Activities with unknown locations </li>
 		<li> Activities with NZCF8 outstanding </li>
+		<li> Activities which have passed but have no attendees set up </li>
 	</ol>
 	
 	<h2> Automated emails </h2>
