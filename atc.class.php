@@ -1,5 +1,8 @@
 <?php
-	define( 'ATC_DEBUG', 					1 );
+	if( $_SERVER['HTTP_HOST'] == '49sqn.philtanner.com')
+		define( 'ATC_DEBUG', 					0 );
+	else
+		define( 'ATC_DEBUG', 					1 );
 	define( 'ATC_SETTING_PARADE_NIGHT',			"Wednesday" );
 	define( 'ATC_SETTING_DATETIME_INPUT',         "Y-m-d\TH:i");
 	define( 'ATC_SETTING_DATETIME_OUTPUT',         "j M, H:i");
@@ -64,6 +67,7 @@
 	define( 'ATC_DRESS_CODE_BLUES',				0 );
 	define( 'ATC_DRESS_CODE_DPM',				1 );
 	define( 'ATC_DRESS_CODE_BLUES_AND_DPM',			2 );
+	define( 'ATC_DRESS_CODE_MUFTI',			3 );
 	
 	define( 'ATC_NOK_TYPE_MOTHER',				0 );
 	define( 'ATC_NOK_TYPE_FATHER',				1 );
@@ -646,7 +650,7 @@
 				throw new ATCExceptionBadData('Invalid startdate');
 			if( !strtotime($startdate) )
 				throw new ATCExceptionBadData('Invalid enddate');
-			if( $dress_code != ATC_DRESS_CODE_BLUES && $dress_code != ATC_DRESS_CODE_DPM && $dress_code != ATC_DRESS_CODE_BLUES_AND_DPM )
+			if( $dress_code != ATC_DRESS_CODE_BLUES && $dress_code != ATC_DRESS_CODE_DPM && $dress_code != ATC_DRESS_CODE_BLUES_AND_DPM && $dress_code != ATC_DRESS_CODE_MUFTI )
 				throw new ATCExceptionBadData('Unknown dress code value');
 
 			$officers = self::get_personnel(null,'ASC',ATC_USER_GROUP_OFFICERS);
@@ -1027,7 +1031,7 @@
 				
 			</ul>
 		</nav>
-		<h1> <!-- ATC --> '.($_SERVER['HTTP_HOST']!='49sqn.philtanner.com'?'DEV - ':'').' '.$title.' </h1>
+		<h1> '.(ATC_DEBUG?'<span style="color:Red;">DEV</span>':'ATC').' - '.$title.' </h1>
 ';
 		}
 		
@@ -1048,6 +1052,20 @@
 						// If we're wanting to view/edit our own user, we're all good.
 						if( $target == self::$currentuser )
 							return true;
+						break;
+					case ATC_PERMISSION_ACTIVITIES_EDIT:
+						// If we're the OIC, we should be able to edit it.
+						$query = 'SELECT `personnel_id` FROM `activity` WHERE `activity_id` = '.(int)$target.' LIMIT 1;';
+						
+						if ($result = self::$mysqli->query($query))
+						{
+							while ( $obj = $result->fetch_object() )
+								// Make sure we're the OIC, and that we're logged in (otherwise anon users can edit new/misconfigured activities)
+								if( $obj->personnel_id == self::$currentuser && self::$currentuser )
+									return true;
+						} else
+							throw new ATCExceptionDBError(self::$mysqli->error);
+						
 						break;
 					default:
 						return false;
