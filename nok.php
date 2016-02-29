@@ -149,6 +149,8 @@
 						   },
 						   success: function(data)
 						   {
+							   // True to ensure we don't just use a cached version, but get a fresh copy from the server
+							   location.reload(true);
 							return false;
 						   },
 						   error: function(data)

@@ -146,7 +146,9 @@
 		$attendees = $ATC->get_activity_attendance((int)$_GET['id']);
 		foreach( $attendees as $attendee )
 			$attendee->nok = $ATC->get_nok((int)$attendee->personnel_id);
-	
+			
+		// We're going to output the contact sheet as a PDF.  This means it can be printed easily, or downloaded
+		// so that it can be accessed offline for use on the day.	
 		require('./fpdf17/fpdf.php');
 	
 		class PDF extends FPDF
@@ -163,7 +165,7 @@
 				$this->SetFont('Arial','',8);
 				$this->Cell(0,6,$activity->name.' '.$activity->address,0,1,'C');
 				$this->SetFont('Arial','B',10);
-				$this->Cell(0,6,'Main point of contact: '.$activity->rank.' '.$activity->firstname.' '.$activity->lastname.' '.$activity->cellphone,0,1,'C');
+				$this->Cell(0,6,'Main point of contact: '.$activity->rank.' '.$activity->firstname.' '.$activity->lastname.' ('.$activity->mobile_phone.')',0,1,'C');
 				// Line break
 				$this->Ln(10);
 			}
@@ -244,21 +246,8 @@
 
 			$pdf->Cell(1,5,'',0,1);
 		}
-
-	
-		// $pdf->AddPage(); // Pagebreak
-		
 			
-	$pdf = $pdf->Output($activity->title.'.pdf','D');
-
-/*
-		echo '<h1>'.$activity->title.' ('.$activity->name.' '.$activity->address.')</h1>';
-		echo '<h2>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($activity->startdate)).' &ndash; '.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($activity->enddate)).' </h2>';
-		echo '<p> Main point of contact: '.$activity->rank.' '.$activity->firstname.' '.$activity->lastname.' '.$activity->cellphone.'</p>';
-		
-		var_dump($activity);
-		var_dump($attendees);
-		*/
+		$pdf = $pdf->Output($activity->title.'.pdf','D');
 		
 		exit();
 	} elseif( isset($_GET['id']) ) {
@@ -459,7 +448,7 @@
 			});
 		});
 		$('a.button.edit').button({ icons: { primary: 'ui-icon-pencil' }, text: false });
-		$('a.button.contactsheet').button({ icons: { primary: 'ui-icon-contact' }, text: false });
+		$('a.button.contactsheet').button({ icons: { primary: 'ui-icon-document' }, text: false });
 		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false });
 		$('#activitylist a.button.attendance').button({ icons: { primary: 'ui-icon-clipboard' }, text: false });
 		$('a.button.edit, a.button.new, #activitylist a.button.attendance').click(function(e){
