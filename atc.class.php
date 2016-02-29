@@ -333,7 +333,7 @@
 				SELECT	`activity_register`.*,
 					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
 					" " AS `rank`,
-					" " AS `cellphone`
+					`personnel`.`mobile_phone`
 				FROM 	`activity_register`
 					INNER JOIN `personnel`
 						ON `activity_register`.`personnel_id` = `personnel`.`personnel_id`
