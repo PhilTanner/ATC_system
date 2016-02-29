@@ -3,6 +3,7 @@
 	define( 'ATC_SETTING_PARADE_NIGHT',			"Wednesday" );
 	define( 'ATC_SETTING_DATETIME_INPUT',         "Y-m-d\TH:i");
 	define( 'ATC_SETTING_DATETIME_OUTPUT',         "j M, H:i");
+	define( 'ATC_SETTING_DATE_OUTPUT',         "j M");
 	define( 'ATC_SETTING_FULL_DISPLAY_NAME',		'CONCAT("RNK, ", `personnel`.`lastname`,", ",`personnel`.`firstname`)' );
 	define( 'ATC_SETTING_DISPLAY_NAME',		'CONCAT(`personnel`.`lastname`,", ",`personnel`.`firstname`)' );
 
@@ -286,8 +287,8 @@
 					`location`.*,
 					`personnel`.`firstname`,
 					`personnel`.`lastname`,
+					`personnel`.`mobile_phone`,
 					" " AS `rank`,
-					" " AS `cellphone`,
 					(
 						SELECT	GROUP_CONCAT(DISTINCT `personnel_id` SEPARATOR ",")
 						FROM 	`activity_register`
@@ -439,6 +440,37 @@
 			return $attendance;
 		}
 		
+		public function get_awol( $date )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			
+			$query = '
+			SELECT	`attendance_register`.*,
+				`personnel`.*,
+				'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`
+			FROM 	`attendance_register` 
+				INNER JOIN `personnel` 
+					ON `attendance_register`.`personnel_id` = `personnel`.`personnel_id` 
+			WHERE 	`attendance_register`.`date` = \''.date('Y-m-d', strtotime($date)).'\' 
+				AND `attendance_register`.`presence` = '.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE.'
+				AND ( LENGTH(`attendance_register`.`comment`) = 0 OR LENGTH(`attendance_register`.`comment`) IS NULL )
+			ORDER BY `date` ASC;';
+
+			$awollers = array();
+			if ($result = self::$mysqli->query($query))
+			{
+				while ( $obj = $result->fetch_object() )
+				{
+					$obj->nok = self::get_nok($obj->personnel_id);
+					$awollers[] = $obj;
+				}
+			}	
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+			return $awollers;
+		}
+		
 		public function get_location( $id=0 )
 		{
 			if(!self::user_has_permission( ATC_PERMISSION_LOCATIONS_VIEW ))
@@ -507,7 +539,7 @@
 					if( is_null($id) )
 					{
 						$personnel = array();
-						$query = "SELECT * FROM `personnel` ";
+						$query = "SELECT *, ".ATC_SETTING_DISPLAY_NAME." AS `display_name` FROM `personnel` ";
 						if( !is_null($access_rights) )
 							$query .= ' WHERE `access_rights` IN ('.self::$mysqli->real_escape_string($access_rights).')  AND `personnel_id` > 0 ';
 						else 
@@ -541,7 +573,7 @@
 					}
 					break;
 				default:
-					$query = "SELECT * FROM `personnel` WHERE `personnel_id` = ".(int)$id." LIMIT 1;";
+					$query = "SELECT *,".ATC_SETTING_DISPLAY_NAME." AS `display_name` FROM `personnel` WHERE `personnel_id` = ".(int)$id." LIMIT 1;";
 					
 					if ($result = self::$mysqli->query($query)) 
 						$personnel = $result->fetch_object();
@@ -565,7 +597,7 @@
 		
 		public function login( $username, $password )
 		{
-			$query = "SELECT `password` AS `correct_hash`, `personnel_id` FROM `personnel` WHERE `email` = '".self::$mysqli->real_escape_string($username)."' LIMIT 1;";
+			$query = "SELECT `password` AS `correct_hash`, `personnel_id` FROM `personnel` WHERE `email` = '".self::$mysqli->real_escape_string($username)."' AND `enabled` = -1 LIMIT 1;";
 			if ($result = self::$mysqli->query($query))	
 			{
 				if ( $obj = $result->fetch_object() )
@@ -752,7 +784,7 @@
 			return false;
 		}
 		
-		public function set_attendance_register( $personnel_id, $date, $presence )
+		public function set_attendance_register( $personnel_id, $date, $presence, $comment=null )
 		{
 			if( !(int)$personnel_id ) 
 				throw new ATCExceptionBadData('Invalid personnel ID');
@@ -770,7 +802,7 @@
 			if( $presence != ATC_ATTENDANCE_PRESENT && $presence != ATC_ATTENDANCE_ON_LEAVE && $presence != ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE )
 				throw new ATCExceptionBadData('Unknown presence value');
 
-			$query = "INSERT INTO `attendance_register` (`personnel_id`, `date`, `presence`) VALUES ( ".(int)$personnel_id.", '".date("Y-m-d",strtotime($date))."', ".$presence.") ON DUPLICATE KEY UPDATE `presence` = VALUES(`presence`)";
+			$query = "INSERT INTO `attendance_register` (`personnel_id`, `date`, `presence`, `comment`) VALUES ( ".(int)$personnel_id.", '".date("Y-m-d",strtotime($date))."', ".$presence.", ".(is_null($comment)?'NULL':'"'.self::$mysqli->real_escape_string($comment).'"').") ON DUPLICATE KEY UPDATE `presence` = VALUES(`presence`), `comment` = VALUES(`comment`)";
 			if ($result = self::$mysqli->query($query))
 				self::log_action( 'attendance_register', $query, $personnel_id );
 			else
@@ -900,8 +932,8 @@
 				
 			if( !$user->personnel_id )
 			{
-				$query = "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `dob`, `password`, `joined_date`, `left_date`, `access_rights`, `is_female`, `enabled` ) VALUES ( ";
-				$query .= '"'.self::$mysqli->real_escape_string($user->firstname).'", "'.self::$mysqli->real_escape_string($user->lastname).'", "'.self::$mysqli->real_escape_string($user->email).'", "'.date('Y-m-d',strtotime($user->dob)).'", ';
+				$query = "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `mobile_phone`, `dob`, `password`, `joined_date`, `left_date`, `access_rights`, `is_female`, `enabled` ) VALUES ( ";
+				$query .= '"'.self::$mysqli->real_escape_string($user->firstname).'", "'.self::$mysqli->real_escape_string($user->lastname).'", "'.self::$mysqli->real_escape_string($user->email).'", "'.self::$mysqli->real_escape_string($user->mobile_phone).'", "'.date('Y-m-d',strtotime($user->dob)).'", ';
 				$query .= '"'.self::$mysqli->real_escape_string(create_hash($user->password)).'", "'.date('Y-m-d',strtotime($user->joined_date)).'", '.(strtotime($user->left_date)?'"'.date('Y-m-d',strtotime($user->left_date)).'"':'NULL').', '.(int)$user->access_rights.', ';
 				$query .= (int)$user->is_female.', '.(isset($user->enabled)&&$user->enabled==-1?-1:0).' );';
 				if ($result = self::$mysqli->query($query))
@@ -912,7 +944,7 @@
 				} else 
 					throw new ATCExceptionDBError(self::$mysqli->error);
 			} else {
-				$query = 'UPDATE `personnel` SET `firstname` = "'.self::$mysqli->real_escape_string($user->firstname).'", `lastname` = "'.self::$mysqli->real_escape_string($user->lastname).'", `email` = "'.self::$mysqli->real_escape_string($user->email).'", `dob` = "'.date('Y-m-d',strtotime($user->dob)).'", ';
+				$query = 'UPDATE `personnel` SET `firstname` = "'.self::$mysqli->real_escape_string($user->firstname).'", `lastname` = "'.self::$mysqli->real_escape_string($user->lastname).'", `email` = "'.self::$mysqli->real_escape_string($user->email).'", `mobile_phone` = "'.self::$mysqli->real_escape_string($user->mobile_phone).'", `dob` = "'.date('Y-m-d',strtotime($user->dob)).'", ';
 				if( strlen(trim($user->password)) ) 
 					 $query .= '`password` = "'.self::$mysqli->real_escape_string(create_hash($user->password)).'", ';
 				$query .= '`joined_date` = "'.date('Y-m-d',strtotime($user->joined_date)).'", ';
@@ -940,7 +972,7 @@
 		<footer>
 			<p> Built on the ATC system code available at <a target="blank" href="https://github.com/PhilTanner/ATC_system">https://github.com/PhilTanner/ATC_system</a> </p>
 			'.(ATC_DEBUG?'<p style="font-size:75%;">DEBUG INFO: Logged in as user: '.self::$currentuser.' - access rights: '.self::$currentpermissions.'</p>':'').'
-			<!-- <img src="49squadron.png" style="position:absolute; bottom: 1em; right: 1em; z-index: -1;" /> -->
+			'.(ATC_DEBUG?'<!--':'').'<img src="49squadron.png" style="position:absolute; bottom: 1em; right: 1em; z-index: -1;" />'.(ATC_DEBUG?'-->':'').'
 		</footer>
 	</body>
 </html>';
@@ -966,7 +998,7 @@
 			$(function(){
 				$(".navoptions ul li a").button().addClass("ui-state-disabled");
 				$(".navoptions ul li a.home").button({ icons: { primary: "ui-icon-home" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Home'?'.addClass("ui-state-active")':'').';
-				$(".navoptions ul li a.personnel").button({ icons: { primary: "ui-icon-person" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Personnel'?'.addClass("ui-state-active")':'').';
+				$(".navoptions ul li a.personnel").button({ icons: { primary: "ui-icon-contact" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Personnel'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.attendance").button({ icons: { primary: "ui-icon-clipboard" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Attendance'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.activities").button({ icons: { primary: "ui-icon-image" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Activities'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.finance").button({ icons: { primary: "ui-icon-cart" } });
@@ -995,7 +1027,7 @@
 				
 			</ul>
 		</nav>
-		<h1> <!-- ATC --> '.$title.' </h1>
+		<h1> <!-- ATC --> '.($_SERVER['HTTP_HOST']!='49sqn.philtanner.com'?'DEV - ':'').' '.$title.' </h1>
 ';
 		}
 		

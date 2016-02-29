@@ -13,7 +13,7 @@
 	{	
 ?>
 		<div id="personnelform">
-			<h2 href="personal.php?id=<?=$user->personnel_id?>"> Personal details </h2>
+			<h2 href="personal.php?id=<?=$user->personnel_id?>"> Personal details &mdash; <?=$user->display_name?> </h2>
 			<div id="personal">
 			</div>
 	
@@ -39,6 +39,11 @@
 
 			<h2> Training </h2>
 			<div id="training">
+			</div>
+			
+			
+			<h2> Current browser sessions </h2>
+			<div id="browsersessions">
 			</div>
 		</div>
 		

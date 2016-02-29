@@ -23,9 +23,7 @@
 			echo 'Caught exception: ',  $e->getMessage(), "\n";
 		}
 		exit();
-	}
-	
-	if( isset( $_POST['attendance_register'] ) && $_POST['attendance_register'] )
+	} elseif( isset( $_POST['attendance_register'] ) && $_POST['attendance_register'] )
 	{
 		try {
 			foreach($_POST as $entry => $status )
@@ -51,6 +49,26 @@
 			echo 'Caught exception: ',  $e->getMessage(), "\n";
 		}
 		exit();
+	} elseif( isset( $_POST['personnel_id'] ) ) {
+		try {
+			foreach($_POST['personnel_id'] as $awol )
+				$ATC->set_attendance_register( $awol, $_POST['date'], ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE, $_POST['comment_'.$awol] );
+		} catch (ATCExceptionInsufficientPermissions $e) {
+			header("HTTP/1.0 401 Unauthorised");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		} catch (ATCExceptionDBError $e) {
+			header("HTTP/1.0 500 Internal Server Error");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		} catch (ATCExceptionDBConn $e) {
+			header("HTTP/1.0 500 Internal Server Error");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		} catch (ATCException $e) {
+			header("HTTP/1.0 400 Bad Request");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		} catch (Exception $e) {
+			header("HTTP/1.0 500 Internal Server Error");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		}
 	}
 
 	$dates = $ATC->get_attendance( date('Y').'-01-01', date('Y').'-12-31' );
@@ -107,9 +125,96 @@
 			</tbody>
 		</table>
 	</form>
+	
+<?php
+	$date = date('Y-m-d', time());
+	$nonattendingcadets = $ATC->get_awol($date);
+	if( count($nonattendingcadets) )
+	{
+?>
+	<form name="missingcadets" id="missingcadets" method="post" style="margin-top:2em;">
+		<input type="hidden" name="date" value="<?=htmlentities($date)?>" />
+		<table>
+			<caption> Absent cadets &mdash; <?=date( ATC_SETTING_DATE_OUTPUT, strtotime($date))?> </caption>
+			<thead>
+				<tr>
+					<th> Name </th>
+					<th> Contact number </th>
+					<th> Next of Kin contact </th>
+					<th> Reason for absence </th>
+				</tr>
+			</thead>
+			<tfoot>
+				<tr>
+					<td colspan="4"> <button type="submit" class="save">Save</button> </td>
+				</tr>
+			</tfoot>
+			<tbody>
+				<?php
+					foreach($nonattendingcadets as $mia)
+					{
+						echo '<tr>';
+						echo '	<td> ';
+						echo '<input type="hidden" name="personnel_id[]" value="'.$mia->personnel_id.'" />';
+						echo $mia->display_name.'</td>';
+						echo '	<td> '.$mia->mobile_phone.'</td>';
+						echo '	<td>';
+						$n=0;
+						foreach( $mia->nok as $nok )
+						{
+							$n++;
+							echo $nok->firstname.' '.$nok->lastname;
+							switch($nok->relationship)
+							{
+								case ATC_NOK_TYPE_MOTHER:
+									echo ' (Mother)';
+									break;
+								case ATC_NOK_TYPE_STEPMOTHER:
+									echo ' (Step-Mother)';
+									break;
+								case ATC_NOK_TYPE_GRANDMOTHER:
+									echo ' (Grandmother)';
+									break;
+								case ATC_NOK_TYPE_FATHER:
+									echo ' (Father)';
+									break;
+								case ATC_NOK_TYPE_STEPFATHER:
+									echo ' (Step-Father)';
+									break;
+								case  ATC_NOK_TYPE_GRANDFATHER:
+									echo ' (Grandfather)';
+									break;
+								case  ATC_NOK_TYPE_SPOUSE:
+									echo ' (Spouse)';
+									break;
+								case  ATC_NOK_TYPE_DOMPTNR:
+									echo ' (Domestic Partner)';
+									break;
+								case  ATC_NOK_TYPE_SIBLING:
+									echo ' (Sibling)';
+									break;
+								default:
+									echo ' (Unknown/Other)';
+							}
+							echo '<br />'.$nok->mobile_number.' ('.$nok->home_number.')';
+							if( $n != count($mia->nok) )
+								echo '<hr />';
+						}
+						echo '	</td>';
+						echo '	<td> <input type="text" maxlength="255" name="comment_'.$mia->personnel_id.'" id="comment_'.$mia->personnel_id.'" /> </td>';
+						echo '</tr>';
+					}
+				?>
+			</tbody>
+		</table>
+	</form>
+<?php
+	}
+?>	
 	<script>
 		$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
-		$('button.save').button({ icons: { primary: 'ui-icon-disk' } }).click(function(e){
+		$('button.save').button({ icons: { primary: 'ui-icon-disk' } });
+		$('#attendanceregister button.save').click(function(e){
 			e.preventDefault(); // stop the submit button actually submitting
 			$.ajax({
 				type: "POST",
@@ -250,6 +355,7 @@
 			});
 		}
 	</script>
+	
 <?php
 	if( !isset($_GET['id']) )
 		$ATC->gui_output_page_footer('Attendance');

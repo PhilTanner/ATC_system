@@ -58,6 +58,8 @@
 			</select><br />
 			<label for="email">Email address</label>
 			<input type="email" name="email" id="email" value="" maxlength="255" required="required" placeholder="Email address" /> <br />
+			<label for="mobile_phone">Mobile phone n&ord;</label>
+			<input type="tel" name="mobile_phone" id="mobile_phone" value="" maxlength="50" placeholder="Mobile (cell) number" /> <br />
 			<label for="password">Password</label>
 			<input type="password" name="password" id="password" value="" maxlength="255" required="required" placeholder="Password"  /> <br />
 			<label for="dob">Date of birth</label>
@@ -92,6 +94,7 @@
 				$('#firstname').val(user['firstname']);
 				$('#lastname').val(user['lastname']);
 				$('#email').val(user['email']);
+				$('#mobile_phone').val(user['mobile_phone']);
 				$('#created').val(user['created']);
 				$('#dob').val(user['dob']);
 				$('#access_rights').val( user['access_rights']);
