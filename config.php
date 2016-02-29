@@ -10,15 +10,8 @@
 	
 	define( 'MONEYFORMAT', '%(#2.2n' );
 	
-	define( 'BOOKED',  0 );
-	define( 'ABSENT',  1 );
-	define( 'REQUEST', 2 );
-	
-	define( 'MONEYFORMAT_NORMAL',      0 );
-	define( 'MONEYFORMAT_PARENTHESIS', 1 );
-	define( 'MONEYFORMAT_TEXTUAL',     2 );
-	
 	setlocale(LC_ALL, 'en_NZ.UTF-8');
+	date_default_timezone_set('Pacific/Auckland');
 
 	if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') 
 	{
