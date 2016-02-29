@@ -53,6 +53,8 @@
 	if(ATC_DEBUG)
 	{
 ?>
+	add mufti<br/>
+	Add edit activity permission if it's their activity
 	
 	<h2> Outstanding documentation </h2>
 	<ol>
@@ -69,6 +71,9 @@
 		<li> Cadets signed up to activities without NZCF8s </li>
 		<li> Cadets who will qualify for uniform </li>
 		<li> Cadets who've not attended in 2/3 weeks </li>
+		<li> Activities with unknown start/end dates </li>
+		<li> Activities with unknown locations </li>
+		<li> Activities with NZCF8 outstanding </li>
 	</ol>
 	
 	<h2> Automated emails </h2>
