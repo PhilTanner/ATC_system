@@ -972,7 +972,7 @@
 		<footer>
 			<p> Built on the ATC system code available at <a target="blank" href="https://github.com/PhilTanner/ATC_system">https://github.com/PhilTanner/ATC_system</a> </p>
 			'.(ATC_DEBUG?'<p style="font-size:75%;">DEBUG INFO: Logged in as user: '.self::$currentuser.' - access rights: '.self::$currentpermissions.'</p>':'').'
-			<!-- <img src="49squadron.png" style="position:absolute; bottom: 1em; right: 1em; z-index: -1;" /> -->
+			'.(ATC_DEBUG?'<!--':'').'<img src="49squadron.png" style="position:absolute; bottom: 1em; right: 1em; z-index: -1;" />'.(ATC_DEBUG?'-->':'').'
 		</footer>
 	</body>
 </html>';

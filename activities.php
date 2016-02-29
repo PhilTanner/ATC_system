@@ -165,7 +165,7 @@
 				$this->SetFont('Arial','',8);
 				$this->Cell(0,6,$activity->name.' '.$activity->address,0,1,'C');
 				$this->SetFont('Arial','B',10);
-				$this->Cell(0,6,'Main point of contact: '.$activity->rank.' '.$activity->firstname.' '.$activity->lastname.' ('.$activity->mobile_phone.')',0,1,'C');
+				$this->Cell(0,6,'Officer In Charge: '.$activity->rank.' '.$activity->firstname.' '.$activity->lastname.' ('.$activity->mobile_phone.')',0,1,'C');
 				// Line break
 				$this->Ln(10);
 			}
@@ -265,7 +265,7 @@
 	<input type='text' id='location' name='location' value='<?=$activity->name?>' required='required' /><br />
 	<label for='activity_type'>Type of activity</label><br />
 	<input type='text' id='activity_type' name='activity_type' value='<?=$activity->type?>' required='required' /><br />
-	<label for='personnel_id'>Organising Staff</label><br />
+	<label for='personnel_id'>Officer In Charge</label><br />
 	<input type='text' id='personnel_name' name='personnel_name' value='<?=$activity->rank.' '.$activity->lastname.', '.$activity->firstname?>' required='required' /><br />
 	<label for='dress_code'>Dress code</label><br />
 	<select name='dress_code' id='dress_code'>
@@ -371,7 +371,7 @@
 			<thead>
 				<tr>
 					<th rowspan="2"> Activity </th>
-					<th rowspan="2"> Lead </th>
+					<th rowspan="2"> <acronym title="Officer In Charge">OIC</acronym> </th>
 					<th colspan="2"> Date </th>
 					<th colspan="2"> Attendance </th>
 					<?php

@@ -3,6 +3,7 @@ body
 	font-family: 'Lucida Sans', 'Lucida Sans Unicode', Verdana, Arial, sans-serif;
 	font-size:80%;
 	/*background: url("logo.png") no-repeat fixed right bottom White*/
+	margin-bottom:5em;
 }
 
 td.currency { text-align: right; }
