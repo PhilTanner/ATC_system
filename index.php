@@ -16,7 +16,8 @@
 			<thead>
 				<tr>
 					<th rowspan="2"> Activity </th>
-					<th rowspan="2"> <acronym title="Officer In Charge">OIC</acronym> </th>
+					<th rowspan="2"> Officer In Charge </th>
+					<th rowspan="2"> Alternate Officer In Charge </th>
 					<th colspan="2"> Date </th>
 					<th colspan="2"> Attendance </th>
 				</tr>
@@ -33,7 +34,8 @@
 					{
 						echo '<tr>';
 						echo '	<td><span class="ui-icon ui-icon-'.($obj->nzcf_status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> '.$obj->title.'</td>';
-						echo '	<td>'.$obj->rank.' '.$obj->lastname.', '.$obj->firstname.'</td>';
+						echo '	<td>'.$obj->display_name.'</td>';
+						echo '	<td>'.$obj->twoic_display_name.'</td>';
 						echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->startdate)).'</td>';
 						echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->enddate)).'</td>';
 						echo '	<td style="text-align:center;">'.$obj->officers_attending.'</td>';
