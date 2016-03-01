@@ -129,8 +129,8 @@
 					if(substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
 						header('Location: login.php', true, 302);
 				}
-			}
-			//if(ATC_DEBUG) self::$currentuser = 1;
+			} else 
+				header('Location: login.php', true, 302);
 		}
 		
 		public function add_parade_night( $date )
@@ -238,9 +238,8 @@
 			$query = '
 				SELECT	`activity`.*,
 					`activity_type`.*,
-					`personnel`.`firstname`,
-					`personnel`.`lastname`,
-					" " AS `rank`,
+					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
+					'.str_replace("personnel","2ic_personnel",ATC_SETTING_DISPLAY_NAME).' AS `twoic_display_name`,
 					(
 						SELECT	COUNT(`personnel`.`personnel_id`)
 						FROM	`activity_register`
@@ -262,6 +261,8 @@
 						ON `activity`.`activity_type_id` = `activity_type`.`activity_type_id`
 					INNER JOIN `personnel`
 						ON `activity`.`personnel_id` = `personnel`.`personnel_id`
+					INNER JOIN `personnel` `2ic_personnel`
+						ON `activity`.`2ic_personnel_id` = `2ic_personnel`.`personnel_id`
 				WHERE 	`activity`.`startdate` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" 
 					AND `activity`.`activity_id` > 0
 				ORDER BY `startdate` ASC;';
@@ -289,10 +290,12 @@
 				SELECT	`activity`.*,
 					`activity_type`.*,
 					`location`.*,
-					`personnel`.`firstname`,
-					`personnel`.`lastname`,
+					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
 					`personnel`.`mobile_phone`,
-					" " AS `rank`,
+					`personnel`.`personnel_id`,
+					'.str_replace("personnel","2ic_personnel",ATC_SETTING_DISPLAY_NAME).' AS `twoic_display_name`,
+					`2ic_personnel`.`mobile_phone` AS `twoic_mobile_phone`,
+					`2ic_personnel`.`personnel_id` AS `twoic_personnel_id`,
 					(
 						SELECT	GROUP_CONCAT(DISTINCT `personnel_id` SEPARATOR ",")
 						FROM 	`activity_register`
@@ -304,6 +307,8 @@
 						ON `activity`.`activity_type_id` = `activity_type`.`activity_type_id`
 					INNER JOIN `personnel`
 						ON `activity`.`personnel_id` = `personnel`.`personnel_id`
+					INNER JOIN `personnel` `2ic_personnel`
+						ON `activity`.`2ic_personnel_id` = `2ic_personnel`.`personnel_id`
 					INNER JOIN `location`
 						ON `activity`.`location_id` = `location`.`location_id`
 				WHERE 	`activity`.`activity_id` = '.(int)$id.' 
@@ -337,7 +342,11 @@
 				SELECT	`activity_register`.*,
 					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
 					" " AS `rank`,
-					`personnel`.`mobile_phone`
+					`personnel`.`mobile_phone`,
+					`personnel`.`allergies`,
+					`personnel`.`medical_conditions`,
+					`personnel`.`medicinal_reactions`,
+					`personnel`.`dietary_requirements`
 				FROM 	`activity_register`
 					INNER JOIN `personnel`
 						ON `activity_register`.`personnel_id` = `personnel`.`personnel_id`
@@ -641,9 +650,9 @@
 		}
 		
 		
-		public function set_activity( $activity_id, $startdate, $enddate, $title, $location_id, $personnel_id, $activity_type_id, $dress_code, $attendees )
+		public function set_activity( $activity_id, $startdate, $enddate, $title, $location_id, $personnel_id, $twoic_personnel_id, $activity_type_id, $dress_code, $attendees )
 		{
-			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_EDIT ))
+			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_EDIT, $activity_id ))
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
 
 			if( !strtotime($startdate) )
@@ -664,8 +673,19 @@
 				}
 			}
 			if( !$isofficer )
-				throw new ATCExceptionBadData('Personnel needs to be an officer');
-
+				throw new ATCExceptionBadData('OIC needs to be an officer');
+			$isofficer = false;
+			foreach( $officers as $officer )
+			{
+				if( $officer->personnel_id == $twoic_personnel_id )
+				{
+					$isofficer = true;
+					break;
+				}
+			}
+			if( !$isofficer )
+				throw new ATCExceptionBadData('Alternate OIC needs to be an officer');
+			
 			if( !(int)$activity_id )
 			{
 				$query = "
@@ -673,6 +693,7 @@
 						`startdate`,
 						`enddate`,
 						`personnel_id`,
+						`2ic_personnel_id`,
 						`title`,
 						`location_id`,
 						`activity_type_id`,
@@ -681,6 +702,7 @@
 						'".date("Y-m-d H:i",strtotime($startdate))."',
 						'".date("Y-m-d H:i",strtotime($enddate))."',
 						".(int)$personnel_id.",
+						".(int)$twoic_personnel_id.",
 						'".self::$mysqli->real_escape_string($title)."', 
 						".(int)$location_id.",
 						".(int)$activity_type_id.",
@@ -703,6 +725,7 @@
 						`startdate` = '".date("Y-m-d H:i",strtotime($startdate))."',
 						`enddate` = '".date("Y-m-d H:i",strtotime($enddate))."',
 						`personnel_id` = ".(int)$personnel_id.",
+						`2ic_personnel_id` = ".(int)$twoic_personnel_id.",
 						`title` = '".self::$mysqli->real_escape_string($title)."', 
 						`location_id` = ".(int)$location_id.",
 						`activity_type_id` = ".(int)$activity_type_id.",
@@ -936,8 +959,8 @@
 				
 			if( !$user->personnel_id )
 			{
-				$query = "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `mobile_phone`, `dob`, `password`, `joined_date`, `left_date`, `access_rights`, `is_female`, `enabled` ) VALUES ( ";
-				$query .= '"'.self::$mysqli->real_escape_string($user->firstname).'", "'.self::$mysqli->real_escape_string($user->lastname).'", "'.self::$mysqli->real_escape_string($user->email).'", "'.self::$mysqli->real_escape_string($user->mobile_phone).'", "'.date('Y-m-d',strtotime($user->dob)).'", ';
+				$query = "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `mobile_phone`, `allergies`, `medical_conditions`, `medicinal_reactions`, `dietary_requirements`, `dob`, `password`, `joined_date`, `left_date`, `access_rights`, `is_female`, `enabled` ) VALUES ( ";
+				$query .= '"'.self::$mysqli->real_escape_string($user->firstname).'", "'.self::$mysqli->real_escape_string($user->lastname).'", "'.self::$mysqli->real_escape_string($user->email).'", "'.self::$mysqli->real_escape_string($user->mobile_phone).'", "'.self::$mysqli->real_escape_string($user->allergies).'", "'.self::$mysqli->real_escape_string($user->medical_conditions).'", "'.self::$mysqli->real_escape_string($user->medicinal_reactions).'", "'.self::$mysqli->real_escape_string($user->dietary_requirements).'", "'.date('Y-m-d',strtotime($user->dob)).'", ';
 				$query .= '"'.self::$mysqli->real_escape_string(create_hash($user->password)).'", "'.date('Y-m-d',strtotime($user->joined_date)).'", '.(strtotime($user->left_date)?'"'.date('Y-m-d',strtotime($user->left_date)).'"':'NULL').', '.(int)$user->access_rights.', ';
 				$query .= (int)$user->is_female.', '.(isset($user->enabled)&&$user->enabled==-1?-1:0).' );';
 				if ($result = self::$mysqli->query($query))
@@ -948,7 +971,7 @@
 				} else 
 					throw new ATCExceptionDBError(self::$mysqli->error);
 			} else {
-				$query = 'UPDATE `personnel` SET `firstname` = "'.self::$mysqli->real_escape_string($user->firstname).'", `lastname` = "'.self::$mysqli->real_escape_string($user->lastname).'", `email` = "'.self::$mysqli->real_escape_string($user->email).'", `mobile_phone` = "'.self::$mysqli->real_escape_string($user->mobile_phone).'", `dob` = "'.date('Y-m-d',strtotime($user->dob)).'", ';
+				$query = 'UPDATE `personnel` SET `firstname` = "'.self::$mysqli->real_escape_string($user->firstname).'", `lastname` = "'.self::$mysqli->real_escape_string($user->lastname).'", `email` = "'.self::$mysqli->real_escape_string($user->email).'", `mobile_phone` = "'.self::$mysqli->real_escape_string($user->mobile_phone).'", `allergies` = "'.self::$mysqli->real_escape_string($user->allergies).'", `medical_conditions` = "'.self::$mysqli->real_escape_string($user->medical_conditions).'", `medicinal_reactions` = "'.self::$mysqli->real_escape_string($user->medicinal_reactions).'", `dietary_requirements` = "'.self::$mysqli->real_escape_string($user->dietary_requirements).'", `dob` = "'.date('Y-m-d',strtotime($user->dob)).'", ';
 				if( strlen(trim($user->password)) ) 
 					 $query .= '`password` = "'.self::$mysqli->real_escape_string(create_hash($user->password)).'", ';
 				$query .= '`joined_date` = "'.date('Y-m-d',strtotime($user->joined_date)).'", ';
@@ -978,6 +1001,7 @@
 			'.(ATC_DEBUG?'<p style="font-size:75%;">DEBUG INFO: Logged in as user: '.self::$currentuser.' - access rights: '.self::$currentpermissions.'</p>':'').'
 			'.(ATC_DEBUG?'<!--':'').'<img src="49squadron.png" style="position:absolute; bottom: 1em; right: 1em; z-index: -1;" />'.(ATC_DEBUG?'-->':'').'
 		</footer>
+		'.(ATC_DEBUG?'<style>body { color:red; }</style>':'').'
 	</body>
 </html>';
 		}
@@ -988,7 +1012,7 @@
 <html lang="us">
 	<head>
 		<meta charset="utf-8">
-		<title>ATC '.$title.'</title>
+		<title>'.(ATC_DEBUG?'DEV':'ATC').' '.$title.'</title>
 		<link href="jquery-ui-1.9.2.custom/css/redmond/jquery-ui-1.9.2.custom.css" rel="stylesheet">
 		<link href="atc.css" rel="stylesheet">
 		<script type="text/javascript" src="jquery-ui-1.9.2.custom/js/jquery-1.8.3.js"></script>

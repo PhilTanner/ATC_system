@@ -58,10 +58,18 @@
 			</select><br />
 			<label for="email">Email address</label>
 			<input type="email" name="email" id="email" value="" maxlength="255" required="required" placeholder="Email address" /> <br />
-			<label for="mobile_phone">Mobile phone n&ord;</label>
+			<label for="mobile_phone">Mobile phone n&ordm;</label>
 			<input type="tel" name="mobile_phone" id="mobile_phone" value="" maxlength="50" placeholder="Mobile (cell) number" /> <br />
 			<label for="password">Password</label>
 			<input type="password" name="password" id="password" value="" maxlength="255" required="required" placeholder="Password"  /> <br />
+			<label for="allergies">Allergies &amp; Treatment</label>
+			<input type="text" name="allergies" id="allergies" value="" maxlength="255" placeholder="Allergies &amp; Treatment (Food &amp; Natural)" /> <br />
+			<label for="medical_conditions">Medical Conditions</label>
+			<input type="text" name="medical_conditions" id="medical_conditions" value="" maxlength="255" placeholder="Medical Conditions (Asthma, Hay Fever, Migranes etc)" /> <br />
+			<label for="medicinal_reactions">Reaction to Medicies</label>
+			<input type="text" name="medicinal_reactions" id="medicinal_reactions" value="" maxlength="255" placeholder="Detail" /> <br />
+			<label for="dietary_requirements">Dietary</label>
+			<input type="text" name="dietary_requirements" id="dietary_requirements" value="" maxlength="255" placeholder="Special Dietary Requirements" /> <br />
 			<label for="dob">Date of birth</label>
 			<input type="date" name="dob" id="dob" value="" maxlength="50" required="required" /><br />
 			<label for="joined_date">Date joined</label>
@@ -95,6 +103,10 @@
 				$('#lastname').val(user['lastname']);
 				$('#email').val(user['email']);
 				$('#mobile_phone').val(user['mobile_phone']);
+				$('#allergies').val(user['allergies']);
+				$('#medical_conditions').val(user['medical_conditions']);
+				$('#dietary_requirements').val(user['dietary_requirements']);
+				$('#medicinal_reactions').val(user['medicinal_reactions']);
 				$('#created').val(user['created']);
 				$('#dob').val(user['dob']);
 				$('#access_rights').val( user['access_rights']);

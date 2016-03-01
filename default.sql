@@ -10,6 +10,8 @@ INSERT INTO `personnel` (`personnel_id`, `firstname`, `lastname`, `is_female`, `
 
 ALTER TABLE `personnel` ADD `mobile_phone` VARCHAR(50) NULL AFTER `email`;
 ALTER TABLE `attendance_register` ADD `comment` VARCHAR(255) NULL ;
+ALTER TABLE `activity` ADD `2ic_personnel_id` INT(11) UNSIGNED NOT NULL AFTER `personnel_id`;
+ALTER TABLE `personnel` ADD `allergies` VARCHAR(255) NULL AFTER `mobile_phone`, ADD `medical_conditions` VARCHAR(255) NULL AFTER `allergies`, ADD `medicinal_reactions` VARCHAR(255) NULL AFTER `medical_conditions`, ADD `dietary_requirements` VARCHAR(255) NULL AFTER `medicinal_reactions`;
 
 CREATE USER 'atc'@'localhost' IDENTIFIED BY 'ZIERIESs5ESa';
 GRANT SELECT, INSERT ON `atc`.`log_changes` TO 'atc'@'localhost';
