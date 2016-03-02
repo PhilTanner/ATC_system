@@ -19,6 +19,7 @@ td.attendance { text-align: center; }
 .pickdate { width: 8em; }
 .navoptions { float: right; }
 .navoptions button { margin-bottom: 5px; }
+.highlighted { background-color:Yellow; }
 
 nav ul li { float: right; list-style: none; margin-left: 1ex; }
 

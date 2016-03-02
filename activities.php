@@ -455,9 +455,9 @@
 					foreach( $activities as $obj )
 					{
 						echo '<tr'.(strtotime($obj->enddate) < time()?' class="ui-state-disabled"':'').'>';
-						echo '	<td><span class="ui-icon ui-icon-'.($obj->nzcf_status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> '.$obj->title.'</td>';
-						echo '	<td>'.$obj->display_name.'</td>';
-						echo '	<td>'.$obj->twoic_display_name.'</td>';
+						echo '	<td'.(array_search($ATC->get_currentuser_id(),explode(',',$obj->attendees))!==false?' class="highlighted"':'').'><span class="ui-icon ui-icon-'.($obj->nzcf_status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> '.$obj->title.'</td>';
+						echo '	<td'.($obj->personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'>'.$obj->display_name.'</td>';
+						echo '	<td'.($obj->twoic_personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'>'.$obj->twoic_display_name.'</td>';
 						echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->startdate)).'</td>';
 						echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->enddate)).'</td>';
 						echo '	<td style="text-align:center;">'.$obj->officers_attending.'</td>';
@@ -468,8 +468,9 @@
 							if( $ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW) )
 							{
 								echo '<a href="?id='.$obj->activity_id.'&action=attendance" class="button attendance">Attendance</a>';
-								echo '<a href="?id='.$obj->activity_id.'&action=contactsheet" class="button contactsheet">Contacts</a>';
+								echo '<a href="?id='.$obj->activity_id.'&action=contactsheet" class="button contactsheet">Contact sheet</a>';
 							}
+							echo '<a href="?id='.$obj->activity_id.'&action=documents" class="button documentation">Documentation</a>';
 							echo '	<a href="?id='.$obj->activity_id.'" class="button delete">Delete</a>';
 							echo '</td>';
 						}
@@ -514,6 +515,7 @@
 		});
 		$('a.button.edit').button({ icons: { primary: 'ui-icon-pencil' }, text: false });
 		$('a.button.contactsheet').button({ icons: { primary: 'ui-icon-document' }, text: false });
+		$('a.button.documentation').button({ icons: { primary: 'ui-icon-folder' }, text: false });
 		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false });
 		$('#activitylist a.button.attendance').button({ icons: { primary: 'ui-icon-clipboard' }, text: false });
 		$('a.button.edit, a.button.new, #activitylist a.button.attendance').click(function(e){
