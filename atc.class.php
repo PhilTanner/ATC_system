@@ -130,7 +130,8 @@
 						header('Location: login.php', true, 302);
 				}
 			} else 
-				header('Location: login.php', true, 302);
+				if(substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
+					header('Location: login.php', true, 302);
 		}
 		
 		public function add_parade_night( $date )
