@@ -33,9 +33,9 @@
 					foreach( $activities as $obj )
 					{
 						echo '<tr>';
-						echo '	<td><span class="ui-icon ui-icon-'.($obj->nzcf_status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> '.$obj->title.'</td>';
-						echo '	<td>'.$obj->display_name.'</td>';
-						echo '	<td>'.$obj->twoic_display_name.'</td>';
+						echo '	<td'.(array_search($ATC->get_currentuser_id(),explode(',',$obj->attendees))!==false?' class="highlighted"':'').'><span class="ui-icon ui-icon-'.($obj->nzcf_status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> '.$obj->title.'</td>';
+						echo '	<td'.($obj->personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'>'.$obj->display_name.'</td>';
+						echo '	<td'.($obj->twoic_personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'>'.$obj->twoic_display_name.'</td>';
 						echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->startdate)).'</td>';
 						echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->enddate)).'</td>';
 						echo '	<td style="text-align:center;">'.$obj->officers_attending.'</td>';
@@ -57,6 +57,8 @@
 ?>
 	
 	Current user login sessions<br />
+	Birthdays<br />
+	Anniversarys<br />
 	
 	<h2> Outstanding documentation </h2>
 	<ol>

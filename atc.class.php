@@ -239,7 +239,9 @@
 				SELECT	`activity`.*,
 					`activity_type`.*,
 					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
+					`personnel`.`personnel_id`,
 					'.str_replace("personnel","2ic_personnel",ATC_SETTING_DISPLAY_NAME).' AS `twoic_display_name`,
+					`2ic_personnel`.`personnel_id` AS `twoic_personnel_id`,
 					(
 						SELECT	COUNT(`personnel`.`personnel_id`)
 						FROM	`activity_register`
@@ -255,7 +257,13 @@
 								ON `personnel`.`personnel_id` = `activity_register`.`personnel_id`
 						WHERE	`activity_register`.`activity_id` = `activity`.`activity_id`
 							AND `personnel`.`access_rights` IN ('.ATC_USER_GROUP_CADETS.')
-					) AS `cadets_attending`
+					) AS `cadets_attending`,
+					(
+						SELECT	GROUP_CONCAT(DISTINCT `personnel_id` SEPARATOR ",")
+						FROM 	`activity_register`
+						GROUP BY `activity_id`
+						HAVING	`activity_id` = `activity`.`activity_id`
+					) AS `attendees`
 				FROM 	`activity` 
 					INNER JOIN `activity_type`
 						ON `activity`.`activity_type_id` = `activity_type`.`activity_type_id`
@@ -483,6 +491,8 @@
 				throw new ATCExceptionDBError(self::$mysqli->error);
 			return $awollers;
 		}
+		
+		public function get_currentuser_id() { return self::$currentuser; }
 		
 		public function get_location( $id=0 )
 		{
