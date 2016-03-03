@@ -70,6 +70,8 @@
 			<input type="text" name="medicinal_reactions" id="medicinal_reactions" value="" maxlength="255" placeholder="Detail" /> <br />
 			<label for="dietary_requirements">Dietary</label>
 			<input type="text" name="dietary_requirements" id="dietary_requirements" value="" maxlength="255" placeholder="Special Dietary Requirements" /> <br />
+			<label for="other_notes">Other notes</label>
+			<input type="text" name="other_notes" id="other_notes" value="" maxlength="255" placeholder="Any other notes" /> <br />
 			<label for="dob">Date of birth</label>
 			<input type="date" name="dob" id="dob" value="" maxlength="50" required="required" /><br />
 			<label for="joined_date">Date joined</label>
@@ -107,6 +109,7 @@
 				$('#medical_conditions').val(user['medical_conditions']);
 				$('#dietary_requirements').val(user['dietary_requirements']);
 				$('#medicinal_reactions').val(user['medicinal_reactions']);
+				$('#other_notes').val(user['other_notes']);
 				$('#created').val(user['created']);
 				$('#dob').val(user['dob']);
 				$('#access_rights').val( user['access_rights']);
