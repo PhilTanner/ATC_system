@@ -167,7 +167,7 @@
 				$this->Cell(0,6,$activity->name.' '.$activity->address,0,1,'C');
 				$this->SetFont('Arial','B',10);
 				$this->Cell(0,4,'Officer In Charge: '.$activity->display_name.' ('.$activity->mobile_phone.')',0,1,'C');
-				$this->Cell(0,4,'Alternate OIC: '.$activity->twoic_display_name.' ('.$activity->twoic_mobile_phone.')',0,1,'C');
+				$this->Cell(0,4,'Alternate Contact: '.$activity->twoic_display_name.' ('.$activity->twoic_mobile_phone.')',0,1,'C');
 				// Line break
 				$this->Ln(10);
 			}
@@ -187,17 +187,20 @@
 		$pdf->AddPage('Landscape');
 	
 		$pdf->SetFont('Arial','B',7);
-		$pdf->SetTextColor(0);
+		$pdf->SetTextColor(255);
+		$pdf->SetFillColor(0);
 	
-		$pdf->Cell(20,3,'Attendee',1);
-		$pdf->Cell(15,3,'Contact #',1);
-		$pdf->Cell(28,3,'Next of Kin',1);
-		$pdf->Cell(20,3,'NOK Mobile',1);
-		$pdf->Cell(20,3,'NOK Home',1);
-		$pdf->Cell(40,3,'Allergies',1);
-		$pdf->Cell(40,3,'Medical Conditions',1);
-		$pdf->Cell(40,3,'Medicinal Reactions',1);
-		$pdf->Cell(40,3,'Dietary Req.',1);
+		$pdf->Cell(20,3,'Attendee',1,0,'L',true);
+		$pdf->Cell(15,3,'Contact #',1,0,'L',true);
+		$pdf->Cell(28,3,'Next of Kin',1,0,'L',true);
+		$pdf->Cell(15,3,'NOK Mobile',1,0,'L',true);
+		$pdf->Cell(15,3,'NOK Home',1,0,'L',true);
+		$pdf->Cell(35,3,'Allergies',1,0,'L',true);
+		$pdf->Cell(35,3,'Medical Conditions',1,0,'L',true);
+		$pdf->Cell(35,3,'Medicinal Reactions',1,0,'L',true);
+		$pdf->Cell(35,3,'Dietary Req.',1,0,'L',true);
+		$pdf->Cell(35,3,'Other.',1,0,'L',true);
+		
 		$pdf->Cell(1,3,'',0,1);
 		
 		$row = 0;
@@ -209,23 +212,37 @@
 			$pdf->SetFont('Arial','',6);
 			$pdf->SetTextColor(0);
 			
-			// Stripe our rows for easier reading
-			if( $row % 2 )	$pdf->SetFillColor( 220 );
-			else		$pdf->SetFillColor( 255 );
+			// Colour code entries for easy reading
+			$text = array( 0,0,0 );
+			$background = array( 255,255,255 );
 			
-			$pdf->Cell(20,(4*count($attendee->nok)),$attendee->rank.' '.$attendee->display_name,1,0,'L',true);
-			$pdf->Cell(15,(4*count($attendee->nok)),$attendee->mobile_phone,1,0,'L',true);
+			// Default stripe our rows for easier reading
+			if( $row % 2 )	$background = array( 230,230,230 );
+			//else		$pdf->SetFillColor( 255 );
+			
+			if( strlen(trim($attendee->allergies)) ) $text[0] = 51;
+			if( strlen(trim($attendee->medical_conditions)) ) $text[1] = 51;
+			if( strlen(trim($attendee->medicinal_reactions)) ) $text[2] = 51;
+			
+			if( strlen(trim($attendee->dietary_requirements)) ) $background[0] = 190;
+			if( strlen(trim($attendee->other_notes)) ) $background[1] = 190;
+			
+			$pdf->SetTextColor(implode(',', $text));
+			$pdf->SetFillColor( implode(',', $background) );			
+			
+			$lineheight = 4;
+			if( count($attendee->nok) )
+				$totallineheight = count($attendee->nok)*$lineheight;
+			else
+				$totallineheight = $lineheight;
+				
+			$pdf->Cell(20,$totallineheight,$attendee->rank.' '.$attendee->display_name,1,0,'L',true);
+			$pdf->Cell(15,$totallineheight,$attendee->mobile_phone,1,0,'L',true);
 			
 			$n = 0;
 			foreach($attendee->nok as $nok )
 			{
-				$n++;
-				if($n > 1 )
-				{
-					$pdf->Cell(1,4,'',0,1);
-					$pdf->Cell(35,4,'',0);
-				}
-				
+				$pdf->SetFont('Arial','',6);
 				switch( $nok->relationship )
 				{
 					case ATC_NOK_TYPE_MOTHER:
@@ -261,28 +278,44 @@
 					default:
 						$relation = 'Unknown';
 				}
-				$pdf->Cell(28,4,$nok->firstname.' '.$nok->lastname.' ('.$relation.')',1,0,'L',true);
-				$pdf->Cell(20,4,$nok->mobile_number,1,0,'L',true);
-				$pdf->Cell(20,4,$nok->home_number,1,0,'L',true);
+				
+				$n++;
+				if($n > 1 )
+				{
+					$pdf->Cell(1,$lineheight,'',0,1);
+					$pdf->Cell(35,$lineheight,'',0);
+				}
+				
+				$pdf->Cell(28,$lineheight,$nok->firstname.' '.$nok->lastname.' ('.$relation.')',1,0,'L',true);
+				$pdf->Cell(15,$lineheight,$nok->mobile_number,1,0,'L',true);
+				$pdf->Cell(15,$lineheight,$nok->home_number,1,0,'L',true);
 				
 				if( $n == 1 )
 				{
-					$pdf->Cell(40,(4*count($attendee->nok)),$attendee->allergies,1,0,'L',true);
-					$pdf->Cell(40,(4*count($attendee->nok)),$attendee->medical_conditions,1,0,'L',true);
-					$pdf->Cell(40,(4*count($attendee->nok)),$attendee->medicinal_reactions,1,0,'L',true);
-					$pdf->Cell(40,(4*count($attendee->nok)),$attendee->dietary_requirements,1,0,'L',true);
+					$pdf->SetFont('Arial','',4);
+					$pdf->Cell(35,$totallineheight,$attendee->allergies,1,0,'L',true);
+					$pdf->Cell(35,$totallineheight,$attendee->medical_conditions,1,0,'L',true);
+					$pdf->Cell(35,$totallineheight,$attendee->medicinal_reactions,1,0,'L',true);
+					$pdf->Cell(35,$totallineheight,$attendee->dietary_requirements,1,0,'L',true);
+					$pdf->Cell(35,$totallineheight,$attendee->other_notes,1,0,'L',true);
 				}
 			}
 
 			if( !count($attendee->nok) )
 			{
-				$pdf->Cell(40,(4*count($attendee->nok)),$attendee->allergies,1,0,'L',true);
-				$pdf->Cell(40,(4*count($attendee->nok)),$attendee->medical_conditions,1,0,'L',true);
-				$pdf->Cell(40,(4*count($attendee->nok)),$attendee->medicinal_reactions,1,0,'L',true);
-				$pdf->Cell(40,(4*count($attendee->nok)),$attendee->dietary_requirements,1,0,'L',true);
+				$pdf->SetFont('Arial','',4);
+				$pdf->Cell(28,$totallineheight,'',1,0,'L',true);
+				$pdf->Cell(15,$totallineheight,'',1,0,'L',true);
+				$pdf->Cell(15,$totallineheight,'',1,0,'L',true);
+				$pdf->Cell(35,$totallineheight,$attendee->allergies,1,0,'L',true);
+				$pdf->Cell(35,$totallineheight,$attendee->medical_conditions,1,0,'L',true);
+				$pdf->Cell(35,$totallineheight,$attendee->medicinal_reactions,1,0,'L',true);
+				$pdf->Cell(35,$totallineheight,$attendee->dietary_requirements,1,0,'L',true);
+				$pdf->Cell(35,$totallineheight,$attendee->other_notes,1,0,'L',true);
 			}
 			
-			$pdf->Cell(1,4,'',0,1);
+			//if( count($attendee->nok) < 2 )
+				$pdf->Cell(1,$lineheight,'',0,1);
 		}
 			
 		$pdf = $pdf->Output($activity->title.'.pdf','D');
@@ -308,7 +341,7 @@
 	<input type='text' id='activity_type' name='activity_type' value='<?=$activity->type?>' required='required' /><br />
 	<label for='personnel_id'>Officer In Charge</label><br />
 	<input type='text' id='personnel_name' name='personnel_name' value='<?=$activity->display_name?>' required='required' /><br />
-	<label for='2ic_personnel_id'>OIC Alternate</label><br />
+	<label for='2ic_personnel_id'>2<sup>nd</sup> Contact</label><br />
 	<input type='text' id='2ic_personnel_name' name='2ic_personnel_name' value='<?=$activity->twoic_display_name?>' required='required' /><br />
 	<label for='dress_code'>Dress code</label><br />
 	<select name='dress_code' id='dress_code'>
@@ -470,7 +503,7 @@
 								echo '<a href="?id='.$obj->activity_id.'&action=attendance" class="button attendance">Attendance</a>';
 								echo '<a href="?id='.$obj->activity_id.'&action=contactsheet" class="button contactsheet">Contact sheet</a>';
 							}
-							echo '<a href="?id='.$obj->activity_id.'&action=documents" class="button documentation">Documentation</a>';
+							//echo '<a href="?id='.$obj->activity_id.'&action=documents" class="button documentation">Documentation</a>';
 							echo '	<a href="?id='.$obj->activity_id.'" class="button delete">Delete</a>';
 							echo '</td>';
 						}

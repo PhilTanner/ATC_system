@@ -355,7 +355,8 @@
 					`personnel`.`allergies`,
 					`personnel`.`medical_conditions`,
 					`personnel`.`medicinal_reactions`,
-					`personnel`.`dietary_requirements`
+					`personnel`.`dietary_requirements`,
+					`personnel`.`other_notes`
 				FROM 	`activity_register`
 					INNER JOIN `personnel`
 						ON `activity_register`.`personnel_id` = `personnel`.`personnel_id`
@@ -970,8 +971,8 @@
 				
 			if( !$user->personnel_id )
 			{
-				$query = "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `mobile_phone`, `allergies`, `medical_conditions`, `medicinal_reactions`, `dietary_requirements`, `dob`, `password`, `joined_date`, `left_date`, `access_rights`, `is_female`, `enabled` ) VALUES ( ";
-				$query .= '"'.self::$mysqli->real_escape_string($user->firstname).'", "'.self::$mysqli->real_escape_string($user->lastname).'", "'.self::$mysqli->real_escape_string($user->email).'", "'.self::$mysqli->real_escape_string($user->mobile_phone).'", "'.self::$mysqli->real_escape_string($user->allergies).'", "'.self::$mysqli->real_escape_string($user->medical_conditions).'", "'.self::$mysqli->real_escape_string($user->medicinal_reactions).'", "'.self::$mysqli->real_escape_string($user->dietary_requirements).'", "'.date('Y-m-d',strtotime($user->dob)).'", ';
+				$query = "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `mobile_phone`, `allergies`, `medical_conditions`, `medicinal_reactions`, `dietary_requirements`, `other_notes`, `dob`, `password`, `joined_date`, `left_date`, `access_rights`, `is_female`, `enabled` ) VALUES ( ";
+				$query .= '"'.self::$mysqli->real_escape_string($user->firstname).'", "'.self::$mysqli->real_escape_string($user->lastname).'", "'.self::$mysqli->real_escape_string($user->email).'", "'.self::$mysqli->real_escape_string($user->mobile_phone).'", "'.self::$mysqli->real_escape_string($user->allergies).'", "'.self::$mysqli->real_escape_string($user->medical_conditions).'", "'.self::$mysqli->real_escape_string($user->medicinal_reactions).'", "'.self::$mysqli->real_escape_string($user->dietary_requirements).'", "'.self::$mysqli->real_escape_string($user->other_notes).'", "'.date('Y-m-d',strtotime($user->dob)).'", ';
 				$query .= '"'.self::$mysqli->real_escape_string(create_hash($user->password)).'", "'.date('Y-m-d',strtotime($user->joined_date)).'", '.(strtotime($user->left_date)?'"'.date('Y-m-d',strtotime($user->left_date)).'"':'NULL').', '.(int)$user->access_rights.', ';
 				$query .= (int)$user->is_female.', '.(isset($user->enabled)&&$user->enabled==-1?-1:0).' );';
 				if ($result = self::$mysqli->query($query))
@@ -982,7 +983,7 @@
 				} else 
 					throw new ATCExceptionDBError(self::$mysqli->error);
 			} else {
-				$query = 'UPDATE `personnel` SET `firstname` = "'.self::$mysqli->real_escape_string($user->firstname).'", `lastname` = "'.self::$mysqli->real_escape_string($user->lastname).'", `email` = "'.self::$mysqli->real_escape_string($user->email).'", `mobile_phone` = "'.self::$mysqli->real_escape_string($user->mobile_phone).'", `allergies` = "'.self::$mysqli->real_escape_string($user->allergies).'", `medical_conditions` = "'.self::$mysqli->real_escape_string($user->medical_conditions).'", `medicinal_reactions` = "'.self::$mysqli->real_escape_string($user->medicinal_reactions).'", `dietary_requirements` = "'.self::$mysqli->real_escape_string($user->dietary_requirements).'", `dob` = "'.date('Y-m-d',strtotime($user->dob)).'", ';
+				$query = 'UPDATE `personnel` SET `firstname` = "'.self::$mysqli->real_escape_string($user->firstname).'", `lastname` = "'.self::$mysqli->real_escape_string($user->lastname).'", `email` = "'.self::$mysqli->real_escape_string($user->email).'", `mobile_phone` = "'.self::$mysqli->real_escape_string($user->mobile_phone).'", `allergies` = "'.self::$mysqli->real_escape_string($user->allergies).'", `medical_conditions` = "'.self::$mysqli->real_escape_string($user->medical_conditions).'", `medicinal_reactions` = "'.self::$mysqli->real_escape_string($user->medicinal_reactions).'", `dietary_requirements` = "'.self::$mysqli->real_escape_string($user->dietary_requirements).'",  `other_notes` = "'.self::$mysqli->real_escape_string($user->other_notes).'", `dob` = "'.date('Y-m-d',strtotime($user->dob)).'", ';
 				if( strlen(trim($user->password)) ) 
 					 $query .= '`password` = "'.self::$mysqli->real_escape_string(create_hash($user->password)).'", ';
 				$query .= '`joined_date` = "'.date('Y-m-d',strtotime($user->joined_date)).'", ';

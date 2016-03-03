@@ -17,7 +17,7 @@
 				<tr>
 					<th rowspan="2"> Activity </th>
 					<th rowspan="2"> Officer In Charge </th>
-					<th rowspan="2"> Alternate Officer In Charge </th>
+					<th rowspan="2"> 2<sup>nd</sup> Contact </th>
 					<th colspan="2"> Date </th>
 					<th colspan="2"> Attendance </th>
 				</tr>
