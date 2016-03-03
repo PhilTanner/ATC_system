@@ -227,8 +227,8 @@
 			if( strlen(trim($attendee->dietary_requirements)) ) $background[0] = 190;
 			if( strlen(trim($attendee->other_notes)) ) $background[1] = 190;
 			
-			$pdf->SetTextColor(implode(',', $text));
-			$pdf->SetFillColor( implode(',', $background) );			
+			$pdf->SetTextColor($text[0], $text[1], $text[2]);
+			$pdf->SetFillColor( $background[0], $background[1], $background[2]);			
 			
 			$lineheight = 4;
 			if( count($attendee->nok) )
