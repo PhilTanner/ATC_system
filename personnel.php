@@ -70,6 +70,7 @@
 		<thead>
 			<tr>
 				<th colspan="2"> Name </th>
+				<th> Contact N&ordm; </th>
 				<th> Access rights </th>
 				<td> <a href="?id=0" class="button new"> New </a> </td>
 			</tr>
@@ -84,55 +85,66 @@
 			<?php
 				foreach( $user as $obj )
 				{
-					echo '<tr'.($obj->enabled?'':' class="ui-state-disabled"').'>';
-					//echo '	<th>'.$obj->personnel_id.'</th>';
-					echo '	<td>'.$obj->rank.'</td>';
-					echo '	<td><a href="?id='.$obj->personnel_id.'">'.$obj->lastname.', '.$obj->firstname.'</a></td>';
-					switch( $obj->access_rights )
+					if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $obj->personnel_id ) )
 					{
-						case ATC_USER_LEVEL_ADMIN:
-							echo '<td> <strong>Admin</strong> </td>';
-							break;
-						case ATC_USER_LEVEL_CADET:
-							echo '<td> Cadet </td>';
-							break;
-						case ATC_USER_LEVEL_NCO:
-							echo '<td> <acronym title="Non-Commissioned Officer">NCO</acronym> </td>';
-							break;
-						case ATC_USER_LEVEL_ADJUTANT:
-							echo '<td> Adjutant </td>';
-							break;
-						case ATC_USER_LEVEL_STORES:
-							echo '<td> Stores Officer </td>';
-							break;
-						case ATC_USER_LEVEL_TRAINING:
-							echo '<td> Training Officer </td>';
-							break;
-						case ATC_USER_LEVEL_CUCDR:
-							echo '<td> Unit Commander </td>';
-							break;
-						case ATC_USER_LEVEL_SUPOFF:
-							echo '<td> Supplimentary Officer </td>';
-							break;
-						case ATC_USER_LEVEL_TREASURER:
-							echo '<td> Treasurer </td>';
-							break;
-						case ATC_USER_LEVEL_USC:
-							echo '<td> Unit Support Committee </td>';
-							break;
-						default:
-							echo '<td class="ui-state-error">Unknown</td>';
+						echo '<tr'.($obj->enabled?'':' class="ui-state-disabled"').'>';
+						//echo '	<th>'.$obj->personnel_id.'</th>';
+						echo '	<td>'.$obj->rank.'</td>';
+						echo '	<td><a href="?id='.$obj->personnel_id.'">'.$obj->lastname.', '.$obj->firstname.'</a></td>';
+						echo '	<td>'.$obj->mobile_phone.'</td>';
+						switch( $obj->access_rights )
+						{
+							case ATC_USER_LEVEL_ADMIN:
+								echo '<td> <strong>Admin</strong> </td>';
+								break;
+							case ATC_USER_LEVEL_CADET:
+								echo '<td> Cadet </td>';
+								break;
+							case ATC_USER_LEVEL_NCO:
+								echo '<td> <acronym title="Non-Commissioned Officer">NCO</acronym> </td>';
+								break;
+							case ATC_USER_LEVEL_ADJUTANT:
+								echo '<td> Adjutant </td>';
+								break;
+							case ATC_USER_LEVEL_STORES:
+								echo '<td> Stores Officer </td>';
+								break;
+							case ATC_USER_LEVEL_TRAINING:
+								echo '<td> Training Officer </td>';
+								break;
+							case ATC_USER_LEVEL_CUCDR:
+								echo '<td> Unit Commander </td>';
+								break;
+							case ATC_USER_LEVEL_SUPOFF:
+								echo '<td> Supplimentary Officer </td>';
+								break;
+							case ATC_USER_LEVEL_OFFICER:
+								echo '<td> Officer </td>';
+								break;
+							case ATC_USER_LEVEL_EMRG_CONTACT:
+								echo '<td class="ui-state-highlight"> Emergency Contact </td>';
+								break;
+							case ATC_USER_LEVEL_TREASURER:
+								echo '<td class="ui-state-highlight"> Treasurer </td>';
+								break;
+							case ATC_USER_LEVEL_USC:
+								echo '<td class="ui-state-highlight"> Unit Support Committee </td>';
+								break;
+							default:
+								echo '<td class="ui-state-error">Unknown</td>';
+						}
+						echo '	<td> <a href="?id='.$obj->personnel_id.'" class="button edit">Edit</a> </td>';
+						echo '</tr>';
 					}
-					echo '	<td> <a href="?id='.$obj->personnel_id.'" class="button edit">Edit</a> </td>';
-					echo '</tr>';
 				}
 			?>
 		</tbody>
 	</table>
 	<script>
-		$("thead th").button({ icons: { primary: "ui-icon-arrowthick-2-n-s" } }).removeClass("ui-corner-all").css({ display: "table-cell" });
+		//$("thead th").button({ icons: { primary: "ui-icon-arrowthick-2-n-s" } }).removeClass("ui-corner-all").css({ display: "table-cell" });
 		$('a.button.edit').button({ icons: { primary: 'ui-icon-pencil' }, text: false });
 		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false });
+		$('td.ui-state-highlight').removeClass('ui-state-highlight').parent().addClass('ui-state-highlight');
 	</script>
 <?php
 	}

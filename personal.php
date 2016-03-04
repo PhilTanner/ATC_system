@@ -83,12 +83,14 @@
 				<option value="<?=ATC_USER_LEVEL_CADET?>"> Cadet </option>
 				<option value="<?=ATC_USER_LEVEL_NCO?>"> NCO </option>
 				<option value="<?=ATC_USER_LEVEL_SUPOFF?>"> Supplimentary Officer </option>
+				<option value="<?=ATC_USER_LEVEL_OFFICER?>"> Officer </option>
 				<option value="<?=ATC_USER_LEVEL_ADJUTANT?>"> Adjutant </option>
 				<option value="<?=ATC_USER_LEVEL_STORES?>"> Stores </option>
 				<option value="<?=ATC_USER_LEVEL_TRAINING?>"> Training </option>
 				<option value="<?=ATC_USER_LEVEL_CUCDR?>"> CUCDR </option>
 				<option value="<?=ATC_USER_LEVEL_USC?>"> Unit Support Committee Member </option>
 				<option value="<?=ATC_USER_LEVEL_TREASURER?>"> Treasurer </option>
+				<option value="<?=ATC_USER_LEVEL_EMRG_CONTACT?>"> Emergency Contact </option>
 				<option value="<?=ATC_USER_LEVEL_ADMIN?>"> Admin </option>
 			</select><br />
 			<label for="enabled">Enabled</label>
