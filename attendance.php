@@ -379,9 +379,9 @@
 			}
 			// Cadets who miss 4 parade nights are eligible to be signed off the books
 			if( missingnights >= 2 ) 
-				$('td.user'+value['personnel_id']+'.date'+value['date']).addClass('ui-state-highlight');
+				$('td.user'+value['personnel_id']+'.date'+value['date']).parent().children().addClass('ui-state-highlight').attr('title','Cadet needs to attend, after 4 missed nights, they will be signed out of the unit!');
 			if( missingnights >= 4 ) 
-				$('td.user'+value['personnel_id']+'.date'+value['date']).addClass('ui-state-error');					
+				$('td.user'+value['personnel_id']+'.date'+value['date']).parent().children().addClass('ui-state-error').attr('title','Cadet missed 4 parade nights - sign them off the books');					
 		});
 	</script>
 	
