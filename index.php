@@ -145,7 +145,7 @@
 	Next/Prev years activity lists<br />
 	Autocomplete searches<br>
 	Fixed height user sortables - scrollable<br/>
-	Flights<br />
+	Cadet Flight details for attendance etc<br />
 	Document folders<br />
 	
 	<h2> Outstanding documentation </h2>
