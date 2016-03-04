@@ -1008,6 +1008,9 @@
 		public function gui_output_page_footer( $title )
 		{
 			echo '
+		<script>
+			$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
+		</script>
 		<footer>
 			<p> Built on the ATC system code available at <a target="blank" href="https://github.com/PhilTanner/ATC_system">https://github.com/PhilTanner/ATC_system</a> </p>
 			'.(ATC_DEBUG?'<p style="font-size:75%;">DEBUG INFO: Logged in as user: '.self::$currentuser.' - access rights: '.self::$currentpermissions.'</p>':'').'
