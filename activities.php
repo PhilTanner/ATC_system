@@ -504,7 +504,8 @@
 								echo '<a href="?id='.$obj->activity_id.'&action=contactsheet" class="button contactsheet">Contact sheet</a>';
 							}
 							//echo '<a href="?id='.$obj->activity_id.'&action=documents" class="button documentation">Documentation</a>';
-							echo '	<a href="?id='.$obj->activity_id.'" class="button delete">Delete</a>';
+							if( $ATC->user_has_permission(ATC_PERMISSION_SYSTEM_EDIT) )
+								echo '	<a href="?id='.$obj->activity_id.'" class="button delete">Delete</a>';
 							echo '</td>';
 						}
 						echo '</tr>';
@@ -548,7 +549,7 @@
 		});
 		$('a.button.edit').button({ icons: { primary: 'ui-icon-pencil' }, text: false });
 		$('a.button.contactsheet').button({ icons: { primary: 'ui-icon-document' }, text: false });
-		$('a.button.documentation').button({ icons: { primary: 'ui-icon-folder' }, text: false });
+		$('a.button.documentation').button({ icons: { primary: 'ui-icon-folder-open' }, text: false });
 		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false });
 		$('#activitylist a.button.attendance').button({ icons: { primary: 'ui-icon-clipboard' }, text: false });
 		$('a.button.edit, a.button.new, #activitylist a.button.attendance').click(function(e){

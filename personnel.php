@@ -121,7 +121,7 @@
 							echo '<td> Unit Support Committee </td>';
 							break;
 						default:
-							echo '<td class="highlight">Unknown</td>';
+							echo '<td class="ui-state-error">Unknown</td>';
 					}
 					echo '	<td> <a href="?id='.$obj->personnel_id.'" class="button edit">Edit</a> </td>';
 					echo '</tr>';

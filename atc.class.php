@@ -40,7 +40,8 @@
 	
 	// Give admin everything we can think of in the future.
 	define( 'ATC_USER_LEVEL_ADMIN', 			16777215 );
-	define( 'ATC_USER_LEVEL_CADET', 			0 );
+	//define( 'ATC_USER_LEVEL_CADET', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW );
+	define( 'ATC_USER_LEVEL_CADET',			0 );
 	define( 'ATC_USER_LEVEL_NCO', 				ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_LOCATIONS_VIEW );
 	define( 'ATC_USER_LEVEL_ADJUTANT', 			ATC_PERMISSION_PERSONNEL_EDIT + ATC_PERMISSION_ATTENDANCE_EDIT + ATC_PERMISSION_ACTIVITIES_EDIT + ATC_PERMISSION_FINANCE_EDIT + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_EDIT + ATC_PERMISSION_ACTIVITY_TYPE_EDIT);
 	define( 'ATC_USER_LEVEL_STORES', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_FINANCE_EDIT + ATC_PERMISSION_STORES_EDIT + ATC_PERMISSION_LOCATIONS_VIEW );
@@ -449,7 +450,7 @@
 				AND `personnel`.`access_rights` IN ('.ATC_USER_GROUP_PERSONNEL.') 
 				AND `personnel`.`enabled` = -1
 				AND `personnel`.`left_date` IS NULL 
-			ORDER BY `date` ASC;';
+			ORDER BY `personnel`.`personnel_id`, `attendance_register`.`date` ASC;';
 
 			$attendance = array();
 			if ($result = self::$mysqli->query($query))
@@ -1045,9 +1046,13 @@
 				$(".navoptions ul li a.personnel").button({ icons: { primary: "ui-icon-contact" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Personnel'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.attendance").button({ icons: { primary: "ui-icon-clipboard" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Attendance'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.activities").button({ icons: { primary: "ui-icon-image" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Activities'?'.addClass("ui-state-active")':'').';
+				$(".navoptions ul li a.documents").button({ icons: { primary: "ui-icon-folder-open" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Documentation'?'.addClass("ui-state-active")':'').';
+				
 				$(".navoptions ul li a.finance").button({ icons: { primary: "ui-icon-cart" } });
 				$(".navoptions ul li a.stores").button({ icons: { primary: "ui-icon-tag" } });
 				$(".navoptions ul li a.training").button({ icons: { primary: "ui-icon-calendar" } });
+				
+				
 				$(".navoptions ul li a.logout").button({ icons: { primary: "ui-icon-unlocked" } }).removeClass("ui-state-disabled");
 				$(".navoptions ul li a.login").button({ icons: { primary: "ui-icon-locked" } })'.(self::$currentuser?'':'.removeClass("ui-state-disabled")').($title=='Login'?'.addClass("ui-state-active")':'').';
 			});
@@ -1063,12 +1068,12 @@
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW)?'<li> <a href="./personnel.php" class="personnel">Personnel</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ATTENDANCE_VIEW)?'<li> <a href="./attendance.php" class="attendance">Attendance</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ACTIVITIES_VIEW)?'<li> <a href="./activities.php" class="activities">Activities</a> </li>':'').'
-				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW)?'<li> <a href="./" class="finance">Finance</a> </li>':'').'
+				<!--'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW)?'<li> <a href="./" class="finance">Finance</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_STORES_VIEW)?'<li> <a href="./" class="stores">Stores</a> </li>':'').'
-				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_TRAINING_VIEW)?'<li> <a href="./" class="training">Training</a> </li>':'').'
-				'.(self::$currentuser?'<li> <a href="./logout.php" class="logout">Logout</a> </li>':'').'
-				'.(!self::$currentuser?'<li> <a href="./login.php" class="login">Login</a> </li>':'').'
-				
+				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_TRAINING_VIEW)?'<li> <a href="./" class="training">Training</a> </li>':'').'-->
+				'.(self::$currentuser && self::user_has_permission(ATC_USER_LEVEL_ADJUTANT)?'<li> <a href="./documents.php" class="documents">Documentation</a> </li>':'').'
+		
+				'.(self::$currentuser?'<li> <a href="./logout.php" class="logout">Logout</a> </li>':'<li> <a href="./login.php" class="login">Login</a> </li>').'				
 			</ul>
 		</nav>
 		<h1> '.(ATC_DEBUG?'<span style="color:Red;">DEV</span>':'ATC').' - '.$title.' </h1>
