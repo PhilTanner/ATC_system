@@ -70,12 +70,13 @@
 		<thead>
 			<tr>
 				<th colspan="2"> Name </th>
+				<th> Access rights </th>
 				<td> <a href="?id=0" class="button new"> New </a> </td>
 			</tr>
 		</thead>
 		<tfoot>
 			<tr>
-				<th colspan="3"> <form><label for="showall">Show all personnel?</label><input type="checkbox" name="showall" value="1" <?=($_GET['showall']?' checked="checked"':'')?> onchange="$(this).parent().submit();" /></form></th>
+				<th colspan="4"> <form><label for="showall">Show all personnel?</label><input type="checkbox" name="showall" value="1" <?=($_GET['showall']?' checked="checked"':'')?> onchange="$(this).parent().submit();" /></form></th>
 				
 			</tr>
 		</tfoot>
@@ -87,6 +88,41 @@
 					//echo '	<th>'.$obj->personnel_id.'</th>';
 					echo '	<td>'.$obj->rank.'</td>';
 					echo '	<td><a href="?id='.$obj->personnel_id.'">'.$obj->lastname.', '.$obj->firstname.'</a></td>';
+					switch( $obj->access_rights )
+					{
+						case ATC_USER_LEVEL_ADMIN:
+							echo '<td> <strong>Admin</strong> </td>';
+							break;
+						case ATC_USER_LEVEL_CADET:
+							echo '<td> Cadet </td>';
+							break;
+						case ATC_USER_LEVEL_NCO:
+							echo '<td> <acronym title="Non-Commissioned Officer">NCO</acronym> </td>';
+							break;
+						case ATC_USER_LEVEL_ADJUTANT:
+							echo '<td> Adjutant </td>';
+							break;
+						case ATC_USER_LEVEL_STORES:
+							echo '<td> Stores Officer </td>';
+							break;
+						case ATC_USER_LEVEL_TRAINING:
+							echo '<td> Training Officer </td>';
+							break;
+						case ATC_USER_LEVEL_CUCDR:
+							echo '<td> Unit Commander </td>';
+							break;
+						case ATC_USER_LEVEL_SUPOFF:
+							echo '<td> Supplimentary Officer </td>';
+							break;
+						case ATC_USER_LEVEL_TREASURER:
+							echo '<td> Treasurer </td>';
+							break;
+						case ATC_USER_LEVEL_USC:
+							echo '<td> Unit Support Committee </td>';
+							break;
+						default:
+							echo '<td class="highlight">Unknown</td>';
+					}
 					echo '	<td> <a href="?id='.$obj->personnel_id.'" class="button edit">Edit</a> </td>';
 					echo '</tr>';
 				}

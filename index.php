@@ -46,19 +46,107 @@
 			</tbody>
 		</table>
 	</form>
-	<script>
-		$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
-	</script>
 <?php
 	}
+	
+	if( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_VIEW) )
+		$user = $ATC->get_personnel(null, 'ASC', null, 0);
+	else
+		$user = array();
+	if( count($user) ) {
+		
+		$bdays = array();
+		$annivs = array();
+					
+		foreach( $user as $obj )
+		{
+			$bday = (int)date("U", strtotime(date('Y').date('-m-d', strtotime($obj->dob))));
+			$anniv = (int)date("U", strtotime(date('Y').date('-m-d', strtotime($obj->joined_date))));
+			$today = time();
+			$nextmonth = time()+(30*24*60*60);
+						
+			if( $bday > $today && $bday <= $nextmonth )
+				$bdays[] = $obj;
+			if( $anniv > $today && $anniv <= $nextmonth )
+				$annivs[] = $obj;
+		}
+
+		// Sort our birthdays and anniversaries into upcoming order.
+		// Complicated usort function because we're not sorting on how old they are, but the next b'day THIS year
+		usort($bdays, function($a, $b){ return ((int)date("U", strtotime(date('Y').date('-m-d', strtotime($a->dob)))) < (int)date("U", strtotime(date('Y').date('-m-d', strtotime($b->dob)))) ? -1 : 1); });
+		// Same for anniversaries.
+		usort($annivs, function($a, $b){ return ((int)date("U", strtotime(date('Y').date('-m-d', strtotime($a->joined_date)))) < (int)date("U", strtotime(date('Y').date('-m-d', strtotime($b->joined_date)))) ? -1 : 1); });
+		
+		if(count($bdays))
+		{
+?>
+	<h2> Upcoming birthdays (next 30 days)</h2>
+		<table>
+			<thead>
+				<tr>
+					<th> Name </th>
+					<th> Date </th>
+					<th> Age </th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					foreach( $bdays as $obj )
+					{
+						echo '<tr>';
+						echo '	<td>'.$obj->display_name.'</td>';
+						echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->dob)).'</td>';
+						echo '	<td>'.((int)date('Y') - (int)date('Y', strtotime($obj->dob))).'</td>';
+						echo '</tr>';
+					}
+				?>
+			</tbody>
+		</table>
+	</form>
+<?php
+		}
+		if(count($annivs))
+		{
+?>
+	<h2> Upcoming anniversaries (next 30 days)</h2>
+		<table>
+			<thead>
+				<tr>
+					<th> Name </th>
+					<th> Date </th>
+					<th> Years </th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					foreach( $annivs as $obj )
+					{
+						echo '<tr>';
+						echo '	<td>'.$obj->display_name.'</td>';
+						echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->joined_date)).'</td>';
+						echo '	<td>'.((int)date('Y') - (int)date('Y', strtotime($obj->joined_date))).'</td>';
+						echo '</tr>';
+					}
+				?>
+			</tbody>
+		</table>
+	</form>
+<?php
+		}
+	}
+
 	
 	if(ATC_DEBUG)
 	{
 ?>
 	
 	Current user login sessions<br />
-	Birthdays<br />
-	Anniversarys<br />
+	New user type - emergency contact (Trudi holding 8s)<br />
+	Next/Prev years activity lists<br />
+	Autocomplete searches<br>
+	Fixed height user sortables - scrollable<br/>
+	Flights<br />
+	Document folders<br />
 	
 	<h2> Outstanding documentation </h2>
 	<ol>
@@ -93,5 +181,6 @@
 	
 <?php
 	}
+
 	$ATC->gui_output_page_footer('Home');
 ?>
