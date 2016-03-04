@@ -5,7 +5,7 @@
 		define( 'ATC_DEBUG', 					1 );
 	define( 'ATC_SETTING_PARADE_NIGHT',			"Wednesday" );
 	define( 'ATC_SETTING_DATETIME_INPUT',         "Y-m-d\TH:i");
-	define( 'ATC_SETTING_DATETIME_OUTPUT',         "j M, H:i");
+	define( 'ATC_SETTING_DATETIME_OUTPUT',         "j M, Hi");
 	define( 'ATC_SETTING_DATE_OUTPUT',         "j M");
 	define( 'ATC_SETTING_FULL_DISPLAY_NAME',		'CONCAT("RNK, ", `personnel`.`lastname`,", ",`personnel`.`firstname`)' );
 	define( 'ATC_SETTING_DISPLAY_NAME',		'CONCAT(`personnel`.`lastname`,", ",`personnel`.`firstname`)' );
@@ -229,7 +229,7 @@
 		
 		public function get_activities( $date=null, $days=365 )
 		{
-			if( is_null($date) ) $startdate = time()-(14*24*60*60);
+			if( is_null($date) ) $startdate = strtotime(date("Y")."-01-01");
 			else $startdate = strtotime($date);
 			$enddate = $startdate + ((int)$days*24*60*60);
 			

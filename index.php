@@ -59,6 +59,12 @@
 	Current user login sessions<br />
 	Birthdays<br />
 	Anniversarys<br />
+	New user type - emergency contact (Trudi holding 8s)<br />
+	Next/Prev years activity lists<br />
+	Autocomplete searches<br>
+	Fixed height user sortables - scrollable<br/>
+	Flights<br />
+	Document folders<br />
 	
 	<h2> Outstanding documentation </h2>
 	<ol>
