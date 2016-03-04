@@ -110,6 +110,7 @@
 						echo '<tr>';	
 						echo '	<td>'.$obj->rank.'</td>';
 						echo '	<td>'.$obj->lastname.', '.$obj->firstname.'</td>';
+						$missednights = 0;
 						foreach( $dates as $night )
 						{
 							echo '<td class="attendance user'.$obj->personnel_id.' date'.$night->date.'"><select name="'.$obj->personnel_id.'|'.$night->date.'" id="'.$obj->personnel_id.'_'.$night->date.'">';
@@ -351,9 +352,37 @@
 					casedefault:
 						symbol = value['presence'];
 				}
-				$('td.user'+value['personnel_id']+'.date'+value['date']).html(symbol); 
+				$('td.user'+value['personnel_id']+'.date'+value['date']).html(symbol);
 			});
 		}
+		
+		var missingnights = 0;
+		var curruser = 0;
+		$.each(attendance, function(index, value){
+			// Don't carry missing nights forward;
+			if( curruser != value['personnel_id'] )
+			{
+				curruser = value['personnel_id'];
+				//missingnights=0;
+			}
+			switch(value['presence'])
+			{
+				case "<?=ATC_ATTENDANCE_PRESENT?>":
+				case "<?=ATC_ATTENDANCE_ON_LEAVE?>":
+					missingnights = 0;
+					break;
+				case "<?=ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE?>":
+					missingnights+=1;
+					break;
+				default:
+					missingnights++;
+			}
+			// Cadets who miss 4 parade nights are eligible to be signed off the books
+			if( missingnights >= 2 ) 
+				$('td.user'+value['personnel_id']+'.date'+value['date']).addClass('ui-state-highlight');
+			if( missingnights >= 4 ) 
+				$('td.user'+value['personnel_id']+'.date'+value['date']).addClass('ui-state-error');					
+		});
 	</script>
 	
 <?php
