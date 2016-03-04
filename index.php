@@ -11,7 +11,7 @@
 	if( count($activities) ) {
 ?>
 		
-		<h2> Upcoming events (next 30 days)</h2>
+		<h2> Upcoming events</h2>
 		<table>
 			<thead>
 				<tr>
@@ -49,7 +49,7 @@
 <?php
 	}
 	
-	if( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_VIEW) )
+	if( $ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW) )
 		$user = $ATC->get_personnel(null, 'ASC', null, 0);
 	else
 		$user = array();
@@ -80,7 +80,7 @@
 		if(count($bdays))
 		{
 ?>
-	<h2> Upcoming birthdays (next 30 days)</h2>
+	<h2> Upcoming birthdays</h2>
 		<table>
 			<thead>
 				<tr>
@@ -108,7 +108,7 @@
 		if(count($annivs))
 		{
 ?>
-	<h2> Upcoming anniversaries (next 30 days)</h2>
+	<h2> Upcoming anniversaries</h2>
 		<table>
 			<thead>
 				<tr>

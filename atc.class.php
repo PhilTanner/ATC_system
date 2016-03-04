@@ -1010,6 +1010,7 @@
 			echo '
 		<script>
 			$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
+			$("tbody tr:odd").addClass("evenrow");
 		</script>
 		<footer>
 			<p> Built on the ATC system code available at <a target="blank" href="https://github.com/PhilTanner/ATC_system">https://github.com/PhilTanner/ATC_system</a> </p>
