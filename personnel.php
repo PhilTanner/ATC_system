@@ -24,7 +24,11 @@
 			<h2 href="attendance.php?id=<?=$user->personnel_id?>"> Attendance </h2>
 			<div id="attendance">
 			</div>
-	
+			
+			<h2 href="personal.php?id=<?=$user->personnel_id?>&amp;action=promotion"> Promotions </h2>
+			<div id="promotion">
+			</div>
+	<!--
 			<h2> Activites </h2>
 			<div id="activities">
 			</div>
@@ -45,6 +49,7 @@
 			<h2> Current browser sessions </h2>
 			<div id="browsersessions">
 			</div>
+			-->
 		</div>
 		
 		<script>

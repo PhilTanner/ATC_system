@@ -2,43 +2,45 @@
 	require_once "atc.class.php";
 	$ATC = new ATC();
 	
-	$id = ( isset($_GET['id'])?(int)$_GET['id']:null );
-	$user = $ATC->get_personnel($id);
-
-	if( isset( $_POST['personnel_id'] ) && isset( $_GET['id'] ) )
+	if( !isset($_GET['action']) )
 	{
-		foreach( $_POST as $var => $val )
-			$user->$var = $val;
-		if( !isset($_POST['enabled']) || !$_POST['enabled'] )
-			$user->enabled = 0;
+		$id = ( isset($_GET['id'])?(int)$_GET['id']:null );
+		$user = $ATC->get_personnel($id);
+	
+		if( isset( $_POST['personnel_id'] ) && isset( $_GET['id'] ) )
+		{
+			foreach( $_POST as $var => $val )
+				$user->$var = $val;
+			if( !isset($_POST['enabled']) || !$_POST['enabled'] )
+				$user->enabled = 0;
 		
-		try {
-			$ATC->set_personnel( $user );
-		} catch (ATCExceptionInsufficientPermissions $e) {
-			header("HTTP/1.0 401 Unauthorised");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-			exit();
-		} catch (ATCExceptionDBError $e) {
-			header("HTTP/1.0 500 Internal Server Error");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-			exit();
-		} catch (ATCExceptionDBConn $e) {
-			header("HTTP/1.0 500 Internal Server Error");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-			exit();
-		} catch (ATCException $e) {
-			header("HTTP/1.0 400 Bad Request");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-			exit();
-		} catch (Exception $e) {
-			header("HTTP/1.0 500 Internal Server Error");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-			exit();
+			try {
+				$ATC->set_personnel( $user );
+			} catch (ATCExceptionInsufficientPermissions $e) {
+				header("HTTP/1.0 401 Unauthorised");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+				exit();
+			} catch (ATCExceptionDBError $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+				exit();
+			} catch (ATCExceptionDBConn $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+				exit();
+			} catch (ATCException $e) {
+				header("HTTP/1.0 400 Bad Request");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+				exit();
+			} catch (Exception $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+				exit();
+			}
 		}
-	}
 
-	if( is_object($user) && $ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW, $id ) )
-	{	
+		if( is_object($user) && $ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW, $id ) )
+		{	
 ?>
 
 		<form id="personalform" method="post" action="personal.php?id=<?=$user->personnel_id?>#personalform">
@@ -182,5 +184,67 @@
 		</script>
 
 <?php
-	} 
+		}
+	} elseif( isset($_GET['action']) && $_GET['action'] == 'promotion' && isset($_GET['id']) ) {
+		if($_SERVER['REQUEST_METHOD'] == 'POST')
+		{
+			try {
+				/*$ATC->set_activity( 
+					$_POST['activity_id'],
+					$_POST['startdate'], 
+					$_POST['enddate'], 
+					$_POST['title'], 
+					$ATC->set_location( $_POST['location_id'], $_POST['location'], null ), 
+					$_POST['personnel_id'],
+					$_POST['2ic_personnel_id'],
+					$ATC->set_activity_type( $_POST['activity_type_id'], $_POST['activity_type'], null ), 
+					$_POST['dress_code'],
+					$_POST['attendees'] 
+				);*/
+			} catch (ATCExceptionInsufficientPermissions $e) {	
+				header("HTTP/1.0 401 Unauthorised");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			} catch (ATCExceptionDBError $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			} catch (ATCExceptionDBConn $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			} catch (ATCException $e) {
+				header("HTTP/1.0 400 Bad Request");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			} catch (Exception $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			}
+			exit();
+		}
+		$promotions  = $ATC->get_promotion_history( $_GET['id'] );
+?>
+		<table>
+			<thead>
+				<tr>
+					<th> Rank </th>
+					<th> Date </th>
+					<?= ($ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_EDIT)?'<td><a href="personal.php?id='.$_GET['id'].'&amp;action=promotion" class="button new">New</a></td>':'')?>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					foreach($promotions as $promotion)
+					{
+						echo '<tr>';
+						echo '	<td> '.$promotion->rank.' </td>';
+						echo '	<td> '.date(ATC_SETTING_DATE_OUTPUT.", Y", strtotime($promotion->date_achieved)).' </td>';
+						echo '</tr>';
+					}
+				?>
+			</tbody>
+		</table>
+		<script>
+			$("thead th").button({ icons: { primary: "ui-icon-arrowthick-2-n-s" } }).removeClass("ui-corner-all").css({ display: "table-cell" });
+			$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false });
+		</script>
+<?php
+	}
 ?>

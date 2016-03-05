@@ -351,7 +351,15 @@
 			$query = '
 				SELECT	`activity_register`.*,
 					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
-					" " AS `rank`,
+					( 
+   					SELECT `rank_shortname` 
+   					FROM `personnel_rank` 
+							INNER JOIN `rank` 
+								ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
+   					WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
+   					ORDER BY `date_achieved` DESC 
+   					LIMIT 1 
+					) AS `rank`,
 					`personnel`.`mobile_phone`,
 					`personnel`.`allergies`,
 					`personnel`.`medical_conditions`,
@@ -565,7 +573,19 @@
 					if( is_null($id) )
 					{
 						$personnel = array();
-						$query = "SELECT *, ".ATC_SETTING_DISPLAY_NAME." AS `display_name` FROM `personnel` ";
+						$query = "
+							SELECT 	*, 
+								".ATC_SETTING_DISPLAY_NAME." AS `display_name`,
+								( 
+   								SELECT `rank_shortname` 
+   								FROM `personnel_rank` 
+										INNER JOIN `rank` 
+											ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
+   								WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
+   								ORDER BY `date_achieved` DESC 
+   								LIMIT 1 
+								) AS `rank`
+							FROM `personnel` ";
 						if( !is_null($access_rights) )
 							$query .= ' WHERE `access_rights` IN ('.self::$mysqli->real_escape_string($access_rights).')  AND `personnel_id` > 0 ';
 						else 
@@ -578,8 +598,6 @@
 						{
 							while ( $obj = $result->fetch_object() )
 								$personnel[] = $obj;
-							foreach( $personnel as $obj )
-								$obj->rank = "";
 						}	
 						else
 							throw new ATCExceptionDBError(self::$mysqli->error);
@@ -599,18 +617,55 @@
 					}
 					break;
 				default:
-					$query = "SELECT *,".ATC_SETTING_DISPLAY_NAME." AS `display_name` FROM `personnel` WHERE `personnel_id` = ".(int)$id." LIMIT 1;";
+					$query = "SELECT *,
+						".ATC_SETTING_DISPLAY_NAME." AS `display_name`,
+					( 
+   					SELECT `rank_shortname` 
+   					FROM `personnel_rank` 
+							INNER JOIN `rank` 
+								ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
+   					WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
+   					ORDER BY `date_achieved` DESC 
+   					LIMIT 1 
+					) AS `rank` 
+					FROM `personnel` 
+					WHERE `personnel_id` = ".(int)$id." 
+					LIMIT 1;";
 					
 					if ($result = self::$mysqli->query($query)) 
 						$personnel = $result->fetch_object();
 					else
 						throw new ATCExceptionDBError(self::$mysqli->error);
 					$personnel->created = date("Y-m-d\TH:i", strtotime($personnel->created));
-					$personnel->rank = null;
 					
 					break;
 			}
 			return $personnel;
+		}
+		
+		public function get_promotion_history( $userid )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $userid ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = '
+				SELECT * 
+				FROM `personnel_rank`
+					INNER JOIN `rank`
+						ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
+				WHERE `personnel_id` = '.(int)$userid.' 
+				ORDER BY `date_achieved` DESC;';
+
+			$promotions = array();
+			if ($result = self::$mysqli->query($query))
+			{
+				while ( $obj = $result->fetch_object() )
+					$promotions[] = $obj;
+			}	
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $promotions;
 		}
 		
 		// Keep a track of who's doing what, for later auditing.
