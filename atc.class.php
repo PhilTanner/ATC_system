@@ -40,15 +40,16 @@
 	
 	// Give admin everything we can think of in the future.
 	define( 'ATC_USER_LEVEL_ADMIN', 			16777215 );
-	define( 'ATC_USER_LEVEL_CADET', 			0 );
+	define( 'ATC_USER_LEVEL_CADET',			0 );
 	define( 'ATC_USER_LEVEL_NCO', 				ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_LOCATIONS_VIEW );
 	define( 'ATC_USER_LEVEL_ADJUTANT', 			ATC_PERMISSION_PERSONNEL_EDIT + ATC_PERMISSION_ATTENDANCE_EDIT + ATC_PERMISSION_ACTIVITIES_EDIT + ATC_PERMISSION_FINANCE_EDIT + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_EDIT + ATC_PERMISSION_ACTIVITY_TYPE_EDIT);
 	define( 'ATC_USER_LEVEL_STORES', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_FINANCE_EDIT + ATC_PERMISSION_STORES_EDIT + ATC_PERMISSION_LOCATIONS_VIEW );
 	define( 'ATC_USER_LEVEL_TRAINING', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_FINANCE_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_EDIT + ATC_PERMISSION_ACTIVITY_TYPE_EDIT + ATC_PERMISSION_TRAINING_EDIT);
 	define( 'ATC_USER_LEVEL_CUCDR', 			ATC_PERMISSION_PERSONNEL_EDIT + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_FINANCE_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_VIEW + ATC_PERMISSION_ACTIVITY_TYPE_EDIT );
-	define( 'ATC_USER_LEVEL_SUPOFF', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_LOCATIONS_VIEW );
+	define( 'ATC_USER_LEVEL_SUPOFF', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_LOCATIONS_VIEW );	define( 'ATC_USER_LEVEL_OFFICER', 			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_LOCATIONS_VIEW + ATC_PERMISSION_FINANCE_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_LOCATIONS_VIEW + ATC_PERMISSION_TRAINING_VIEW );
 	define( 'ATC_USER_LEVEL_TREASURER',			ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_FINANCE_EDIT + ATC_PERMISSION_LOCATIONS_VIEW );
 	define( 'ATC_USER_LEVEL_USC', 				ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_FINANCE_VIEW + ATC_PERMISSION_LOCATIONS_VIEW );
+	define( 'ATC_USER_LEVEL_EMRG_CONTACT', 		ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_LOCATIONS_VIEW );
 
 	define( 'ATC_USER_GROUP_OFFICERS',			ATC_USER_LEVEL_ADJUTANT.','.ATC_USER_LEVEL_STORES.','.ATC_USER_LEVEL_TRAINING.','.ATC_USER_LEVEL_CUCDR.','.ATC_USER_LEVEL_SUPOFF );
 	define( 'ATC_USER_GROUP_CADETS',			ATC_USER_LEVEL_CADET.','.ATC_USER_LEVEL_NCO );
@@ -144,6 +145,21 @@
 			{
 				self::log_action( 'attendance', $query, self::$mysqli->insert_id );
 				return true;
+			}
+			else throw new ATCExceptionDBError(self::$mysqli->error);
+		}
+		
+		public function add_promotion( $rank_id, $personnel_id, $date )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_PERSONNEL_EDIT, $personnel_id ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = "INSERT INTO `personnel_rank` (`rank_id`, `personnel_id`, `date_achieved` ) VALUES ( ".(int)$rank_id.", ".(int)$personnel_id.", '".date("Y-m-d",strtotime($date))."' );";
+
+			if ($result = self::$mysqli->query($query))
+			{
+				self::log_action( 'personnel_rank', $query, self::$mysqli->insert_id );
+				return self::$mysqli->insert_id;
 			}
 			else throw new ATCExceptionDBError(self::$mysqli->error);
 		}
@@ -350,7 +366,15 @@
 			$query = '
 				SELECT	`activity_register`.*,
 					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
-					" " AS `rank`,
+					( 
+   					SELECT `rank_shortname` 
+   					FROM `personnel_rank` 
+							INNER JOIN `rank` 
+								ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
+   					WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
+   					ORDER BY `date_achieved` DESC 
+   					LIMIT 1 
+					) AS `rank`,
 					`personnel`.`mobile_phone`,
 					`personnel`.`allergies`,
 					`personnel`.`medical_conditions`,
@@ -449,7 +473,7 @@
 				AND `personnel`.`access_rights` IN ('.ATC_USER_GROUP_PERSONNEL.') 
 				AND `personnel`.`enabled` = -1
 				AND `personnel`.`left_date` IS NULL 
-			ORDER BY `date` ASC;';
+			ORDER BY `personnel`.`personnel_id`, `attendance_register`.`date` ASC;';
 
 			$attendance = array();
 			if ($result = self::$mysqli->query($query))
@@ -564,7 +588,19 @@
 					if( is_null($id) )
 					{
 						$personnel = array();
-						$query = "SELECT *, ".ATC_SETTING_DISPLAY_NAME." AS `display_name` FROM `personnel` ";
+						$query = "
+							SELECT 	*, 
+								".ATC_SETTING_DISPLAY_NAME." AS `display_name`,
+								( 
+   								SELECT `rank_shortname` 
+   								FROM `personnel_rank` 
+										INNER JOIN `rank` 
+											ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
+   								WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
+   								ORDER BY `date_achieved` DESC 
+   								LIMIT 1 
+								) AS `rank`
+							FROM `personnel` ";
 						if( !is_null($access_rights) )
 							$query .= ' WHERE `access_rights` IN ('.self::$mysqli->real_escape_string($access_rights).')  AND `personnel_id` > 0 ';
 						else 
@@ -577,8 +613,6 @@
 						{
 							while ( $obj = $result->fetch_object() )
 								$personnel[] = $obj;
-							foreach( $personnel as $obj )
-								$obj->rank = "";
 						}	
 						else
 							throw new ATCExceptionDBError(self::$mysqli->error);
@@ -598,18 +632,74 @@
 					}
 					break;
 				default:
-					$query = "SELECT *,".ATC_SETTING_DISPLAY_NAME." AS `display_name` FROM `personnel` WHERE `personnel_id` = ".(int)$id." LIMIT 1;";
+					$query = "SELECT *,
+						".ATC_SETTING_DISPLAY_NAME." AS `display_name`,
+					( 
+   					SELECT `rank_shortname` 
+   					FROM `personnel_rank` 
+							INNER JOIN `rank` 
+								ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
+   					WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
+   					ORDER BY `date_achieved` DESC 
+   					LIMIT 1 
+					) AS `rank` 
+					FROM `personnel` 
+					WHERE `personnel_id` = ".(int)$id." 
+					LIMIT 1;";
 					
 					if ($result = self::$mysqli->query($query)) 
 						$personnel = $result->fetch_object();
 					else
 						throw new ATCExceptionDBError(self::$mysqli->error);
 					$personnel->created = date("Y-m-d\TH:i", strtotime($personnel->created));
-					$personnel->rank = null;
 					
 					break;
 			}
 			return $personnel;
+		}
+		
+		public function get_promotion_history( $userid )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $userid ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = '
+				SELECT * 
+				FROM `personnel_rank`
+					INNER JOIN `rank`
+						ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
+				WHERE `personnel_id` = '.(int)$userid.' 
+				ORDER BY `date_achieved` DESC;';
+
+			$promotions = array();
+			if ($result = self::$mysqli->query($query))
+			{
+				while ( $obj = $result->fetch_object() )
+					$promotions[] = $obj;
+			}	
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $promotions;
+		}
+		
+		public function get_ranks( )
+		{
+			$query = '
+				SELECT * 
+				FROM `rank`
+				ORDER BY `ordering` ASC;';
+
+			$ranks = array();
+			if ($result = self::$mysqli->query($query))
+			{
+				while ( $obj = $result->fetch_object() )
+					$ranks[] = $obj;
+			}	
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $ranks;
 		}
 		
 		// Keep a track of who's doing what, for later auditing.
@@ -779,11 +869,12 @@
 				if( $presence == '' )
 					$presence = 'NULL';
 				$note = $value['note'];
+				$updatenote = strlen(trim($note));
 				
 				if( $presence != ATC_ATTENDANCE_PRESENT && $presence != ATC_ATTENDANCE_ON_LEAVE && $presence != ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE )
 					throw new ATCExceptionBadData('Unknown presence value');
 
-				$query = "INSERT INTO `activity_register` (`personnel_id`, `activity_id`, `presence`, `note`) VALUES ( ".(int)$personnel_id.", ".(int)$activity_id.", ".$presence.", '".self::$mysqli->real_escape_string($note)."') ON DUPLICATE KEY UPDATE `presence` = ".$presence.", `note` = '".self::$mysqli->real_escape_string($note)."';";
+				$query = "INSERT INTO `activity_register` (`personnel_id`, `activity_id`, `presence`".($updatenote?', `note`':'').") VALUES ( ".(int)$personnel_id.", ".(int)$activity_id.", ".$presence.($updatenote?", '".self::$mysqli->real_escape_string($note)."'":'').") ON DUPLICATE KEY UPDATE `presence` = ".$presence.($updatenote?", `note` = '".self::$mysqli->real_escape_string($note)."'":'').";";
 				
 				if ($result = self::$mysqli->query($query))
 					self::log_action( 'activity_register', $query, $activity_id );
@@ -1010,6 +1101,7 @@
 			echo '
 		<script>
 			$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
+			$("tbody tr:odd").addClass("evenrow");
 		</script>
 		<footer>
 			<p> Built on the ATC system code available at <a target="blank" href="https://github.com/PhilTanner/ATC_system">https://github.com/PhilTanner/ATC_system</a> </p>
@@ -1044,9 +1136,13 @@
 				$(".navoptions ul li a.personnel").button({ icons: { primary: "ui-icon-contact" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Personnel'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.attendance").button({ icons: { primary: "ui-icon-clipboard" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Attendance'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.activities").button({ icons: { primary: "ui-icon-image" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Activities'?'.addClass("ui-state-active")':'').';
+				$(".navoptions ul li a.documents").button({ icons: { primary: "ui-icon-folder-open" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Documentation'?'.addClass("ui-state-active")':'').';
+				
 				$(".navoptions ul li a.finance").button({ icons: { primary: "ui-icon-cart" } });
 				$(".navoptions ul li a.stores").button({ icons: { primary: "ui-icon-tag" } });
 				$(".navoptions ul li a.training").button({ icons: { primary: "ui-icon-calendar" } });
+				
+				
 				$(".navoptions ul li a.logout").button({ icons: { primary: "ui-icon-unlocked" } }).removeClass("ui-state-disabled");
 				$(".navoptions ul li a.login").button({ icons: { primary: "ui-icon-locked" } })'.(self::$currentuser?'':'.removeClass("ui-state-disabled")').($title=='Login'?'.addClass("ui-state-active")':'').';
 			});
@@ -1062,12 +1158,12 @@
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW)?'<li> <a href="./personnel.php" class="personnel">Personnel</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ATTENDANCE_VIEW)?'<li> <a href="./attendance.php" class="attendance">Attendance</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ACTIVITIES_VIEW)?'<li> <a href="./activities.php" class="activities">Activities</a> </li>':'').'
-				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW)?'<li> <a href="./" class="finance">Finance</a> </li>':'').'
+				<!--'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW)?'<li> <a href="./" class="finance">Finance</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_STORES_VIEW)?'<li> <a href="./" class="stores">Stores</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_TRAINING_VIEW)?'<li> <a href="./" class="training">Training</a> </li>':'').'
-				'.(self::$currentuser?'<li> <a href="./logout.php" class="logout">Logout</a> </li>':'').'
-				'.(!self::$currentuser?'<li> <a href="./login.php" class="login">Login</a> </li>':'').'
-				
+				'.(self::$currentuser && self::user_has_permission(ATC_USER_LEVEL_ADJUTANT)?'<li> <a href="./documents.php" class="documents">Documentation</a> </li>':'').'-->
+		
+				'.(self::$currentuser?'<li> <a href="./logout.php" class="logout">Logout</a> </li>':'<li> <a href="./login.php" class="login">Login</a> </li>').'				
 			</ul>
 		</nav>
 		<h1> '.(ATC_DEBUG?'<span style="color:Red;">DEV</span>':'ATC').' - '.$title.' </h1>

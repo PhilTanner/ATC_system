@@ -107,19 +107,23 @@
 				<?php
 					foreach( $users as $obj )
 					{
-						echo '<tr>';	
-						echo '	<td>'.$obj->rank.'</td>';
-						echo '	<td>'.$obj->lastname.', '.$obj->firstname.'</td>';
-						foreach( $dates as $night )
+						if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $obj->personnel_id ) )
 						{
-							echo '<td class="attendance user'.$obj->personnel_id.' date'.$night->date.'"><select name="'.$obj->personnel_id.'|'.$night->date.'" id="'.$obj->personnel_id.'_'.$night->date.'">';
-							echo '	<option value="" selected="selected"></option>';
-							echo '	<option value="'.ATC_ATTENDANCE_PRESENT.'">'.ATC_ATTENDANCE_PRESENT_SYMBOL.'</option>';
-							echo '	<option value="'.ATC_ATTENDANCE_ON_LEAVE.'">'.ATC_ATTENDANCE_ON_LEAVE_SYMBOL.'</option>';
-							echo '	<option value="'.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE.'">'.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE_SYMBOL.'</option>';
-							echo '</select></td>';
+							echo '<tr>';	
+							echo '	<td>'.$obj->rank.'</td>';
+							echo '	<td><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
+							$missednights = 0;
+							foreach( $dates as $night )
+							{
+								echo '<td class="attendance user'.$obj->personnel_id.' date'.$night->date.'"><select name="'.$obj->personnel_id.'|'.$night->date.'" id="'.$obj->personnel_id.'_'.$night->date.'">';
+								echo '	<option value="" selected="selected"></option>';
+								echo '	<option value="'.ATC_ATTENDANCE_PRESENT.'">'.ATC_ATTENDANCE_PRESENT_SYMBOL.'</option>';
+								echo '	<option value="'.ATC_ATTENDANCE_ON_LEAVE.'">'.ATC_ATTENDANCE_ON_LEAVE_SYMBOL.'</option>';
+								echo '	<option value="'.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE.'">'.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE_SYMBOL.'</option>';
+								echo '</select></td>';
+							}
+							echo '</tr>';
 						}
-						echo '</tr>';
 					}
 				?>
 			</tbody>
@@ -153,56 +157,59 @@
 				<?php
 					foreach($nonattendingcadets as $mia)
 					{
-						echo '<tr>';
-						echo '	<td> ';
-						echo '<input type="hidden" name="personnel_id[]" value="'.$mia->personnel_id.'" />';
-						echo $mia->display_name.'</td>';
-						echo '	<td> '.$mia->mobile_phone.'</td>';
-						echo '	<td>';
-						$n=0;
-						foreach( $mia->nok as $nok )
+						if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $mia->personnel_id ) )
 						{
-							$n++;
-							echo $nok->firstname.' '.$nok->lastname;
-							switch($nok->relationship)
+							echo '<tr>';
+							echo '	<td> ';
+							echo '<input type="hidden" name="personnel_id[]" value="'.$mia->personnel_id.'" />';
+							echo $mia->display_name.'</td>';
+							echo '	<td> '.$mia->mobile_phone.'</td>';
+							echo '	<td>';
+							$n=0;
+							foreach( $mia->nok as $nok )
 							{
-								case ATC_NOK_TYPE_MOTHER:
-									echo ' (Mother)';
-									break;
-								case ATC_NOK_TYPE_STEPMOTHER:
-									echo ' (Step-Mother)';
-									break;
-								case ATC_NOK_TYPE_GRANDMOTHER:
-									echo ' (Grandmother)';
-									break;
-								case ATC_NOK_TYPE_FATHER:
-									echo ' (Father)';
-									break;
-								case ATC_NOK_TYPE_STEPFATHER:
-									echo ' (Step-Father)';
-									break;
-								case  ATC_NOK_TYPE_GRANDFATHER:
-									echo ' (Grandfather)';
-									break;
-								case  ATC_NOK_TYPE_SPOUSE:
-									echo ' (Spouse)';
-									break;
-								case  ATC_NOK_TYPE_DOMPTNR:
-									echo ' (Domestic Partner)';
-									break;
-								case  ATC_NOK_TYPE_SIBLING:
-									echo ' (Sibling)';
-									break;
-								default:
-									echo ' (Unknown/Other)';
+								$n++;
+								echo $nok->firstname.' '.$nok->lastname;
+								switch($nok->relationship)
+								{
+									case ATC_NOK_TYPE_MOTHER:
+										echo ' (Mother)';
+										break;
+									case ATC_NOK_TYPE_STEPMOTHER:
+										echo ' (Step-Mother)';
+										break;
+									case ATC_NOK_TYPE_GRANDMOTHER:
+										echo ' (Grandmother)';
+										break;
+									case ATC_NOK_TYPE_FATHER:
+										echo ' (Father)';
+										break;
+									case ATC_NOK_TYPE_STEPFATHER:
+										echo ' (Step-Father)';
+										break;
+									case  ATC_NOK_TYPE_GRANDFATHER:
+										echo ' (Grandfather)';
+										break;
+									case  ATC_NOK_TYPE_SPOUSE:
+										echo ' (Spouse)';
+										break;
+									case  ATC_NOK_TYPE_DOMPTNR:
+										echo ' (Domestic Partner)';
+										break;
+									case  ATC_NOK_TYPE_SIBLING:
+										echo ' (Sibling)';
+										break;
+									default:
+										echo ' (Unknown/Other)';
+								}
+								echo '<br />'.$nok->mobile_number.' ('.$nok->home_number.')';
+								if( $n != count($mia->nok) )
+									echo '<hr />';
 							}
-							echo '<br />'.$nok->mobile_number.' ('.$nok->home_number.')';
-							if( $n != count($mia->nok) )
-								echo '<hr />';
+							echo '	</td>';
+							echo '	<td> <input type="text" maxlength="255" name="comment_'.$mia->personnel_id.'" id="comment_'.$mia->personnel_id.'" /> </td>';
+							echo '</tr>';
 						}
-						echo '	</td>';
-						echo '	<td> <input type="text" maxlength="255" name="comment_'.$mia->personnel_id.'" id="comment_'.$mia->personnel_id.'" /> </td>';
-						echo '</tr>';
 					}
 				?>
 			</tbody>
@@ -351,9 +358,37 @@
 					casedefault:
 						symbol = value['presence'];
 				}
-				$('td.user'+value['personnel_id']+'.date'+value['date']).html(symbol); 
+				$('td.user'+value['personnel_id']+'.date'+value['date']).html(symbol);
 			});
 		}
+		
+		var missingnights = 0;
+		var curruser = 0;
+		$.each(attendance, function(index, value){
+			// Don't carry missing nights forward;
+			if( curruser != value['personnel_id'] )
+			{
+				curruser = value['personnel_id'];
+				//missingnights=0;
+			}
+			switch(value['presence'])
+			{
+				case "<?=ATC_ATTENDANCE_PRESENT?>":
+				case "<?=ATC_ATTENDANCE_ON_LEAVE?>":
+					missingnights = 0;
+					break;
+				case "<?=ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE?>":
+					missingnights+=1;
+					break;
+				default:
+					missingnights++;
+			}
+			// Cadets who miss 4 parade nights are eligible to be signed off the books
+			if( missingnights >= 2 ) 
+				$('td.user'+value['personnel_id']+'.date'+value['date']).parent().children().addClass('ui-state-highlight').attr('title','Cadet needs to attend, after 4 missed nights, they will be signed out of the unit!');
+			if( missingnights >= 4 ) 
+				$('td.user'+value['personnel_id']+'.date'+value['date']).parent().children().addClass('ui-state-error').attr('title','Cadet missed 4 parade nights - sign them off the books');					
+		});
 	</script>
 	
 <?php

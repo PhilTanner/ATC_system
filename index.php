@@ -11,7 +11,7 @@
 	if( count($activities) ) {
 ?>
 		
-		<h2> Upcoming events (next 30 days)</h2>
+		<h2> Upcoming events</h2>
 		<table>
 			<thead>
 				<tr>
@@ -33,7 +33,7 @@
 					foreach( $activities as $obj )
 					{
 						echo '<tr>';
-						echo '	<td'.(array_search($ATC->get_currentuser_id(),explode(',',$obj->attendees))!==false?' class="highlighted"':'').'><span class="ui-icon ui-icon-'.($obj->nzcf_status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> '.$obj->title.'</td>';
+						echo '	<td'.(array_search($ATC->get_currentuser_id(),explode(',',$obj->attendees))!==false?' class="highlighted"':'').'><!--<span class="ui-icon ui-icon-'.($obj->nzcf_status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> -->'.$obj->title.'</td>';
 						echo '	<td'.($obj->personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'>'.$obj->display_name.'</td>';
 						echo '	<td'.($obj->twoic_personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'>'.$obj->twoic_display_name.'</td>';
 						echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->startdate)).'</td>';
@@ -49,7 +49,7 @@
 <?php
 	}
 	
-	if( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_VIEW) )
+	if( $ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW) )
 		$user = $ATC->get_personnel(null, 'ASC', null, 0);
 	else
 		$user = array();
@@ -80,7 +80,7 @@
 		if(count($bdays))
 		{
 ?>
-	<h2> Upcoming birthdays (next 30 days)</h2>
+	<h2> Upcoming birthdays</h2>
 		<table>
 			<thead>
 				<tr>
@@ -108,7 +108,7 @@
 		if(count($annivs))
 		{
 ?>
-	<h2> Upcoming anniversaries (next 30 days)</h2>
+	<h2> Upcoming anniversaries</h2>
 		<table>
 			<thead>
 				<tr>
@@ -145,7 +145,7 @@
 	Next/Prev years activity lists<br />
 	Autocomplete searches<br>
 	Fixed height user sortables - scrollable<br/>
-	Flights<br />
+	Cadet Flight details for attendance etc<br />
 	Document folders<br />
 	
 	<h2> Outstanding documentation </h2>

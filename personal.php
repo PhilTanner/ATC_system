@@ -2,43 +2,45 @@
 	require_once "atc.class.php";
 	$ATC = new ATC();
 	
-	$id = ( isset($_GET['id'])?(int)$_GET['id']:null );
-	$user = $ATC->get_personnel($id);
-
-	if( isset( $_POST['personnel_id'] ) && isset( $_GET['id'] ) )
+	if( !isset($_GET['action']) )
 	{
-		foreach( $_POST as $var => $val )
-			$user->$var = $val;
-		if( !isset($_POST['enabled']) || !$_POST['enabled'] )
-			$user->enabled = 0;
+		$id = ( isset($_GET['id'])?(int)$_GET['id']:null );
+		$user = $ATC->get_personnel($id);
+	
+		if( isset( $_POST['personnel_id'] ) && isset( $_GET['id'] ) )
+		{
+			foreach( $_POST as $var => $val )
+				$user->$var = $val;
+			if( !isset($_POST['enabled']) || !$_POST['enabled'] )
+				$user->enabled = 0;
 		
-		try {
-			$ATC->set_personnel( $user );
-		} catch (ATCExceptionInsufficientPermissions $e) {
-			header("HTTP/1.0 401 Unauthorised");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-			exit();
-		} catch (ATCExceptionDBError $e) {
-			header("HTTP/1.0 500 Internal Server Error");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-			exit();
-		} catch (ATCExceptionDBConn $e) {
-			header("HTTP/1.0 500 Internal Server Error");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-			exit();
-		} catch (ATCException $e) {
-			header("HTTP/1.0 400 Bad Request");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-			exit();
-		} catch (Exception $e) {
-			header("HTTP/1.0 500 Internal Server Error");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-			exit();
+			try {
+				$ATC->set_personnel( $user );
+			} catch (ATCExceptionInsufficientPermissions $e) {
+				header("HTTP/1.0 401 Unauthorised");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+				exit();
+			} catch (ATCExceptionDBError $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+				exit();
+			} catch (ATCExceptionDBConn $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+				exit();
+			} catch (ATCException $e) {
+				header("HTTP/1.0 400 Bad Request");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+				exit();
+			} catch (Exception $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+				exit();
+			}
 		}
-	}
 
-	if( is_object($user) && $ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW, $id ) )
-	{	
+		if( is_object($user) && $ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW, $id ) )
+		{	
 ?>
 
 		<form id="personalform" method="post" action="personal.php?id=<?=$user->personnel_id?>#personalform">
@@ -83,12 +85,14 @@
 				<option value="<?=ATC_USER_LEVEL_CADET?>"> Cadet </option>
 				<option value="<?=ATC_USER_LEVEL_NCO?>"> NCO </option>
 				<option value="<?=ATC_USER_LEVEL_SUPOFF?>"> Supplimentary Officer </option>
+				<option value="<?=ATC_USER_LEVEL_OFFICER?>"> Officer </option>
 				<option value="<?=ATC_USER_LEVEL_ADJUTANT?>"> Adjutant </option>
 				<option value="<?=ATC_USER_LEVEL_STORES?>"> Stores </option>
 				<option value="<?=ATC_USER_LEVEL_TRAINING?>"> Training </option>
 				<option value="<?=ATC_USER_LEVEL_CUCDR?>"> CUCDR </option>
 				<option value="<?=ATC_USER_LEVEL_USC?>"> Unit Support Committee Member </option>
 				<option value="<?=ATC_USER_LEVEL_TREASURER?>"> Treasurer </option>
+				<option value="<?=ATC_USER_LEVEL_EMRG_CONTACT?>"> Emergency Contact </option>
 				<option value="<?=ATC_USER_LEVEL_ADMIN?>"> Admin </option>
 			</select><br />
 			<label for="enabled">Enabled</label>
@@ -180,5 +184,129 @@
 		</script>
 
 <?php
-	} 
+		}
+	} elseif( isset($_GET['action']) && $_GET['action'] == 'promotion' && isset($_GET['id']) ) {
+		if($_SERVER['REQUEST_METHOD'] == 'POST')
+		{
+			try {
+				$ATC->add_promotion( $_POST['rank_id'], $_GET['id'], $_POST['date_achieved'] );
+			} catch (ATCExceptionInsufficientPermissions $e) {	
+				header("HTTP/1.0 401 Unauthorised");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			} catch (ATCExceptionDBError $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			} catch (ATCExceptionDBConn $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			} catch (ATCException $e) {
+				header("HTTP/1.0 400 Bad Request");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			} catch (Exception $e) {
+				header("HTTP/1.0 500 Internal Server Error");
+				echo 'Caught exception: ',  $e->getMessage(), "\n";
+			}
+			exit();
+		}
+		$promotions  = $ATC->get_promotion_history( $_GET['id'] );
+		$ranks = $ATC->get_ranks();
+?>
+		<table>
+			<thead>
+				<tr>
+					<th> Rank </th>
+					<th> Date </th>
+					<?= ($ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_EDIT)?'<td><a href="personal.php?id='.$_GET['id'].'&amp;action=promotion" class="button new">New</a></td>':'')?>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					foreach($promotions as $promotion)
+					{
+						echo '<tr>';
+						echo '	<td> '.$promotion->rank.' </td>';
+						echo '	<td> '.date(ATC_SETTING_DATE_OUTPUT.", Y", strtotime($promotion->date_achieved)).' </td>';
+						echo '</tr>';
+					}
+				?>
+			</tbody>
+		</table>
+		<script>
+			$("thead th").button(/*{ icons: { primary: "ui-icon-arrowthick-2-n-s" } }*/).removeClass("ui-corner-all").css({ display: "table-cell" });
+			$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false }).click(function(e){
+				e.preventDefault(); // stop the link actually firing
+				var href = $(this).attr("href");
+				$('#dialog').html('<form name="newrank" id="newrank">'+
+						'	<label for="rank">New Rank</rank><br />'+
+						'	<select name="rank_id" id="rank_id">'+
+						'		<?php foreach($ranks as $rank) echo '<option value="'.$rank->rank_id.'">'.$rank->rank.'</option>'; ?>'+
+						'	</select><br />'+
+						'	<label for="date_achieved">Date achieved</label><br />'+
+						'	<input type="date" value="" name="date_achieved" id="date_achieved" />'+
+						'</form>').dialog({
+					modal: true,
+					width: 600,
+					title: 'Add new rank record',
+					buttons: {
+						Cancel: function() {
+							$( this ).dialog( "close" );
+						},
+						Save: function() {
+						
+							$.ajax({
+						 	  type: "POST",
+						  	 url: href,
+						   	data: $("#newrank").serialize(),
+						   	beforeSend: function()
+						   	{
+							   	$('#newrank').addClass('ui-state-disabled');
+						   	},
+						   	complete: function()
+						   	{
+							   	$('#newrank').removeClass('ui-state-disabled');
+						   	},
+						   	success: function(data)
+						   	{
+							   	// True to ensure we don't just use a cached version, but get a fresh copy from the server
+							   	location.reload(true);
+						   	},
+						   	error: function(data)
+						   	{
+							   	$('#dialog').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
+								  	modal: true,
+								  	//dialogClass: 'ui-state-error',
+								  	title: 'Error!',
+								  	buttons: {
+										Close: function() {
+									 	 $( this ).dialog( "close" );
+										}
+								 	 },
+								 	 close: function() { 
+										$( this ).dialog( "destroy" ); 
+										$('#save_indicator').fadeOut(1500, function(){ $('#save_indicator').remove() });
+								 	 },
+								  	open: function() {
+									 	$('.ui-dialog-titlebar').addClass('ui-state-error');
+								  	}
+									}).filter('ui-dialog-titlebar');
+							   	return false;
+						   	}
+						 	});
+						 
+							$( this ).dialog( "close" );
+						}
+				  	},
+				  	close: function() { 
+						$( this ).dialog( "destroy" ); 
+				  	},
+				  	open: function() {
+				
+					
+					}
+				});
+				return false;
+			});
+		</script>
+<?php
+	}
 ?>

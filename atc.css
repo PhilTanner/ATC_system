@@ -20,6 +20,7 @@ td.attendance { text-align: center; }
 .navoptions { float: right; }
 .navoptions button { margin-bottom: 5px; }
 .highlighted { background-color:Yellow; }
+.evenrow { background-color: #f3f3f3; }
 
 nav ul li { float: right; list-style: none; margin-left: 1ex; }
 
