@@ -148,6 +148,21 @@
 			}
 			else throw new ATCExceptionDBError(self::$mysqli->error);
 		}
+		
+		public function add_promotion( $rank_id, $personnel_id, $date )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_PERSONNEL_EDIT, $personnel_id ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = "INSERT INTO `personnel_rank` (`rank_id`, `personnel_id`, `date_achieved` ) VALUES ( ".(int)$rank_id.", ".(int)$personnel_id.", '".date("Y-m-d",strtotime($date))."' );";
+
+			if ($result = self::$mysqli->query($query))
+			{
+				self::log_action( 'personnel_rank', $query, self::$mysqli->insert_id );
+				return self::$mysqli->insert_id;
+			}
+			else throw new ATCExceptionDBError(self::$mysqli->error);
+		}
 
 		public function check_user_session( $session )
 		{
@@ -666,6 +681,25 @@
 				throw new ATCExceptionDBError(self::$mysqli->error);
 
 			return $promotions;
+		}
+		
+		public function get_ranks( )
+		{
+			$query = '
+				SELECT * 
+				FROM `rank`
+				ORDER BY `ordering` ASC;';
+
+			$ranks = array();
+			if ($result = self::$mysqli->query($query))
+			{
+				while ( $obj = $result->fetch_object() )
+					$ranks[] = $obj;
+			}	
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $ranks;
 		}
 		
 		// Keep a track of who's doing what, for later auditing.

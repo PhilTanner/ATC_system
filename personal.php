@@ -189,18 +189,7 @@
 		if($_SERVER['REQUEST_METHOD'] == 'POST')
 		{
 			try {
-				/*$ATC->set_activity( 
-					$_POST['activity_id'],
-					$_POST['startdate'], 
-					$_POST['enddate'], 
-					$_POST['title'], 
-					$ATC->set_location( $_POST['location_id'], $_POST['location'], null ), 
-					$_POST['personnel_id'],
-					$_POST['2ic_personnel_id'],
-					$ATC->set_activity_type( $_POST['activity_type_id'], $_POST['activity_type'], null ), 
-					$_POST['dress_code'],
-					$_POST['attendees'] 
-				);*/
+				$ATC->add_promotion( $_POST['rank_id'], $_GET['id'], $_POST['date_achieved'] );
 			} catch (ATCExceptionInsufficientPermissions $e) {	
 				header("HTTP/1.0 401 Unauthorised");
 				echo 'Caught exception: ',  $e->getMessage(), "\n";
@@ -220,6 +209,7 @@
 			exit();
 		}
 		$promotions  = $ATC->get_promotion_history( $_GET['id'] );
+		$ranks = $ATC->get_ranks();
 ?>
 		<table>
 			<thead>
@@ -242,8 +232,80 @@
 			</tbody>
 		</table>
 		<script>
-			$("thead th").button({ icons: { primary: "ui-icon-arrowthick-2-n-s" } }).removeClass("ui-corner-all").css({ display: "table-cell" });
-			$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false });
+			$("thead th").button(/*{ icons: { primary: "ui-icon-arrowthick-2-n-s" } }*/).removeClass("ui-corner-all").css({ display: "table-cell" });
+			$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false }).click(function(e){
+				e.preventDefault(); // stop the link actually firing
+				var href = $(this).attr("href");
+				$('#dialog').html('<form name="newrank" id="newrank">'+
+						'	<label for="rank">New Rank</rank><br />'+
+						'	<select name="rank_id" id="rank_id">'+
+						'		<?php foreach($ranks as $rank) echo '<option value="'.$rank->rank_id.'">'.$rank->rank.'</option>'; ?>'+
+						'	</select><br />'+
+						'	<label for="date_achieved">Date achieved</label><br />'+
+						'	<input type="date" value="" name="date_achieved" id="date_achieved" />'+
+						'</form>').dialog({
+					modal: true,
+					width: 600,
+					title: 'Add new rank record',
+					buttons: {
+						Cancel: function() {
+							$( this ).dialog( "close" );
+						},
+						Save: function() {
+						
+							$.ajax({
+						 	  type: "POST",
+						  	 url: href,
+						   	data: $("#newrank").serialize(),
+						   	beforeSend: function()
+						   	{
+							   	$('#newrank').addClass('ui-state-disabled');
+						   	},
+						   	complete: function()
+						   	{
+							   	$('#newrank').removeClass('ui-state-disabled');
+						   	},
+						   	success: function(data)
+						   	{
+							   	// True to ensure we don't just use a cached version, but get a fresh copy from the server
+							   	location.reload(true);
+						   	},
+						   	error: function(data)
+						   	{
+							   	$('#dialog').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
+								  	modal: true,
+								  	//dialogClass: 'ui-state-error',
+								  	title: 'Error!',
+								  	buttons: {
+										Close: function() {
+									 	 $( this ).dialog( "close" );
+										}
+								 	 },
+								 	 close: function() { 
+										$( this ).dialog( "destroy" ); 
+										$('#save_indicator').fadeOut(1500, function(){ $('#save_indicator').remove() });
+								 	 },
+								  	open: function() {
+									 	$('.ui-dialog-titlebar').addClass('ui-state-error');
+								  	}
+									}).filter('ui-dialog-titlebar');
+							   	return false;
+						   	}
+						 	});
+						 
+							$( this ).dialog( "close" );
+						}
+				  	},
+				  	close: function() { 
+						$( this ).dialog( "destroy" ); 
+				  	},
+				  	open: function() {
+				
+					
+					}
+				});
+				return false;
+			});
 		</script>
 <?php
 	}

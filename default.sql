@@ -33,7 +33,7 @@ INSERT INTO `rank` (`rank_id`, `rank`, `rank_shortname`, `ordering`, `nzcf20_ord
 (1, 'Squadron Leader', 'SQNLDR', 10, 10),
 (2, 'Pilot Officer', 'PLTOFF', 40, 40),
 (3, 'Under Officer', 'U/O', 45, 45),
-(4, 'Warrent Officer', 'W/O', 47, 10),
+(4, 'Warrant Officer', 'W/O', 47, 10),
 (5, 'Flight Sergent', 'F/S', 50, 20),
 (6, 'Sergent', 'SGT', 60, 30),
 (7, 'Corpral', 'CPL', 70, 40),
