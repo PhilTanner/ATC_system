@@ -111,7 +111,7 @@
 						{
 							echo '<tr>';	
 							echo '	<td>'.$obj->rank.'</td>';
-							echo '	<td>'.$obj->lastname.', '.$obj->firstname.'</td>';
+							echo '	<td><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
 							$missednights = 0;
 							foreach( $dates as $night )
 							{

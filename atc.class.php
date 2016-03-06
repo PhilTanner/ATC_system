@@ -1160,8 +1160,8 @@
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ACTIVITIES_VIEW)?'<li> <a href="./activities.php" class="activities">Activities</a> </li>':'').'
 				<!--'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW)?'<li> <a href="./" class="finance">Finance</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_STORES_VIEW)?'<li> <a href="./" class="stores">Stores</a> </li>':'').'
-				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_TRAINING_VIEW)?'<li> <a href="./" class="training">Training</a> </li>':'').'-->
-				'.(self::$currentuser && self::user_has_permission(ATC_USER_LEVEL_ADJUTANT)?'<li> <a href="./documents.php" class="documents">Documentation</a> </li>':'').'
+				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_TRAINING_VIEW)?'<li> <a href="./" class="training">Training</a> </li>':'').'
+				'.(self::$currentuser && self::user_has_permission(ATC_USER_LEVEL_ADJUTANT)?'<li> <a href="./documents.php" class="documents">Documentation</a> </li>':'').'-->
 		
 				'.(self::$currentuser?'<li> <a href="./logout.php" class="logout">Logout</a> </li>':'<li> <a href="./login.php" class="login">Login</a> </li>').'				
 			</ul>

@@ -13,7 +13,7 @@
 	{	
 ?>
 		<div id="personnelform">
-			<h2 href="personal.php?id=<?=$user->personnel_id?>"> Personal details &mdash; <?=$user->display_name?> </h2>
+			<h2 href="personal.php?id=<?=$user->personnel_id?>"> Personal details &mdash; <?=$user->rank.' '.$user->display_name?> </h2>
 			<div id="personal">
 			</div>
 	

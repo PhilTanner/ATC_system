@@ -34,14 +34,14 @@ INSERT INTO `rank` (`rank_id`, `rank`, `rank_shortname`, `ordering`, `nzcf20_ord
 (2, 'Pilot Officer', 'PLTOFF', 40, 40),
 (3, 'Under Officer', 'U/O', 45, 45),
 (4, 'Warrant Officer', 'W/O', 47, 10),
-(5, 'Flight Sergent', 'F/S', 50, 20),
-(6, 'Sergent', 'SGT', 60, 30),
-(7, 'Corpral', 'CPL', 70, 40),
+(5, 'Flight Sergeant', 'F/S', 50, 20),
+(6, 'Sergeant', 'SGT', 60, 30),
+(7, 'Corporal', 'CPL', 70, 40),
 (8, 'Leading Air Cadet', 'LAC', 80, 50),
 (9, 'Cadet', 'CDT', 90, 60),
 (10, 'Flight Lieutenant', 'FLTLT', 15, 15),
 (11, 'Not Applicable', 'N/A', '999', '999');
-INSERT INTO `personnel_rank` ( personnel_id, date_achieved, rank_id ) SELECT personnel_id, joined_date, 9 AS rank_id FROM personnel;
+INSERT INTO `personnel_rank` ( personnel_id, date_achieved, rank_id ) SELECT personnel_id, joined_date, 9 AS rank_id FROM personnel WHERE NOT personnel_id IN (10,1,13);
 
 
 CREATE USER 'atc'@'localhost' IDENTIFIED BY 'ZIERIESs5ESa';

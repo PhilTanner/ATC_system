@@ -4,7 +4,9 @@
 	
 	$ATC->gui_output_page_header('Documents');
 	
-	var_dump( $ATC->nzcf20_stats( '2016', '02' ) );
+	$nzcf20 = $ATC->nzcf20_stats( '2016', '02' );
+	var_dump($nzcf20);
+	
 		
 ?>
 	<h1> NZCF20 </h1>
@@ -19,61 +21,61 @@
 			<tfoot>
 				<tr>
 					<th> Totals </th>
-					<td> 29 </td>
-					<td> + </td>
-					<td> 8 </td>
-					<td> = </td>
-					<td> 37 </td>
+					<td align="center"> <?= $nzcf20[0][6][1]; ?> </td>
+					<td align="center"> + </td>
+					<td align="center"> <?= $nzcf20[0][6][0]; ?></td>
+					<td align="center"> = </td>
+					<td align="center"> <?= $nzcf20[0][6][1]+$nzcf20[0][6][0]; ?></td>
 				</tr>
 			</tfoot>
 			<tbody>
 				<tr>
 					<td> WO / WOII / W/O </td>
-					<td> </td>
-					<td> + </td>
-					<td> 1 </td>
-					<td> = </td>
-					<td> 1 </td>
+					<td align="center"> <?= $nzcf20[0][0][1]; ?> </td>
+					<td align="center"> + </td>
+					<td align="center"> <?= $nzcf20[0][0][0]; ?> </td>
+					<td align="center"> = </td>
+					<td align="center"> <?= $nzcf20[0][0][1]+$nzcf20[0][0][0]; ?> </td>
 				</tr>
 				<tr>
 					<td> CPO / SSGT / F/S </td>
-					<td> 2 </td>
-					<td> + </td>
-					<td> </td>
-					<td> = </td>
-					<td> 2 </td>
+					<td align="center"> <?= $nzcf20[0][1][1]; ?></td>
+					<td align="center"> + </td>
+					<td align="center"> <?= $nzcf20[0][1][0]; ?></td>
+					<td align="center"> = </td>
+					<td align="center"> <?= $nzcf20[0][1][1]+$nzcf20[0][1][0]; ?> </td>
 				</tr>
 				<tr>
 					<td> PO / SGT </td>
-					<td> 1 </td>
-					<td> + </td>
-					<td> </td>
-					<td> = </td>
-					<td> 1 </td>
+					<td align="center"> <?= $nzcf20[0][2][1]; ?> </td>
+					<td align="center"> + </td>
+					<td align="center"> <?= $nzcf20[0][2][0]; ?> </td>
+					<td align="center"> = </td>
+					<td align="center"> <?= $nzcf20[0][2][1]+$nzcf20[0][2][0]; ?> </td>
 				</tr>
 				<tr>
 					<td> LCDT / CPL </td>
-					<td> 4 </td>
-					<td> + </td>
-					<td> </td>
-					<td> = </td>
-					<td> 4 </td>
+					<td align="center"> <?= $nzcf20[0][3][1]; ?> </td>
+					<td align="center"> + </td>
+					<td align="center"> <?= $nzcf20[0][3][0]; ?> </td>
+					<td align="center"> = </td>
+					<td align="center"> <?= $nzcf20[0][3][1]+$nzcf20[0][3][0]; ?> </td>
 				</tr>
 				<tr>
 					<td> ABCDT / LCPL / LACDT </td>
-					<td> 6 </td>
-					<td> + </td>
-					<td> 1 </td>
-					<td> = </td>
-					<td> 7 </td>
+					<td align="center"> <?= $nzcf20[0][4][1]; ?> </td>
+					<td align="center"> + </td>
+					<td align="center"> <?= $nzcf20[0][4][0]; ?> </td>
+					<td align="center"> = </td>
+					<td align="center"> <?= $nzcf20[0][4][1]+$nzcf20[0][4][0]; ?> </td>
 				</tr>
 				<tr>
 					<td> CDTs </td>
-					<td> 16 </td>
-					<td> + </td>
-					<td> 6 </td>
-					<td> = </td>
-					<td> 22 </td>
+					<td align="center"> <?= $nzcf20[0][5][1]; ?> </td>
+					<td align="center"> + </td>
+					<td align="center"> <?= $nzcf20[0][5][0]; ?> </td>
+					<td align="center"> = </td>
+					<td align="center"> <?= $nzcf20[0][5][1]+$nzcf20[0][5][0]; ?>  </td>
 				</tr>
 			</tbody>
 		</table>
@@ -93,11 +95,11 @@
 					<td> Week 5 </td>
 				</tr>
 				<tr>
-					<td> 21 </td>
-					<td> 27 </td>
-					<td> 32 </td>
-					<td> 31 </td>
-					<td> </td>
+					<td> <?= (isset($nzcf20[1][0]->count)?$nzcf20[1][0]->count:'')?> </td>
+					<td> <?= (isset($nzcf20[1][1]->count)?$nzcf20[1][1]->count:'')?> </td>
+					<td> <?= (isset($nzcf20[1][2]->count)?$nzcf20[1][2]->count:'')?>  </td>
+					<td> <?= (isset($nzcf20[1][3]->count)?$nzcf20[1][3]->count:'')?>  </td>
+					<td> <?= (isset($nzcf20[1][4]->count)?$nzcf20[1][4]->count:'')?>  </td>
 				</tr>
 			</tbody>
 		</table>
