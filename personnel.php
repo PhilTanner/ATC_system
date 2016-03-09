@@ -77,7 +77,7 @@
 				<th colspan="2"> Name </th>
 				<th> Contact N&ordm; </th>
 				<th> Access rights </th>
-				<td> <a href="?id=0" class="button new"> New </a> </td>
+				<td> <?= ( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_EDIT )?'<a href="?id=0" class="button new"> New </a>':'')?> </td>
 			</tr>
 		</thead>
 		<tfoot>
@@ -138,7 +138,8 @@
 							default:
 								echo '<td class="ui-state-error">Unknown</td>';
 						}
-						echo '	<td> <a href="?id='.$obj->personnel_id.'" class="button edit">Edit</a> </td>';
+						if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_EDIT, $obj->personnel_id ) )
+							echo '	<td> <a href="?id='.$obj->personnel_id.'" class="button edit">Edit</a> </td>';
 						echo '</tr>';
 					}
 				}
