@@ -133,7 +133,7 @@
 <?php
 	$date = date('Y-m-d', time());
 	$nonattendingcadets = $ATC->get_awol($date);
-	if( count($nonattendingcadets) )
+	if( count($nonattendingcadets) && $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ) )
 	{
 ?>
 	<form name="missingcadets" id="missingcadets" method="post" style="margin-top:2em;">
@@ -238,7 +238,7 @@
 				success: function(data)
 				{
 					// True to ensure we don't just use a cached version, but get a fresh copy from the server
-					//location.reload(true);
+					location.reload(true);
 				},
 				error: function(data)
 				{
@@ -362,32 +362,32 @@
 			});
 		}
 		
-		var missingnights = 0;
-		var curruser = 0;
-		$.each(attendance, function(index, value){
+		
+		$('#attendanceregister tr').each(function(index, value){
 			// Don't carry missing nights forward;
-			if( curruser != value['personnel_id'] )
+			var missingnights = 0;
+			
+			if( <?= ($ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT )?'1':'0')?> == '1' )
 			{
-				curruser = value['personnel_id'];
-				//missingnights=0;
-			}
-			switch(value['presence'])
-			{
-				case "<?=ATC_ATTENDANCE_PRESENT?>":
-				case "<?=ATC_ATTENDANCE_ON_LEAVE?>":
-					missingnights = 0;
-					break;
-				case "<?=ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE?>":
-					missingnights+=1;
-					break;
-				default:
-					missingnights++;
+				$(this).children('td').children('select').each(function(index, value){
+					if( $(this).val() == '<?=ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE?>' )
+						missingnights++;
+					else if( $(this).val() == '<?=ATC_ATTENDANCE_PRESENT?>' || $(this).val() == '<?=ATC_ATTENDANCE_ON_LEAVE?>' )
+						missingnights = 0;
+				});
+			} else {
+				$(this).children('td').each(function(index, value){
+					if( $(this).html() == '<?=ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE?>' )
+						missingnights++;
+					else if( $(this).html() == '<?=ATC_ATTENDANCE_PRESENT?>' || $(this).val() == '<?=ATC_ATTENDANCE_ON_LEAVE?>' )
+						missingnights = 0;
+				});
 			}
 			// Cadets who miss 4 parade nights are eligible to be signed off the books
-			if( missingnights >= 2 ) 
-				$('td.user'+value['personnel_id']+'.date'+value['date']).parent().children().addClass('ui-state-highlight').attr('title','Cadet needs to attend, after 4 missed nights, they will be signed out of the unit!');
 			if( missingnights >= 4 ) 
-				$('td.user'+value['personnel_id']+'.date'+value['date']).parent().children().addClass('ui-state-error').attr('title','Cadet missed 4 parade nights - sign them off the books');					
+				$(this).addClass('ui-state-error').attr('title','Cadet missed 4 parade nights - sign them off the books');
+			else if( missingnights >= 2 ) 
+				$(this).addClass('ui-state-highlight').attr('title','Cadet needs to attend, after 4 missed nights, they will be signed out of the unit!');
 		});
 	</script>
 	
