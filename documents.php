@@ -3,10 +3,11 @@
 	$ATC = new ATC_Documentation();
 	
 	$ATC->gui_output_page_header('Documents');
+	$lastmonth = strtotime("-1 month");
+	$year = date("Y", $lastmonth);
+	$month = date("m", $lastmonth);
 	
-	$nzcf20 = $ATC->nzcf20_stats( '2016', '02' );
-	var_dump($nzcf20);
-	
+	$nzcf20 = $ATC->nzcf20_stats( $year, $month );
 		
 ?>
 	<h1> NZCF20 </h1>
@@ -16,6 +17,14 @@
 			<thead>
 				<tr>
 					<th colspan="6"> 1. Enrolled Cadet Strength at Month's End </th>
+				</tr>
+				<tr>
+					<th></th>
+					<th>Male</th>
+					<th></th>
+					<th>Female</th>
+					<th></th>
+					<th>Total</th>
 				</tr>
 			</thead>
 			<tfoot>
@@ -85,15 +94,15 @@
 				<tr>
 					<th colspan="5"> 2. Cadet Attendance (Week night parades) </th>
 				</tr>
+				<tr>
+					<th> Week 1 </th>
+					<th> Week 2 </th>
+					<th> Week 3 </th>
+					<th> Week 4 </th>
+					<th> Week 5 </th>
+				</tr>
 			</thead>
 			<tbody>
-				<tr>
-					<td> Week 1 </td>
-					<td> Week 2 </th>
-					<td> Week 3 </td>
-					<td> Week 4 </td>
-					<td> Week 5 </td>
-				</tr>
 				<tr>
 					<td> <?= (isset($nzcf20[1][0]->count)?$nzcf20[1][0]->count:'')?> </td>
 					<td> <?= (isset($nzcf20[1][1]->count)?$nzcf20[1][1]->count:'')?> </td>
@@ -109,18 +118,23 @@
 				<tr>
 					<th colspan="3"> 3. NZCF Officer &amp; Under Officer Attendance<br />Activity Days = Activities Authorised &amp; Recognised </th>
 				</tr>
+				<tr>
+					<th> Rank / First Name / Surname<br />(Inc those on: Sup List, Leave &amp; Attached) </th>
+					<th> Activity Days </th>
+					<th> Parade Hours </th>
+				</tr>
 			</thead>
 			<tbody>
-				<tr>
-					<td> Rank / First Name / Surname<br />(Inc those on: Sup List, Leave &amp; Attached) </td>
-					<td> Activity Days </th>
-					<td> Parade Hours </td>
-				</tr>
-				<tr>
-					<td> </td>
-					<td> </td>
-					<td> </td>
-				</tr>
+				<?php
+					foreach( $nzcf20[2] as $officer )
+					{
+						echo '<tr>';
+						echo '	<td> '.$officer->rank.' '.$officer->firstname.' '.$officer->lastname.' </td>';
+						echo '	<td> '.$officer->activity_days.' </td>';
+						echo '	<td> '.((float)$officer->parade_hours+(float)$officer->activity_hours).' </td>';
+						echo '</tr>';
+					}
+				?>
 			</tbody>
 		</table>
 		
@@ -129,21 +143,100 @@
 				<tr>
 					<th colspan="3"> 4. Supplementary Staff </th>
 				</tr>
+				<tr>
+					<th> Name &amp; Position </th>
+					<th> Days </th>
+					<th> Hours </th>
+				</tr>
 			</thead>
 			<tbody>
-				<tr>
-					<td> Name &amp; Position </td>
-					<td> Days </th>
-					<td> Hours </td>
-				</tr>
-				<tr>
-					<td> </td>
-					<td> </td>
-					<td> </td>
-				</tr>
+				<?php
+					foreach( $nzcf20[3] as $officer )
+					{
+						echo '<tr>';
+						echo '	<td> '.$officer->rank.' '.$officer->firstname.' '.$officer->lastname.' </td>';
+						echo '	<td> '.$officer->activity_days.' </td>';
+						echo '	<td> '.((float)$officer->parade_hours+(float)$officer->activity_hours).' </td>';
+						echo '</tr>';
+					}
+				?>
 			</tbody>
 		</table>		
-		
+	</div>
+	<div style="width:40%; float: left;margin-left:1em;">
+		<table>
+			<thead>
+				<tr>
+					<th colspan="4"> 5. Activity Record &amp; Dates </th>
+				</tr>
+				<tr>
+					<th rowspan="2">Activities: Authorised &amp; Recognised<br /> (Include Officers, Under Officers &amp; Cadets on Courses and Dates) </th>
+					<th colspan="3">Attendance</th>
+				</tr>
+				<tr>
+					<th>Offrs</th>
+					<th>UOs</th>
+					<th>Cdts</th>
+				</tr>
+			</thead>
+			<tfoot>
+				<tr>
+				</tr>
+			</tfoot>
+			<tbody>
+				<?php
+					foreach( $nzcf20[4] as $activity )
+					{
+						$activity->startdate = strtotime($activity->startdate);
+						$activity->enddate = strtotime($activity->enddate);
+						$length = ($activity->enddate-$activity->startdate)/60/60/24;
+						$attendees = $ATC->get_activity_attendance($activity->activity_id);
+						
+						$attending_officers = $attending_cadets = $attending_uos = 0;
+						foreach($attendees as $attendee)
+							if($attendee->presence == ATC_ATTENDANCE_PRESENT && array_search($attendee->access_rights, explode(',', ATC_USER_GROUP_OFFICERS )) !== false ) $attending_officers++;
+							elseif($attendee->presence == ATC_ATTENDANCE_PRESENT && array_search($attendee->access_rights, explode(',', ATC_USER_GROUP_CADETS )) !== false ) $attending_cadets++;
+						
+						echo '<tr>';
+						echo '	<td> '.date('M d', $activity->startdate).($length>1?'-'.date('M d', $activity->enddate):'').' '.$activity->title.' </td>';
+						echo '	<td> '.$attending_officers.' </td>';
+						echo '	<td>  </td>';
+						echo '	<td> '.$attending_cadets.'</td>';
+						//echo '	<td> '.$officer->activity_days.' </td>';
+						//echo '	<td> '.((float)$officer->parade_hours+(float)$officer->activity_hours).' </td>';
+						echo '</tr>';
+					}
+				?>
+			</tbody>
+		</table>
+		<table>
+			<thead>
+				<tr>
+					<th colspan="2"> 6. Forecast of Activities and Training </th>
+				</tr>
+			</thead>
+			<tfoot>
+				<tr>
+				</tr>
+			</tfoot>
+			<tbody>
+				<?php
+					$n = 0;
+					foreach( $nzcf20[5] as $activity )
+					{
+						$activity->startdate = strtotime($activity->startdate);
+						$activity->enddate = strtotime($activity->enddate);
+						$length = ($activity->enddate-$activity->startdate)/60/60/24;
+						$n++;
+						
+						if( ($n % 2) )
+							echo '</tr><tr>';
+						echo '	<td> '.date('M d', $activity->startdate).($length>1?'-'.date('M d', $activity->enddate):'').' '.$activity->title.' </td>';
+						
+					}
+				?>
+			</tbody>
+		</table>
 	</div>
 	
 	<script>

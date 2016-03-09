@@ -51,7 +51,7 @@
 	define( 'ATC_USER_LEVEL_USC', 				ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ATTENDANCE_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_STORES_VIEW + ATC_PERMISSION_FINANCE_VIEW + ATC_PERMISSION_LOCATIONS_VIEW );
 	define( 'ATC_USER_LEVEL_EMRG_CONTACT', 		ATC_PERMISSION_PERSONNEL_VIEW + ATC_PERMISSION_ACTIVITIES_VIEW + ATC_PERMISSION_LOCATIONS_VIEW );
 
-	define( 'ATC_USER_GROUP_OFFICERS',			ATC_USER_LEVEL_ADJUTANT.','.ATC_USER_LEVEL_STORES.','.ATC_USER_LEVEL_TRAINING.','.ATC_USER_LEVEL_CUCDR.','.ATC_USER_LEVEL_SUPOFF );
+	define( 'ATC_USER_GROUP_OFFICERS',			ATC_USER_LEVEL_ADJUTANT.','.ATC_USER_LEVEL_STORES.','.ATC_USER_LEVEL_TRAINING.','.ATC_USER_LEVEL_CUCDR.','.ATC_USER_LEVEL_SUPOFF.','.ATC_USER_LEVEL_OFFICER );
 	define( 'ATC_USER_GROUP_CADETS',			ATC_USER_LEVEL_CADET.','.ATC_USER_LEVEL_NCO );
 	define( 'ATC_USER_GROUP_PERSONNEL',			ATC_USER_GROUP_OFFICERS.','.ATC_USER_GROUP_CADETS );
 
@@ -377,6 +377,7 @@
 					) AS `rank`,
 					`personnel`.`mobile_phone`,
 					`personnel`.`allergies`,
+					`personnel`.`access_rights`,
 					`personnel`.`medical_conditions`,
 					`personnel`.`medicinal_reactions`,
 					`personnel`.`dietary_requirements`,
@@ -577,9 +578,6 @@
 		{
 			$personnel = new stdClass();
 
-			if(!self::user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $id ))
-			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this user");
-				
 			switch( $id )
 			{
 				// only loose casting, so work it out properly here
@@ -632,6 +630,9 @@
 					}
 					break;
 				default:
+					if(!self::user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $id ))
+					    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this user");
+				
 					$query = "SELECT *,
 						".ATC_SETTING_DISPLAY_NAME." AS `display_name`,
 					( 
@@ -1155,13 +1156,13 @@
 		<nav class="navoptions">
 			<ul>
 				<li> <a href="./" class="home">Home</a> </li>
-				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW)?'<li> <a href="./personnel.php" class="personnel">Personnel</a> </li>':'').'
+				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW, self::$currentuser)?'<li> <a href="./personnel.php" class="personnel">Personnel</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ATTENDANCE_VIEW)?'<li> <a href="./attendance.php" class="attendance">Attendance</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ACTIVITIES_VIEW)?'<li> <a href="./activities.php" class="activities">Activities</a> </li>':'').'
 				<!--'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW)?'<li> <a href="./" class="finance">Finance</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_STORES_VIEW)?'<li> <a href="./" class="stores">Stores</a> </li>':'').'
-				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_TRAINING_VIEW)?'<li> <a href="./" class="training">Training</a> </li>':'').'
-				'.(self::$currentuser && self::user_has_permission(ATC_USER_LEVEL_ADJUTANT)?'<li> <a href="./documents.php" class="documents">Documentation</a> </li>':'').'-->
+				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_TRAINING_VIEW)?'<li> <a href="./" class="training">Training</a> </li>':'').'-->
+				'.(self::$currentuser && self::user_has_permission(ATC_USER_LEVEL_ADJUTANT)?'<li> <a href="./documents.php" class="documents">Documentation</a> </li>':'').'
 		
 				'.(self::$currentuser?'<li> <a href="./logout.php" class="logout">Logout</a> </li>':'<li> <a href="./login.php" class="login">Login</a> </li>').'				
 			</ul>
