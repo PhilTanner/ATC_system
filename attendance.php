@@ -97,7 +97,7 @@
 					<?php
 						foreach( $dates as $paradenight )
 							echo '<th style="font-size:70%">'.date('M j', strtotime($paradenight->date)).'</th>'."\n".'				';
-						if( !isset($_GET['id']) )
+						if( !isset($_GET['id']) && $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ))
 							echo '<td><a href="?id=0" class="button new"> New </a></td>';
 					?>
 				</tr>
@@ -111,7 +111,7 @@
 				<?php
 					foreach( $users as $obj )
 					{
-						if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $obj->personnel_id ) )
+						if( $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW, $obj->personnel_id ) )
 						{
 							echo '<tr>';	
 							echo '	<td>'.$obj->rank.'</td>';
@@ -119,12 +119,17 @@
 							$missednights = 0;
 							foreach( $dates as $night )
 							{
-								echo '<td class="attendance user'.$obj->personnel_id.' date'.$night->date.'"><select name="'.$obj->personnel_id.'|'.$night->date.'" id="'.$obj->personnel_id.'_'.$night->date.'">';
-								echo '	<option value="" selected="selected"></option>';
-								echo '	<option value="'.ATC_ATTENDANCE_PRESENT.'">'.ATC_ATTENDANCE_PRESENT_SYMBOL.'</option>';
-								echo '	<option value="'.ATC_ATTENDANCE_ON_LEAVE.'">'.ATC_ATTENDANCE_ON_LEAVE_SYMBOL.'</option>';
-								echo '	<option value="'.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE.'">'.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE_SYMBOL.'</option>';
-								echo '</select></td>';
+								echo '<td class="attendance user'.$obj->personnel_id.' date'.$night->date.'">';
+								if( $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT, $obj->personnel_id ) )
+								{
+									echo '<select name="'.$obj->personnel_id.'|'.$night->date.'" id="'.$obj->personnel_id.'_'.$night->date.'">';
+									echo '	<option value="" selected="selected"></option>';
+									echo '	<option value="'.ATC_ATTENDANCE_PRESENT.'">'.ATC_ATTENDANCE_PRESENT_SYMBOL.'</option>';
+									echo '	<option value="'.ATC_ATTENDANCE_ON_LEAVE.'">'.ATC_ATTENDANCE_ON_LEAVE_SYMBOL.'</option>';
+									echo '	<option value="'.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE.'">'.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE_SYMBOL.'</option>';
+									echo '</select>';
+								}
+								echo '</td>';
 							}
 							echo '</tr>';
 						}
@@ -137,7 +142,7 @@
 <?php
 	$date = date('Y-m-d', time());
 	$nonattendingcadets = $ATC->get_awol(date('Y').'-01-01', date('Y').'-12-31');
-	if( count($nonattendingcadets) && $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ) )
+	if( count($nonattendingcadets) && $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ) )
 	{
 ?>
 	<form name="missingcadets" id="missingcadets" method="post" style="margin-top:2em;">
@@ -150,7 +155,7 @@
 					<th> Contact number </th>
 					<th> Next of Kin contact </th>
 					<th> Reason for absence </th>
-					<td colspan="5"> <button type="submit" class="save">Save</button> </td>
+					<td> <?= ($ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT)?'<button type="submit" class="save">Save</button>':'')?> </td>
 				</tr>
 			</thead>
 			<tfoot>
@@ -213,7 +218,10 @@
 									echo '<hr />';
 							}
 							echo '	</td>';
-							echo '	<td> <input type="text" maxlength="255" style="width:30em;" name="comment_'.$mia->personnel_id.'_'.date('Y|m|d', strtotime($mia->date)).'" id="comment_'.$mia->personnel_id.'_'.date('Ymd', strtotime($mia->date)).'" value="'.htmlentities($mia->comment).'" /> </td>';
+							if( $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT, $obj->personnel_id ) )
+								echo '	<td> <input type="text" maxlength="255" style="width:30em;" name="comment_'.$mia->personnel_id.'_'.date('Y|m|d', strtotime($mia->date)).'" id="comment_'.$mia->personnel_id.'_'.date('Ymd', strtotime($mia->date)).'" value="'.htmlentities($mia->comment).'" /> </td>';
+							else
+								echo '	<td> '.htmlentities($mia->comment).' </td>';
 							echo '</tr>';
 						}
 					}
@@ -341,13 +349,13 @@
 		});
 
 		var attendance = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $calendar )) ?>' );
-		
-		if( <?= $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ) ?> )
+
+		if( <?= $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ) ?> == 1)
 		{
 			$.each(attendance, function(index, value){
 				$('#'+value['personnel_id']+'_'+value['date']).val(value['presence']);
 			});
-		} else if( <?= $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ) ?> ) {
+		} else if( <?= $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ) ?> == 1 ) {
 			$('td.attendance').empty();
 			$.each(attendance, function(index, value){
 				var symbol="";

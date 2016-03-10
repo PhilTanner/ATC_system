@@ -81,7 +81,7 @@
 			<label for="left_date">Date left</label>
 			<input type="date" name="left_date" id="left_date" value="" maxlength="50" /><br />
 			<label for="access_rights">Access level</label>
-			<select name="access_rights" id="access_rights">
+			<select name="access_rights" id="access_rights" <?= ($ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_EDIT)?'':' class="uneditable" readonly="readonly" disabled="disabled"')?> >
 				<option value="<?=ATC_USER_LEVEL_CADET?>"> Cadet </option>
 				<option value="<?=ATC_USER_LEVEL_NCO?>"> NCO </option>
 				<option value="<?=ATC_USER_LEVEL_SUPOFF?>"> Supplimentary Officer </option>
@@ -96,7 +96,7 @@
 				<option value="<?=ATC_USER_LEVEL_ADMIN?>"> Admin </option>
 			</select><br />
 			<label for="enabled">Enabled</label>
-			<input type="checkbox" name="enabled" id="enabled" value="-1" checked="checked" /><br />
+			<input type="checkbox" name="enabled" id="enabled" value="-1" checked="checked" <?= ($ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_EDIT)?'':' class="uneditable" readonly="readonly" disabled="disabled"')?> /><br />
 			<button type="submit">Save</button>
 		</form>
 		
@@ -133,18 +133,22 @@
 				$('#personalform').submit(function(e) {
 					
 					e.preventDefault(); // stop the submit button actually submitting
-					
+					// Unless we do this, enabled checkbox is not passed thru, disabling any user who edits their profile
+					$('#personalform input').removeAttr('readonly').removeAttr('disabled');
+					$('#personalform select').removeAttr('readonly').removeAttr('disabled');
 					$.ajax({
 						   type: "POST",
 						   url: $('#personalform').attr('action'),
 						   data: $("#personalform").serialize(),
 						   beforeSend: function()
 						   {
-							$('#personalform').addClass('ui-state-disabled');
+								$('#personalform').addClass('ui-state-disabled');
 						   },
 						   complete: function()
 						   {
-							$('#personalform').removeClass('ui-state-disabled');
+								$('#personalform input.uneditable').attr('readonly','readonly').attr('disabled','disabled');
+								$('#personalform select.uneditable').attr('readonly','readonly').attr('disabled','disabled');
+								$('#personalform').removeClass('ui-state-disabled');
 						   },
 						   success: function(data)
 						   {

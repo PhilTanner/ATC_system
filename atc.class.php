@@ -1178,12 +1178,13 @@
 		public function user_has_permission( $permission, $target=null )
 		{
 			if( is_null($target) )
-			{
-				if( self::$currentpermissions & $permission ) 
+			{				
+				if( (self::$currentpermissions & $permission) == $permission ) 
 					return true;
 			} else {
+								
 				// If we have the global permission, we're good anyway
-				if( self::$currentpermissions & $permission ) 
+				if( (self::$currentpermissions & $permission) == $permission ) 
 					return true;
 				switch($permission)
 				{
@@ -1208,10 +1209,10 @@
 						
 						break;
 					default:
-						return false;
+						return 0;
 				}
 			}
-			return false;
+			return 0;
 		}
 		
 	}
