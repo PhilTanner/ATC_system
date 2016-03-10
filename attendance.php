@@ -90,7 +90,7 @@
 ?>
 	<form name="attendanceregister" id="attendanceregister" method="POST">
 		<input type="hidden" name="attendance_register" value="1" />
-		<table>
+		<table class="tablesorter">
 			<thead>
 				<tr>
 					<th colspan="2"> Name </th>
@@ -146,7 +146,7 @@
 	{
 ?>
 	<form name="missingcadets" id="missingcadets" method="post" style="margin-top:2em;">
-		<table>
+		<table class="tablesorter">
 			<caption> Absent cadets </caption>
 			<thead>
 				<tr>

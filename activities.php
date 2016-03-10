@@ -463,7 +463,7 @@
 ?>
 	<form name="activitylist" id="activitylist" method="POST">
 		<input type="hidden" name="activitylist" value="1" />
-		<table>
+		<table class="tablesorter">
 			<thead>
 				<tr>
 					<th rowspan="2"> Activity </th>

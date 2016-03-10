@@ -12,7 +12,7 @@
 ?>
 		
 		<h2> Upcoming events</h2>
-		<table>
+		<table class="tablesorter">
 			<thead>
 				<tr>
 					<th rowspan="2"> Activity </th>
@@ -81,7 +81,7 @@
 		{
 ?>
 	<h2> Upcoming birthdays</h2>
-		<table>
+		<table class="tablesorter">
 			<thead>
 				<tr>
 					<th> Name </th>
@@ -109,7 +109,7 @@
 		{
 ?>
 	<h2> Upcoming anniversaries</h2>
-		<table>
+		<table class="tablesorter">
 			<thead>
 				<tr>
 					<th> Name </th>
@@ -153,7 +153,6 @@
 		<li>NZCF11</li>
 		<li>NZCF8</li>
 		<li>NZCF11a</li>
-		<li>NZCF20</li>
 	</ol>
 	
 	<h2> Alerts to build </h2>

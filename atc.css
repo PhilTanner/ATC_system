@@ -46,6 +46,20 @@ ol.dragdrop li {
 }
 #attendees, #non_attendees {     float: left;  width:45%; }
 
+
+table.tablesorter thead tr .header {
+	background-image: url(tablesorter/themes/blue/bg.gif);
+	background-repeat: no-repeat;
+	background-position: center right;
+	cursor: pointer;
+}
+table.tablesorter thead tr .headerSortUp {
+	background-image: url(tablesorter/themes/blue/asc.gif);
+}
+table.tablesorter thead tr .headerSortDown {
+	background-image: url(tablesorter/themes/blue/desc.gif);
+}
+
 input[type=checkbox] { width: auto; }
 button[type=submit] { float:right; }
 td.attendance select { width: auto; font-size: 70%; }
