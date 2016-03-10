@@ -51,8 +51,12 @@
 		exit();
 	} elseif( isset( $_POST['personnel_id'] ) ) {
 		try {
-			foreach($_POST['personnel_id'] as $awol )
-				$ATC->set_attendance_register( $awol, $_POST['date'], ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE, $_POST['comment_'.$awol] );
+			foreach($_POST as $field => $excuse )
+			{
+				$foo = explode("_", $field);
+				if( count($foo) == 3 && $foo[0] == 'comment' )
+					$ATC->set_attendance_register( $foo[1], str_replace('|','-',$foo[2]), ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE, $excuse );
+			}
 		} catch (ATCExceptionInsufficientPermissions $e) {
 			header("HTTP/1.0 401 Unauthorised");
 			echo 'Caught exception: ',  $e->getMessage(), "\n";
@@ -132,25 +136,26 @@
 	
 <?php
 	$date = date('Y-m-d', time());
-	$nonattendingcadets = $ATC->get_awol($date);
+	$nonattendingcadets = $ATC->get_awol(date('Y').'-01-01', date('Y').'-12-31');
 	if( count($nonattendingcadets) && $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ) )
 	{
 ?>
 	<form name="missingcadets" id="missingcadets" method="post" style="margin-top:2em;">
-		<input type="hidden" name="date" value="<?=htmlentities($date)?>" />
 		<table>
-			<caption> Absent cadets &mdash; <?=date( ATC_SETTING_DATE_OUTPUT, strtotime($date))?> </caption>
+			<caption> Absent cadets </caption>
 			<thead>
 				<tr>
+					<th> Date </th>
 					<th> Name </th>
 					<th> Contact number </th>
 					<th> Next of Kin contact </th>
 					<th> Reason for absence </th>
+					<td colspan="5"> <button type="submit" class="save">Save</button> </td>
 				</tr>
 			</thead>
 			<tfoot>
 				<tr>
-					<td colspan="4"> <button type="submit" class="save">Save</button> </td>
+					
 				</tr>
 			</tfoot>
 			<tbody>
@@ -159,7 +164,8 @@
 					{
 						if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $mia->personnel_id ) )
 						{
-							echo '<tr>';
+							echo '<tr class="date'.date('Ymd', strtotime($mia->date)).'">';
+							echo '	<td>'.date( ATC_SETTING_DATE_OUTPUT, strtotime($mia->date)).'</td>';
 							echo '	<td> ';
 							echo '<input type="hidden" name="personnel_id[]" value="'.$mia->personnel_id.'" />';
 							echo $mia->display_name.'</td>';
@@ -207,7 +213,7 @@
 									echo '<hr />';
 							}
 							echo '	</td>';
-							echo '	<td> <input type="text" maxlength="255" name="comment_'.$mia->personnel_id.'" id="comment_'.$mia->personnel_id.'" /> </td>';
+							echo '	<td> <input type="text" maxlength="255" style="width:30em;" name="comment_'.$mia->personnel_id.'_'.date('Y|m|d', strtotime($mia->date)).'" id="comment_'.$mia->personnel_id.'_'.date('Ymd', strtotime($mia->date)).'" value="'.htmlentities($mia->comment).'" /> </td>';
 							echo '</tr>';
 						}
 					}
@@ -220,6 +226,7 @@
 ?>	
 	<script>
 		$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
+		$("#missingcadets tbody tr").not('.date<?=date('Ymd')?>').addClass('ui-state-disabled');
 		$('button.save').button({ icons: { primary: 'ui-icon-disk' } });
 		$('#attendanceregister button.save').click(function(e){
 			e.preventDefault(); // stop the submit button actually submitting
