@@ -1106,8 +1106,8 @@
 			echo '
 		<script>
 			$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
-			$("tbody tr:odd").addClass("evenrow");
-			$("table.tablesorter").tablesorter().on("sortStart", function(){ $("tbody tr").removeClass("evenrow"); }).on("sortEnd", function(){ $("tbody tr:odd").addClass("evenrow"); });
+			$("tbody tr:odd").not(".ui-state-highlight, .ui-state-error").addClass("evenrow");
+			$("table.tablesorter").tablesorter().on("sortStart", function(){ $("tbody tr").removeClass("evenrow"); }).on("sortEnd", function(){ $("tbody tr:odd").not(".ui-state-highlight, .ui-state-error").addClass("evenrow"); });
 		</script>
 		<footer>
 			<p> Built on the ATC system code available at <a target="blank" href="https://github.com/PhilTanner/ATC_system">https://github.com/PhilTanner/ATC_system</a> </p>
