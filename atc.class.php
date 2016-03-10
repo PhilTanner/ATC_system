@@ -488,8 +488,11 @@
 			return $attendance;
 		}
 		
-		public function get_awol( $date )
+		public function get_awol( $startdate, $enddate )
 		{
+			$startdate = strtotime($startdate);
+			$enddate = strtotime($enddate);
+
 			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ))
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
 			
@@ -500,10 +503,11 @@
 			FROM 	`attendance_register` 
 				INNER JOIN `personnel` 
 					ON `attendance_register`.`personnel_id` = `personnel`.`personnel_id` 
-			WHERE 	`attendance_register`.`date` = \''.date('Y-m-d', strtotime($date)).'\' 
+			WHERE 	`attendance_register`.`date` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'"  
 				AND `attendance_register`.`presence` = '.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE.'
-				AND ( LENGTH(`attendance_register`.`comment`) = 0 OR LENGTH(`attendance_register`.`comment`) IS NULL )
-			ORDER BY `date` ASC;';
+				-- AND ( LENGTH(`attendance_register`.`comment`) = 0 OR LENGTH(`attendance_register`.`comment`) IS NULL )
+				AND `personnel`.`access_rights` IN ('.ATC_USER_GROUP_PERSONNEL.') 
+			ORDER BY `date` DESC, `display_name` ASC;';
 
 			$awollers = array();
 			if ($result = self::$mysqli->query($query))
@@ -1174,12 +1178,13 @@
 		public function user_has_permission( $permission, $target=null )
 		{
 			if( is_null($target) )
-			{
-				if( self::$currentpermissions & $permission ) 
+			{				
+				if( (self::$currentpermissions & $permission) == $permission ) 
 					return true;
 			} else {
+								
 				// If we have the global permission, we're good anyway
-				if( self::$currentpermissions & $permission ) 
+				if( (self::$currentpermissions & $permission) == $permission ) 
 					return true;
 				switch($permission)
 				{
@@ -1204,10 +1209,10 @@
 						
 						break;
 					default:
-						return false;
+						return 0;
 				}
 			}
-			return false;
+			return 0;
 		}
 		
 	}
