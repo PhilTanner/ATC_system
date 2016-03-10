@@ -1138,6 +1138,22 @@
 		<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
 		
 		<script type="text/javascript">
+			$.tablesorter.addParser({
+				// set a unique id
+				id: "ATC_SETTING_DATETIME_OUTPUT",
+				is: function(s) {
+					// return false so this parser is not auto detected
+					return  /^\d{1,2}[\ ][A-Za-z]{3}[\,][\ ]\d{2}[\:]\d{2}$/.test(s);;
+				},
+				format: function(s) {
+					// format your data for normalization
+					return Date.parse(s);
+				},
+				// set type, either numeric or text
+				type: "numeric"
+			});
+	
+		
 			$(function(){
 				$(".navoptions ul li a").button().addClass("ui-state-disabled");
 				$(".navoptions ul li a.home").button({ icons: { primary: "ui-icon-home" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Home'?'.addClass("ui-state-active")':'').';
