@@ -96,7 +96,7 @@
 					<th colspan="2"> Name </th>
 					<?php
 						foreach( $dates as $paradenight )
-							echo '<th style="font-size:70%">'.date('M j', strtotime($paradenight->date)).'</th>'."\n".'				';
+							echo '<th style="font-size:70%">'.date(ATC_SETTING_DATE_OUTPUT, strtotime($paradenight->date)).'</th>'."\n".'				';
 						if( !isset($_GET['id']) && $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ))
 							echo '<td><a href="?id=0" class="button new"> New </a></td>';
 					?>
@@ -104,7 +104,7 @@
 			</thead>
 			<tfoot>
 				<tr>
-					<td colspan="<?=count($dates)+2?>"><?= ($ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT )?'<button type="submit" class="save">Save</button>':'')?></td>
+					<td colspan="<?=count($dates)+2?>"><?= ($ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ) && !isset($_GET['id']) ?'<button type="submit" class="save">Save</button>':'')?></td>
 				</tr>
 			</tfoot>
 			<tbody>
@@ -120,7 +120,8 @@
 							foreach( $dates as $night )
 							{
 								echo '<td class="attendance user'.$obj->personnel_id.' date'.$night->date.'">';
-								if( $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT, $obj->personnel_id ) )
+								// When embedding for a particular personnel page, don't let us edit
+								if( $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT, $obj->personnel_id ) && !isset($_GET['id']) )
 								{
 									echo '<select name="'.$obj->personnel_id.'|'.$night->date.'" id="'.$obj->personnel_id.'_'.$night->date.'">';
 									echo '	<option value="" selected="selected"></option>';
@@ -155,7 +156,7 @@
 					<th> Contact number </th>
 					<th> Next of Kin contact </th>
 					<th> Reason for absence </th>
-					<td> <?= ($ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT)?'<button type="submit" class="save">Save</button>':'')?> </td>
+					<td> <?= ($ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT) && !isset($_GET['id']) ?'<button type="submit" class="save">Save</button>':'')?> </td>
 				</tr>
 			</thead>
 			<tfoot>
@@ -167,7 +168,7 @@
 				<?php
 					foreach($nonattendingcadets as $mia)
 					{
-						if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $mia->personnel_id ) )
+						if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $mia->personnel_id ) && (!isset($_GET['id']) || $_GET['id'] == $mia->personnel_id ) )
 						{
 							echo '<tr class="date'.date('Ymd', strtotime($mia->date)).'">';
 							echo '	<td>'.date( ATC_SETTING_DATE_OUTPUT, strtotime($mia->date)).'</td>';
@@ -218,7 +219,7 @@
 									echo '<hr />';
 							}
 							echo '	</td>';
-							if( $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT, $obj->personnel_id ) )
+							if( $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT, $obj->personnel_id ) && !isset($_GET['id'])  )
 								echo '	<td> <input type="text" maxlength="255" style="width:30em;" name="comment_'.$mia->personnel_id.'_'.date('Y|m|d', strtotime($mia->date)).'" id="comment_'.$mia->personnel_id.'_'.date('Ymd', strtotime($mia->date)).'" value="'.htmlentities($mia->comment).'" /> </td>';
 							else
 								echo '	<td> '.htmlentities($mia->comment).' </td>';
@@ -350,12 +351,12 @@
 
 		var attendance = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $calendar )) ?>' );
 
-		if( <?= $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ) ?> == 1)
+		if( '<?= $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ) && !isset($_GET['id']) ?>' )
 		{
 			$.each(attendance, function(index, value){
 				$('#'+value['personnel_id']+'_'+value['date']).val(value['presence']);
 			});
-		} else if( <?= $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ) ?> == 1 ) {
+		} else if( '<?= $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ) ?>' ) {
 			$('td.attendance').empty();
 			$.each(attendance, function(index, value){
 				var symbol="";
@@ -382,7 +383,7 @@
 			// Don't carry missing nights forward;
 			var missingnights = 0;
 			
-			if( <?= ($ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT )?'1':'0')?> == '1' )
+			if( '<?= ($ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ) && isset($_GET['id']) )?>'  )
 			{
 				$(this).children('td').children('select').each(function(index, value){
 					if( $(this).val() == '<?=ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE?>' )

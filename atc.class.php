@@ -1106,8 +1106,8 @@
 			echo '
 		<script>
 			$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
-			$("tbody tr:odd").addClass("evenrow");
-			$("table.tablesorter").tablesorter().on("sortStart", function(){ $("tbody tr").removeClass("evenrow"); }).on("sortEnd", function(){ $("tbody tr:odd").addClass("evenrow"); });
+			$("tbody tr:odd").not(".ui-state-highlight, .ui-state-error").addClass("evenrow");
+			$("table.tablesorter").tablesorter().on("sortStart", function(){ $("tbody tr").removeClass("evenrow"); }).on("sortEnd", function(){ $("tbody tr:odd").not(".ui-state-highlight, .ui-state-error").addClass("evenrow"); });
 		</script>
 		<footer>
 			<p> Built on the ATC system code available at <a target="blank" href="https://github.com/PhilTanner/ATC_system">https://github.com/PhilTanner/ATC_system</a> </p>
@@ -1138,6 +1138,22 @@
 		<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
 		
 		<script type="text/javascript">
+			$.tablesorter.addParser({
+				// set a unique id
+				id: "ATC_SETTING_DATETIME_OUTPUT",
+				is: function(s) {
+					// return false so this parser is not auto detected
+					return  /^\d{1,2}[\ ][A-Za-z]{3}[\,][\ ]\d{2}[\:]\d{2}$/.test(s);;
+				},
+				format: function(s) {
+					// format your data for normalization
+					return Date.parse(s);
+				},
+				// set type, either numeric or text
+				type: "numeric"
+			});
+	
+		
 			$(function(){
 				$(".navoptions ul li a").button().addClass("ui-state-disabled");
 				$(".navoptions ul li a.home").button({ icons: { primary: "ui-icon-home" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Home'?'.addClass("ui-state-active")':'').';

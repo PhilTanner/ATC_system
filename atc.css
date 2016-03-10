@@ -50,7 +50,7 @@ ol.dragdrop li {
 table.tablesorter thead tr .header {
 	background-image: url(tablesorter/themes/blue/bg.gif);
 	background-repeat: no-repeat;
-	background-position: center right;
+	background-position: center left;
 	cursor: pointer;
 }
 table.tablesorter thead tr .headerSortUp {
