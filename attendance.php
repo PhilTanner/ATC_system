@@ -96,7 +96,7 @@
 					<th colspan="2"> Name </th>
 					<?php
 						foreach( $dates as $paradenight )
-							echo '<th style="font-size:70%">'.date('M j', strtotime($paradenight->date)).'</th>'."\n".'				';
+							echo '<th style="font-size:70%">'.date(ATC_SETTING_DATE_OUTPUT, strtotime($paradenight->date)).'</th>'."\n".'				';
 						if( !isset($_GET['id']) && $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ))
 							echo '<td><a href="?id=0" class="button new"> New </a></td>';
 					?>
