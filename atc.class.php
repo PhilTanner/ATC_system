@@ -5,7 +5,7 @@
 		define( 'ATC_DEBUG', 					1 );
 	define( 'ATC_SETTING_PARADE_NIGHT',			"Wednesday" );
 	define( 'ATC_SETTING_DATETIME_INPUT',         "Y-m-d\TH:i");
-	define( 'ATC_SETTING_DATETIME_OUTPUT',         "j M, Hi");
+	define( 'ATC_SETTING_DATETIME_OUTPUT',         "j M, H:i");
 	define( 'ATC_SETTING_DATE_OUTPUT',         "j M");
 	define( 'ATC_SETTING_FULL_DISPLAY_NAME',		'CONCAT("RNK, ", `personnel`.`lastname`,", ",`personnel`.`firstname`)' );
 	define( 'ATC_SETTING_DISPLAY_NAME',		'CONCAT(`personnel`.`lastname`,", ",`personnel`.`firstname`)' );
@@ -1107,6 +1107,7 @@
 		<script>
 			$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
 			$("tbody tr:odd").addClass("evenrow");
+			$("table.tablesorter").tablesorter().on("sortStart", function(){ $("tbody tr").removeClass("evenrow"); }).on("sortEnd", function(){ $("tbody tr:odd").addClass("evenrow"); });
 		</script>
 		<footer>
 			<p> Built on the ATC system code available at <a target="blank" href="https://github.com/PhilTanner/ATC_system">https://github.com/PhilTanner/ATC_system</a> </p>
@@ -1127,10 +1128,12 @@
 		<title>'.(ATC_DEBUG?'DEV':'ATC').' '.$title.'</title>
 		<link href="jquery-ui-1.9.2.custom/css/redmond/jquery-ui-1.9.2.custom.css" rel="stylesheet">
 		<link href="atc.css" rel="stylesheet">
+		
 		<script type="text/javascript" src="jquery-ui-1.9.2.custom/js/jquery-1.8.3.js"></script>
 		<script type="text/javascript" src="jquery-ui-1.9.2.custom/js/jquery-ui-1.9.2.custom.js"></script>
 		<script type="text/javascript" src="touchpunch.furf.com_jqueryui-touch.js"></script>
 		<script type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
+		<script type="text/javascript" src="tablesorter/jquery.tablesorter.js"></script> 
 		
 		<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
 		

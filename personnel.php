@@ -71,7 +71,7 @@
 <?php
 	} elseif( is_array( $user ) ) {
 ?>
-	<table>
+	<table class="tablesorter">
 		<thead>
 			<tr>
 				<th colspan="2"> Name </th>
