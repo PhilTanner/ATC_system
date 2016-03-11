@@ -1152,6 +1152,20 @@
 				// set type, either numeric or text
 				type: "numeric"
 			});
+			$.tablesorter.addParser({
+				// set a unique id
+				id: "ATC_SETTING_DATE_OUTPUT",
+				is: function(s) {
+					// return false so this parser is not auto detected
+					return  /^\d{1,2}[\ ][A-Za-z]{3}$/.test(s);;
+				},
+				format: function(s) {
+					// format your data for normalization
+					return Date.parse(s);
+				},
+				// set type, either numeric or text
+				type: "numeric"
+			});
 	
 		
 			$(function(){
