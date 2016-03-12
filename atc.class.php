@@ -953,7 +953,7 @@
 			if( $presence != ATC_ATTENDANCE_PRESENT && $presence != ATC_ATTENDANCE_ON_LEAVE && $presence != ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE )
 				throw new ATCExceptionBadData('Unknown presence value');
 
-			$query = "INSERT INTO `attendance_register` (`personnel_id`, `date`, `presence`, `comment`) VALUES ( ".(int)$personnel_id.", '".date("Y-m-d",strtotime($date))."', ".$presence.", ".(is_null($comment)?'NULL':'"'.self::$mysqli->real_escape_string($comment).'"').") ON DUPLICATE KEY UPDATE `presence` = VALUES(`presence`), `comment` = VALUES(`comment`)";
+			$query = "INSERT INTO `attendance_register` (`personnel_id`, `date`, `presence`".(is_null($comment)?'':', `comment`').") VALUES ( ".(int)$personnel_id.", '".date("Y-m-d",strtotime($date))."', ".$presence.(is_null($comment)?'':', "'.self::$mysqli->real_escape_string($comment).'"').") ON DUPLICATE KEY UPDATE `presence` = VALUES(`presence`)".(is_null($comment)?'':', `comment` = VALUES(`comment`)');
 			if ($result = self::$mysqli->query($query))
 				self::log_action( 'attendance_register', $query, $personnel_id );
 			else
