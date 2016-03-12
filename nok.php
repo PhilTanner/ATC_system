@@ -132,7 +132,7 @@
 
 				$('#nokform button[type=submit]').button({icons: { primary: "ui-icon-disk" }}).css({ clear:'left', marginTop: '1em' });
 				$('#nokform fieldset legend').button({ icons: { primary: "ui-icon-person" }}).parent().addClass('ui-corner-all').children('fieldset legend.new').addClass('ui-state-highlight');
-				$('#nokform').sortable().submit(function(e) {
+				$('#nokform').submit(function(e) {
 					e.preventDefault(); // stop the submit button actually submitting
 					
 					$.ajax({

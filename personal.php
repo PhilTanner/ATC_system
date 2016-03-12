@@ -153,7 +153,7 @@
 				$('#medicinal_reactions').val(user['medicinal_reactions']);
 				$('#other_notes').val(user['other_notes']);
 				$('#created').val(user['created']);
-				$('#flight').val(user['flight']).autocomplete({ minLength: 0, source: flights });
+				$('#flight').autocomplete({ minLength: 0, source: flights }).val(user['flight']);
 				$('#dob').val(user['dob']);
 				$('#access_rights').val( user['access_rights']);
 				$('#is_female').val( user['is_female']);

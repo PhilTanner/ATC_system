@@ -530,7 +530,7 @@
 		public function get_flights()
 		{
 				
-			$query = 'SELECT DISTINCT `flight` FROM `personnel` ORDER BY LOWER(`flight`);';
+			$query = 'SELECT DISTINCT `flight` FROM `personnel` WHERE LENGTH(TRIM(`flight`)) > 0 ORDER BY LOWER(`flight`);';
 
 			$flights = array();
 			if ($result = self::$mysqli->query($query))
