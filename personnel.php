@@ -74,7 +74,9 @@
 	<table class="tablesorter">
 		<thead>
 			<tr>
-				<th colspan="2"> Name </th>
+				<th> Flight </th>
+				<th> Rank </th>
+				<th> Name </th>
 				<th> Contact N&ordm; </th>
 				<th> Access rights </th>
 				<td> <?= ( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_EDIT )?'<a href="?id=0" class="button new"> New </a>':'')?> </td>
@@ -82,7 +84,7 @@
 		</thead>
 		<tfoot>
 			<tr>
-				<th colspan="4"> <form><label for="showall">Show all personnel?</label><input type="checkbox" name="showall" value="1" <?=($_GET['showall']?' checked="checked"':'')?> onchange="$(this).parent().submit();" /></form></th>
+				<th colspan="5"> <form><label for="showall">Show all personnel?</label><input type="checkbox" name="showall" value="1" <?=($_GET['showall']?' checked="checked"':'')?> onchange="$(this).parent().submit();" /></form></th>
 				
 			</tr>
 		</tfoot>
@@ -94,6 +96,7 @@
 					{
 						echo '<tr'.($obj->enabled?'':' class="ui-state-disabled"').'>';
 						//echo '	<th>'.$obj->personnel_id.'</th>';
+						echo '	<td>'.$obj->flight.'</td>';
 						echo '	<td>'.$obj->rank.'</td>';
 						echo '	<td><a href="?id='.$obj->personnel_id.'">'.$obj->lastname.', '.$obj->firstname.'</a></td>';
 						echo '	<td>'.$obj->mobile_phone.'</td>';

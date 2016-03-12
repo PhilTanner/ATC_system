@@ -44,6 +44,10 @@ INSERT INTO `rank` (`rank_id`, `rank`, `rank_shortname`, `ordering`, `nzcf20_ord
 INSERT INTO `personnel_rank` ( personnel_id, date_achieved, rank_id ) SELECT personnel_id, joined_date, 9 AS rank_id FROM personnel WHERE NOT personnel_id IN (10,1,13);
 
 
+ALTER TABLE `personnel` ADD `flight` VARCHAR(15) NULL AFTER `other_notes`;
+ALTER TABLE `personnel` ADD `social_media_approved` BOOLEAN NOT NULL DEFAULT FALSE AFTER `flight`;
+
+
 CREATE USER 'atc'@'localhost' IDENTIFIED BY 'ZIERIESs5ESa';
 GRANT SELECT, INSERT ON `atc`.`log_changes` TO 'atc'@'localhost';
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON `atc`.`attendance` TO 'atc'@'localhost';

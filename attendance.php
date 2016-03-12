@@ -93,7 +93,9 @@
 		<table class="tablesorter">
 			<thead>
 				<tr>
-					<th colspan="2"> Name </th>
+					<th>Flight</th>
+					<th>Rank</th>
+					<th> Name </th>
 					<?php
 						foreach( $dates as $paradenight )
 							echo '<th style="font-size:70%">'.date(ATC_SETTING_DATE_OUTPUT, strtotime($paradenight->date)).'</th>'."\n".'				';
@@ -114,6 +116,7 @@
 						if( $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW, $obj->personnel_id ) )
 						{
 							echo '<tr>';	
+							echo '	<td>'.$obj->flight.'</td>';
 							echo '	<td>'.$obj->rank.'</td>';
 							echo '	<td><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
 							$missednights = 0;
@@ -174,7 +177,7 @@
 							echo '	<td>'.date( ATC_SETTING_DATE_OUTPUT, strtotime($mia->date)).'</td>';
 							echo '	<td> ';
 							echo '<input type="hidden" name="personnel_id[]" value="'.$mia->personnel_id.'" />';
-							echo $mia->display_name.'</td>';
+							echo $mia->firstname.' '.$mia->lastname.'</td>';
 							echo '	<td> '.$mia->mobile_phone.'</td>';
 							echo '	<td>';
 							$n=0;

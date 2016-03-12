@@ -190,6 +190,7 @@
 		$pdf->SetTextColor(255);
 		$pdf->SetFillColor(0);
 	
+		$pdf->Cell(5,3,'SM',1,0,'C',true);
 		$pdf->Cell(20,3,'Attendee',1,0,'L',true);
 		$pdf->Cell(15,3,'Contact #',1,0,'L',true);
 		$pdf->Cell(28,3,'Next of Kin',1,0,'L',true);
@@ -235,7 +236,10 @@
 				$totallineheight = count($attendee->nok)*$lineheight;
 			else
 				$totallineheight = $lineheight;
-				
+			
+			$pdf->SetFont('Arial','B',6);
+			$pdf->Cell(5,$totallineheight,($attendee->social_media_approved==-1?'':'X'),1,0,'C',true);
+			$pdf->SetFont('Arial','',6);
 			$pdf->Cell(20,$totallineheight,$attendee->rank.' '.$attendee->display_name,1,0,'L',true);
 			$pdf->Cell(15,$totallineheight,$attendee->mobile_phone,1,0,'L',true);
 			

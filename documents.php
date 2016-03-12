@@ -3,13 +3,25 @@
 	$ATC = new ATC_Documentation();
 	
 	$ATC->gui_output_page_header('Documents');
-	$lastmonth = strtotime("-1 month");
-	$year = date("Y", $lastmonth);
-	$month = date("m", $lastmonth);
+	$datepicked = strtotime("-1 month");
+	if( isset($_GET['date']) && strtotime($_GET['date']) )
+		$datepicked = strtotime($_GET['date']);
+	$year = date("Y", $datepicked);
+	$month = date("m", $datepicked);
+	
 	
 	$nzcf20 = $ATC->nzcf20_stats( $year, $month );
 		
 ?>
+	<form name="datepicker" id="datepicker">
+		<fieldset>
+			<legend>Choose date</legend>
+			<label for="month">Pick a date:</label>
+			<input type="date" name="date" id="date" value="<?=date( ATC_SETTING_DATE_INPUT, $datepicked)?>" /><br />
+			<button type="submit" class="update">Update</button>			
+		</fieldset>
+	</form>
+	
 	<h1> NZCF20 </h1>
 	
 	<div style="width:40%; float: left;">
@@ -241,6 +253,7 @@
 	
 	<script>
 		$('table').css({ width: '100%', marginBottom: '1em' });
+		$('button.update').button({ icons: { primary: 'ui-icon-refresh' } });
 	</script>
 		
 <?php

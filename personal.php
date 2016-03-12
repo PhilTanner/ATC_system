@@ -13,6 +13,8 @@
 				$user->$var = $val;
 			if( !isset($_POST['enabled']) || !$_POST['enabled'] )
 				$user->enabled = 0;
+			if( !isset($_POST['social_media_approved']) || !$_POST['social_media_approved'] )
+				$user->social_media_approved = 0;
 		
 			try {
 				$ATC->set_personnel( $user );
@@ -40,7 +42,7 @@
 		}
 
 		if( is_object($user) && $ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW, $id ) )
-		{	
+		{
 ?>
 
 		<form id="personalform" method="post" action="personal.php?id=<?=$user->personnel_id?>#personalform">
@@ -49,60 +51,96 @@
 				<label for="created">Date created</label>
 				<input type="datetime-local" name="created" id="created" value="" maxlength="50" readonly="readonly" disabled="disabled" style="width:16em;" />
 			</div>
-			<label for="firstname">First name</label>
-			<input type="text" name="firstname" id="firstname" value="" maxlength="50" required="required" placeholder="First name" /> <br />
-			<label for="lastname">Last name</label>
-			<input type="text" name="lastname" id="lastname" value="" maxlength="100" required="required" placeholder="Last name" /> <br />
-			<label for="is_female">Gender</label>
-			<select name="is_female" id="is_female">
-				<option value="-1"> Female </option>
-				<option value="0"> Male </option>
-			</select><br />
-			<label for="email">Email address</label>
-			<input type="email" name="email" id="email" value="" maxlength="255" required="required" placeholder="Email address" /> <br />
-			<label for="mobile_phone">Mobile phone n&ordm;</label>
-			<input type="tel" name="mobile_phone" id="mobile_phone" value="" maxlength="50" placeholder="Mobile (cell) number" /> <br />
-			<label for="password">Password</label>
-			<input type="password" name="password" id="password" value="" maxlength="255" required="required" placeholder="Password"  /> <br />
-			<label for="allergies">Allergies &amp; Treatment</label>
-			<input type="text" name="allergies" id="allergies" value="" maxlength="255" placeholder="Allergies &amp; Treatment (Food &amp; Natural)" /> <br />
-			<label for="medical_conditions">Medical Conditions</label>
-			<input type="text" name="medical_conditions" id="medical_conditions" value="" maxlength="255" placeholder="Medical Conditions (Asthma, Hay Fever, Migranes etc)" /> <br />
-			<label for="medicinal_reactions">Reaction to Medicies</label>
-			<input type="text" name="medicinal_reactions" id="medicinal_reactions" value="" maxlength="255" placeholder="Detail" /> <br />
-			<label for="dietary_requirements">Dietary</label>
-			<input type="text" name="dietary_requirements" id="dietary_requirements" value="" maxlength="255" placeholder="Special Dietary Requirements" /> <br />
-			<label for="other_notes">Other notes</label>
-			<input type="text" name="other_notes" id="other_notes" value="" maxlength="255" placeholder="Any other notes" /> <br />
-			<label for="dob">Date of birth</label>
-			<input type="date" name="dob" id="dob" value="" maxlength="50" required="required" /><br />
-			<label for="joined_date">Date joined</label>
-			<input type="date" name="joined_date" id="joined_date" value="" maxlength="50" required="required" /><br />
-			<label for="left_date">Date left</label>
-			<input type="date" name="left_date" id="left_date" value="" maxlength="50" /><br />
-			<label for="access_rights">Access level</label>
-			<select name="access_rights" id="access_rights" <?= ($ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_EDIT)?'':' class="uneditable" readonly="readonly" disabled="disabled"')?> >
-				<option value="<?=ATC_USER_LEVEL_CADET?>"> Cadet </option>
-				<option value="<?=ATC_USER_LEVEL_NCO?>"> NCO </option>
-				<option value="<?=ATC_USER_LEVEL_SUPOFF?>"> Supplimentary Officer </option>
-				<option value="<?=ATC_USER_LEVEL_OFFICER?>"> Officer </option>
-				<option value="<?=ATC_USER_LEVEL_ADJUTANT?>"> Adjutant </option>
-				<option value="<?=ATC_USER_LEVEL_STORES?>"> Stores </option>
-				<option value="<?=ATC_USER_LEVEL_TRAINING?>"> Training </option>
-				<option value="<?=ATC_USER_LEVEL_CUCDR?>"> CUCDR </option>
-				<option value="<?=ATC_USER_LEVEL_USC?>"> Unit Support Committee Member </option>
-				<option value="<?=ATC_USER_LEVEL_TREASURER?>"> Treasurer </option>
-				<option value="<?=ATC_USER_LEVEL_EMRG_CONTACT?>"> Emergency Contact </option>
-				<option value="<?=ATC_USER_LEVEL_ADMIN?>"> Admin </option>
-			</select><br />
-			<label for="enabled">Enabled</label>
-			<input type="checkbox" name="enabled" id="enabled" value="-1" checked="checked" <?= ($ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_EDIT)?'':' class="uneditable" readonly="readonly" disabled="disabled"')?> /><br />
+			<fieldset style="clear:right;">
+				<legend> Personal details </legend>
+			
+				<label for="firstname">First name</label>
+				<input type="text" name="firstname" id="firstname" value="" maxlength="50" required="required" placeholder="First name" /> <br />
+				
+				<label for="lastname">Last name</label>
+				<input type="text" name="lastname" id="lastname" value="" maxlength="100" required="required" placeholder="Last name" /> <br />
+				
+				<label for="is_female">Gender</label>
+				<select name="is_female" id="is_female">
+					<option value="-1"> Female </option>
+					<option value="0"> Male </option>
+				</select><br />
+			
+				<label for="mobile_phone">Mobile phone n&ordm;</label>
+				<input type="tel" name="mobile_phone" id="mobile_phone" value="" maxlength="50" placeholder="Mobile (cell) number" /> <br />
+				
+				<label for="email">Email address</label>
+				<input type="email" name="email" id="email" value="" maxlength="255" required="required" placeholder="Email address" /> <br />
+				
+				<label for="password">Password</label>
+				<input type="password" name="password" id="password" value="" maxlength="255" required="required" placeholder="Password"  /> <br />
+				
+				<label for="enabled">Enabled</label>
+				<input type="checkbox" name="enabled" id="enabled" value="-1" checked="checked" <?= ($ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_EDIT)?'':' class="uneditable" readonly="readonly" disabled="disabled"')?> /><br />
+			</fieldset>
+			<fieldset>
+				<legend> Medical &amp; notes </legend>
+				
+				<label for="dob">Date of birth</label>
+				<input type="date" name="dob" id="dob" value="" maxlength="50" required="required" /><br />
+				
+				<label for="allergies">Allergies &amp; Treatment</label>
+				<input type="text" name="allergies" id="allergies" value="" maxlength="255" placeholder="Allergies &amp; Treatment (Food &amp; Natural)" /> <br />
+				
+				<label for="medical_conditions">Medical Conditions</label>
+				<input type="text" name="medical_conditions" id="medical_conditions" value="" maxlength="255" placeholder="Medical Conditions (Asthma, Hay Fever, Migranes etc)" /> <br />
+				
+				<label for="medicinal_reactions">Reaction to Medicies</label>
+				<input type="text" name="medicinal_reactions" id="medicinal_reactions" value="" maxlength="255" placeholder="Detail" /> <br />
+				
+				<label for="dietary_requirements">Dietary</label>
+				<input type="text" name="dietary_requirements" id="dietary_requirements" value="" maxlength="255" placeholder="Special Dietary Requirements" /> <br />
+				
+				<label for="other_notes">Other notes</label>
+				<input type="text" name="other_notes" id="other_notes" value="" maxlength="255" placeholder="Any other notes" /> <br />
+				
+			</fieldset>
+			<fieldset>
+				<legend> Squadron details </legend>
+				
+				<label for="access_rights">Access level</label>
+				<select name="access_rights" id="access_rights" <?= ($ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_EDIT)?'':' class="uneditable" readonly="readonly" disabled="disabled"')?> >
+					<option value="<?=ATC_USER_LEVEL_CADET?>"> Cadet </option>
+					<option value="<?=ATC_USER_LEVEL_NCO?>"> NCO </option>
+					<option value="<?=ATC_USER_LEVEL_SUPOFF?>"> Supplimentary Officer </option>
+					<option value="<?=ATC_USER_LEVEL_OFFICER?>"> Officer </option>
+					<option value="<?=ATC_USER_LEVEL_ADJUTANT?>"> Adjutant </option>	
+					<option value="<?=ATC_USER_LEVEL_STORES?>"> Stores </option>
+					<option value="<?=ATC_USER_LEVEL_TRAINING?>"> Training </option>
+					<option value="<?=ATC_USER_LEVEL_CUCDR?>"> CUCDR </option>
+					<option value="<?=ATC_USER_LEVEL_USC?>"> Unit Support Committee Member </option>
+					<option value="<?=ATC_USER_LEVEL_TREASURER?>"> Treasurer </option>
+					<option value="<?=ATC_USER_LEVEL_EMRG_CONTACT?>"> Emergency Contact </option>
+					<option value="<?=ATC_USER_LEVEL_ADMIN?>"> Admin </option>
+				</select><br />
+				
+				<label for="flight">Flight</label>
+				<input type="text" name="flight" id="flight" value="" maxlength="15" placeholder="What flight are they in?" /> <br />
+				
+				<label for="joined_date">Date joined</label>
+				<input type="date" name="joined_date" id="joined_date" value="" maxlength="50" required="required" /><br />
+				
+				<label for="left_date">Date left</label>
+				<input type="date" name="left_date" id="left_date" value="" maxlength="50" /><br />
+				
+				<label for="social_media_approved">Social Media</label>
+				<input type="checkbox" name="social_media_approved" id="social_media_approved" value="-1" checked="checked" /><br />
+				
+			</fieldset>
 			<button type="submit">Save</button>
 		</form>
 		
 		<script>
 			$(function(){
 				user = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $user )) ?>' );
+				flights = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_flights() )) ?>' );
+				
+				$('#personalform fieldset legend').button().parent().addClass('ui-corner-all');
 
 				$('#personnel_id').val(user['personnel_id']);
 				$('#firstname').val(user['firstname']);
@@ -115,15 +153,14 @@
 				$('#medicinal_reactions').val(user['medicinal_reactions']);
 				$('#other_notes').val(user['other_notes']);
 				$('#created').val(user['created']);
+				$('#flight').autocomplete({ minLength: 0, source: flights }).val(user['flight']);
 				$('#dob').val(user['dob']);
 				$('#access_rights').val( user['access_rights']);
 				$('#is_female').val( user['is_female']);
 				$('#joined_date').val(user['joined_date']);
 				$('#left_date').val(user['left_date']);
-				if( user['enabled'] == "-1" )
-					$('#enabled').prop('checked', true);
-				else
-					$('#enabled').prop('checked', false);
+				$('#social_media_approved').prop('checked', (user['social_media_approved']==-1?true:false));
+				$('#enabled').prop('checked', (user['enabled']==-1?true:false));
 
 				// Update our password settings for editing existing users for clarity
 				if( user['personnel_id'] )
