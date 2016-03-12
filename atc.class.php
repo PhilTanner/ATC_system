@@ -382,7 +382,8 @@
 					`personnel`.`medical_conditions`,
 					`personnel`.`medicinal_reactions`,
 					`personnel`.`dietary_requirements`,
-					`personnel`.`other_notes`
+					`personnel`.`other_notes`,
+					`personnel`.`social_media_approved`
 				FROM 	`activity_register`
 					INNER JOIN `personnel`
 						ON `activity_register`.`personnel_id` = `personnel`.`personnel_id`
@@ -525,6 +526,20 @@
 		}
 		
 		public function get_currentuser_id() { return self::$currentuser; }
+		
+		public function get_flights()
+		{
+				
+			$query = 'SELECT DISTINCT `flight` FROM `personnel` ORDER BY LOWER(`flight`);';
+
+			$flights = array();
+			if ($result = self::$mysqli->query($query))
+				while ( $obj = $result->fetch_object() )
+					$flights[] = $obj->flight;
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+			return $flights;
+		}
 		
 		public function get_location( $id=0 )
 		{
@@ -1068,10 +1083,10 @@
 				
 			if( !$user->personnel_id )
 			{
-				$query = "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `mobile_phone`, `allergies`, `medical_conditions`, `medicinal_reactions`, `dietary_requirements`, `other_notes`, `dob`, `password`, `joined_date`, `left_date`, `access_rights`, `is_female`, `enabled` ) VALUES ( ";
+				$query = "INSERT INTO `personnel` (`firstname`, `lastname`, `email`, `mobile_phone`, `allergies`, `medical_conditions`, `medicinal_reactions`, `dietary_requirements`, `other_notes`, `dob`, `password`, `joined_date`, `left_date`, `access_rights`, `is_female`, `enabled`, `flight`, `social_media_approved` ) VALUES ( ";
 				$query .= '"'.self::$mysqli->real_escape_string($user->firstname).'", "'.self::$mysqli->real_escape_string($user->lastname).'", "'.self::$mysqli->real_escape_string($user->email).'", "'.self::$mysqli->real_escape_string($user->mobile_phone).'", "'.self::$mysqli->real_escape_string($user->allergies).'", "'.self::$mysqli->real_escape_string($user->medical_conditions).'", "'.self::$mysqli->real_escape_string($user->medicinal_reactions).'", "'.self::$mysqli->real_escape_string($user->dietary_requirements).'", "'.self::$mysqli->real_escape_string($user->other_notes).'", "'.date('Y-m-d',strtotime($user->dob)).'", ';
 				$query .= '"'.self::$mysqli->real_escape_string(create_hash($user->password)).'", "'.date('Y-m-d',strtotime($user->joined_date)).'", '.(strtotime($user->left_date)?'"'.date('Y-m-d',strtotime($user->left_date)).'"':'NULL').', '.(int)$user->access_rights.', ';
-				$query .= (int)$user->is_female.', '.(isset($user->enabled)&&$user->enabled==-1?-1:0).' );';
+				$query .= (int)$user->is_female.', '.(isset($user->enabled)&&$user->enabled==-1?-1:0).', "'.self::$mysqli->real_escape_string($user->flight).'", '.(isset($user->social_media_approved)&&$user->social_media_approved==-1?-1:0).' );';
 				if ($result = self::$mysqli->query($query))
 				{
 					$user->personnel_id = self::$mysqli->insert_id;
@@ -1088,7 +1103,7 @@
 					$query .= '`left_date` = "'.date('Y-m-d',strtotime($user->left_date)).'", ';
 				else 
 					$query .= '`left_date` = NULL, ';
-				$query .= '`access_rights` = '.(int)$user->access_rights.', `enabled` = '.(isset($user->enabled)&&$user->enabled==-1?-1:0).', `is_female` = '.(int)$user->is_female;
+				$query .= '`access_rights` = '.(int)$user->access_rights.', `enabled` = '.(isset($user->enabled)&&$user->enabled==-1?-1:0).', `is_female` = '.(int)$user->is_female.', `flight` = "'.self::$mysqli->real_escape_string($user->flight).'", `social_media_approved` = '.(isset($user->social_media_approved)&&$user->social_media_approved==-1?-1:0).'';
 				$query .= ' WHERE personnel_id = '.(int)$user->personnel_id.' LIMIT 1;';
 
 				if ($result = self::$mysqli->query($query))
