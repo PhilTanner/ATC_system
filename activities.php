@@ -373,6 +373,10 @@
 	$('#title').autocomplete({ source: names, minLength: 0 });
 	
 	var locations = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_locations() )) ?>' );
+	// Autocompletes need a label field to search against
+	$.each(locations, function(){
+		$(this)[0].label = $(this)[0].name + " " + $(this)[0].address;
+	});
 	$('#location').autocomplete({ 
 		minLength: 0,
 		source: locations,
@@ -411,6 +415,10 @@
 	} 
 	
 	var officers = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_personnel(null,'ASC',ATC_USER_GROUP_OFFICERS) )) ?>' );
+	// Autocompletes need a label field to search against
+	$.each(officers, function(){
+		$(this)[0].label = $(this)[0].rank + " " + $(this)[0].lastname + ", " + $(this)[0].firstname;
+	});
 	$('#personnel_name').autocomplete({ 
 		minLength: 0,
 		source: officers,
