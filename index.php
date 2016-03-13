@@ -141,12 +141,12 @@
 ?>
 	
 	Current user login sessions<br />
-	New user type - emergency contact (Trudi holding 8s)<br />
 	Next/Prev years activity lists<br />
 	Autocomplete searches<br>
 	Fixed height user sortables - scrollable<br/>
-	Cadet Flight details for attendance etc<br />
 	Document folders<br />
+	costs for activities<br/>
+	Activity status (planned/potential/alternative date/complete/etc)<br/>
 	
 	<h2> Outstanding documentation </h2>
 	<ol>
