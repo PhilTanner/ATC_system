@@ -1,6 +1,6 @@
 <?php
-	require_once "atc.class.php";
-	$ATC = new ATC();
+	require_once "atc_documentation.class.php";
+	$ATC = new ATC_Documentation();
 	
 	$ATC->gui_output_page_header('Home');
 	
@@ -134,6 +134,33 @@
 <?php
 		}
 	}
+	
+	$missingnok = $ATC->get_cadet_without_nok();
+	if( count( $missingnok ) )
+	{
+?>
+		<h2> Cadets missing Next of Kin </h2>
+		<table class="tablesorter">
+			<thead>
+				<tr>
+					<th> Rank </th>
+					<th> Name </th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					foreach( $missingnok as $obj )
+					{
+						echo '<tr>';
+						echo '	<td>'.$obj->rank.'</td>';
+						echo '	<td>'.$obj->display_name.'</td>';
+						echo '</tr>';
+					}
+				?>
+			</tbody>
+		</table>
+<?php
+	}
 
 	
 	if(ATC_DEBUG)
@@ -145,7 +172,6 @@
 	Document folders<br />
 	Activity status (planned/potential/alternative date/complete/etc)<br/>
 	Cadets with payments outstanding for upcoming activities<br />
-	Cadets with no NOKs<br />
 	Term week 8 with no term fee payments<br />
 	Promotion dates. Joiing dates
 	
