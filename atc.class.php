@@ -773,7 +773,7 @@
 		}
 		
 		
-		public function set_activity( $activity_id, $startdate, $enddate, $title, $location_id, $personnel_id, $twoic_personnel_id, $activity_type_id, $dress_code, $attendees )
+		public function set_activity( $activity_id, $startdate, $enddate, $title, $location_id, $personnel_id, $twoic_personnel_id, $activity_type_id, $dress_code, $attendees, $cost )
 		{
 			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_EDIT, $activity_id ))
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
@@ -820,7 +820,8 @@
 						`title`,
 						`location_id`,
 						`activity_type_id`,
-						`dress_code`
+						`dress_code`,
+						`cost`
 					) VALUES ( 
 						'".date("Y-m-d H:i",strtotime($startdate))."',
 						'".date("Y-m-d H:i",strtotime($enddate))."',
@@ -829,7 +830,8 @@
 						'".self::$mysqli->real_escape_string($title)."', 
 						".(int)$location_id.",
 						".(int)$activity_type_id.",
-						".(int)$dress_code."
+						".(int)$dress_code.",
+						".(float)$cost."
 					);";
 				if ($result = self::$mysqli->query($query))
 				{
@@ -852,7 +854,8 @@
 						`title` = '".self::$mysqli->real_escape_string($title)."', 
 						`location_id` = ".(int)$location_id.",
 						`activity_type_id` = ".(int)$activity_type_id.",
-						`dress_code` = ".(int)$dress_code."
+						`dress_code` = ".(int)$dress_code.",
+						`cost` = ".(float)$cost."
 					WHERE `activity_id` = ".(int)$activity_id."
 					LIMIT 1;";
 				if ($result = self::$mysqli->query($query))
@@ -891,11 +894,12 @@
 					$presence = 'NULL';
 				$note = $value['note'];
 				$updatenote = strlen(trim($note));
+				$amount_paid = (float)$value['amount_paid'];
 				
 				if( $presence != ATC_ATTENDANCE_PRESENT && $presence != ATC_ATTENDANCE_ON_LEAVE && $presence != ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE )
 					throw new ATCExceptionBadData('Unknown presence value');
 
-				$query = "INSERT INTO `activity_register` (`personnel_id`, `activity_id`, `presence`".($updatenote?', `note`':'').") VALUES ( ".(int)$personnel_id.", ".(int)$activity_id.", ".$presence.($updatenote?", '".self::$mysqli->real_escape_string($note)."'":'').") ON DUPLICATE KEY UPDATE `presence` = ".$presence.($updatenote?", `note` = '".self::$mysqli->real_escape_string($note)."'":'').";";
+				$query = "INSERT INTO `activity_register` (`personnel_id`, `activity_id`, `presence`".($updatenote?', `note`':'').", `amount_paid`) VALUES ( ".(int)$personnel_id.", ".(int)$activity_id.", ".$presence.($updatenote?", '".self::$mysqli->real_escape_string($note)."'":'').", ".$amount_paid.") ON DUPLICATE KEY UPDATE `presence` = ".$presence.($updatenote?", `note` = '".self::$mysqli->real_escape_string($note)."'":'').", `amount_paid` = ".$amount_paid.";";
 				
 				if ($result = self::$mysqli->query($query))
 					self::log_action( 'activity_register', $query, $activity_id );

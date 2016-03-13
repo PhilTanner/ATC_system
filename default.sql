@@ -47,6 +47,9 @@ INSERT INTO `personnel_rank` ( personnel_id, date_achieved, rank_id ) SELECT per
 ALTER TABLE `personnel` ADD `flight` VARCHAR(15) NULL AFTER `other_notes`;
 ALTER TABLE `personnel` ADD `social_media_approved` BOOLEAN NOT NULL DEFAULT FALSE AFTER `flight`;
 
+ALTER TABLE `activity` ADD `cost` DECIMAL(10,2) NOT NULL DEFAULT '0.00' ;
+ALTER TABLE `activity_register` ADD `amount_paid` DECIMAL(10,2) NOT NULL DEFAULT '0.00' ;
+
 
 CREATE USER 'atc'@'localhost' IDENTIFIED BY 'ZIERIESs5ESa';
 GRANT SELECT, INSERT ON `atc`.`log_changes` TO 'atc'@'localhost';

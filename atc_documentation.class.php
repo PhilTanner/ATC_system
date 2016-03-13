@@ -61,6 +61,39 @@
 			return $attendance;
 		}
 		
+		public function get_cadet_without_nok()
+		{
+			$query = '
+				SELECT	`personnel`.*, 
+						COUNT(`next_of_kin`.`kin_id`) as `noks`,
+						'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
+						( 
+   						SELECT `rank_shortname` 
+   						FROM `personnel_rank` 
+								INNER JOIN `rank` 
+									ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
+   						WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
+   						ORDER BY `date_achieved` DESC 
+   						LIMIT 1 
+						) AS `rank`
+				FROM	`personnel` 
+						LEFT JOIN `next_of_kin` 
+							ON `next_of_kin`.`personnel_id` = `personnel`.`personnel_id`
+				WHERE	`personnel`.`access_rights` IN ( '.ATC_USER_GROUP_CADETS.' )
+						AND `personnel`.`personnel_id` > 0
+				GROUP BY `next_of_kin`.`personnel_id`
+				ORDER BY `rank`, LOWER(`display_name`);';
+
+			$cadets = array();
+			if ($result = self::$mysqli->query($query))
+				while ( $obj = $result->fetch_object() )
+					$cadets[] = $obj;
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+			
+			return $cadets;
+		}
+		
 		public function get_officer_attendance( $startdate, $enddate, $supplimentary=false )
 		{
 			$query = '

@@ -1,6 +1,6 @@
 <?php
-	require_once "atc.class.php";
-	$ATC = new ATC();
+	require_once "atc_documentation.class.php";
+	$ATC = new ATC_Documentation();
 	
 	$ATC->gui_output_page_header('Home');
 	
@@ -134,6 +134,33 @@
 <?php
 		}
 	}
+	
+	$missingnok = $ATC->get_cadet_without_nok();
+	if( count( $missingnok ) )
+	{
+?>
+		<h2> Cadets missing Next of Kin records </h2>
+		<table class="tablesorter">
+			<thead>
+				<tr>
+					<th> Rank </th>
+					<th> Name </th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+					foreach( $missingnok as $obj )
+					{
+						echo '<tr>';
+						echo '	<td>'.$obj->rank.'</td>';
+						echo '	<td><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
+						echo '</tr>';
+					}
+				?>
+			</tbody>
+		</table>
+<?php
+	}
 
 	
 	if(ATC_DEBUG)
@@ -141,12 +168,12 @@
 ?>
 	
 	Current user login sessions<br />
-	New user type - emergency contact (Trudi holding 8s)<br />
 	Next/Prev years activity lists<br />
-	Autocomplete searches<br>
-	Fixed height user sortables - scrollable<br/>
-	Cadet Flight details for attendance etc<br />
 	Document folders<br />
+	Activity status (planned/potential/alternative date/complete/etc)<br/>
+	Cadets with payments outstanding for upcoming activities<br />
+	Term week 8 with no term fee payments<br />
+	Promotion dates. Joiing dates
 	
 	<h2> Outstanding documentation </h2>
 	<ol>
@@ -161,7 +188,6 @@
 		<li> Cadets signed up to activities without term fees </li>
 		<li> Cadets signed up to activities without NZCF8s </li>
 		<li> Cadets who will qualify for uniform </li>
-		<li> Cadets who've not attended in 2/3 weeks </li>
 		<li> Activities with unknown start/end dates </li>
 		<li> Activities with unknown locations </li>
 		<li> Activities with NZCF8 outstanding </li>

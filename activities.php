@@ -17,7 +17,8 @@
 					$_POST['2ic_personnel_id'],
 					$ATC->set_activity_type( $_POST['activity_type_id'], $_POST['activity_type'], null ), 
 					$_POST['dress_code'],
-					$_POST['attendees'] 
+					$_POST['attendees'],
+					$_POST['cost'] 
 				);
 			} catch (ATCExceptionInsufficientPermissions $e) {	
 				header("HTTP/1.0 401 Unauthorised");
@@ -45,7 +46,7 @@
 						$foo = explode("_", $key);
 						// Exclude the attendance_register entry, only go if we've got a real person record
 						if( (int)$foo[1] )
-							$register[] = array('personnel_id' => $foo[1], 'attendance' => $value, 'note' => $_POST['note_'.$foo[1]]);
+							$register[] = array('personnel_id' => $foo[1], 'attendance' => $value, 'note' => $_POST['note_'.$foo[1]], 'amount_paid' => $_POST['amtpaid_'.$foo[1]]);
 					}
 				}
 				$ATC->set_activity_attendance( (int)$_POST['activity_id'], $register );
@@ -109,6 +110,7 @@
 					<th colspan="2"> Name </th>
 					<th> <?= $activity->title ?> Attendance </th>
 					<th> Note </th>
+					<th> Amount paid </th>
 				</tr>
 			</thead>
 			<tbody>
@@ -129,6 +131,7 @@
 						echo '	</select>';
 						echo '</td>';
 						echo '<td><input type="text" name="note_'.$obj->personnel_id.'" id="note_'.$obj->personnel_id.'" value="'.htmlentities($obj->note).'" maxlength="255" /></td>';
+						echo '<td><input type="number" step="0.1" name="amtpaid_'.$obj->personnel_id.'" id="amtpaid_'.$obj->personnel_id.'" value="'.htmlentities($obj->amount_paid).'" min="0" style="width:3em;" '.($ATC->user_has_permission(ATC_PERMISSION_FINANCE_EDIT)?'':'readonly="readonly"').'/></td>';
 						echo '</tr>';
 					}
 				?>
@@ -331,32 +334,34 @@
 ?>
 <form name='editactivity' id='editactivity' method='post'>
 	<div style="width:49%; float:left;">
-	<label for='title'>Activity name</label><br />
-	<input type='text' id='title' name='title' value='<?=$activity->title?>' required='required' /><br />
-	<label for='startdate'>Assemble date/time</label><br />
-	<input type='datetime-local' id='startdate' name='startdate' value='<?=$activity->startdate?>' required='required' /><br />
-	<label for='enddate'>Dispersal date/time</label><br />
-	<input type='datetime-local' id='enddate' name='enddate' value='<?=$activity->enddate?>' required='required' /><br />
-	<label for='location'>Activity location</label><br />
-	<input type='text' id='location' name='location' value='<?=$activity->name?>' required='required' /><br />
+		<label for='title'>Activity name</label><br />
+		<input type='text' id='title' name='title' value='<?=htmlentities($activity->title)?>' required='required' /><br />
+		<label for='startdate'>Assemble date/time</label><br />
+		<input type='datetime-local' id='startdate' name='startdate' value='<?=$activity->startdate?>' required='required' /><br />
+		<label for='enddate'>Dispersal date/time</label><br />
+		<input type='datetime-local' id='enddate' name='enddate' value='<?=$activity->enddate?>' required='required' /><br />
+		<label for='location'>Activity location</label><br />
+		<input type='text' id='location' name='location' value='<?=htmlentities($activity->name)?>' required='required' /><br />
+		<label for='cost'>Activity cost</label><br />
+		<input type="number" step="0.1" name="cost" id="cost" value="<?=htmlentities($activity->cost)?>" min="0" /><br />
 	</div>
 	<div style="width:45%; float:left;">
-	<label for='activity_type'>Type of activity</label><br />
-	<input type='text' id='activity_type' name='activity_type' value='<?=$activity->type?>' required='required' /><br />
-	<label for='personnel_id'>Officer In Charge</label><br />
-	<input type='text' id='personnel_name' name='personnel_name' value='<?=$activity->display_name?>' required='required' /><br />
-	<label for='2ic_personnel_id'>2<sup>nd</sup> Contact</label><br />
-	<input type='text' id='2ic_personnel_name' name='2ic_personnel_name' value='<?=$activity->twoic_display_name?>' required='required' /><br />
-	<label for='dress_code'>Dress code</label><br />
-	<select name='dress_code' id='dress_code'>
-		<option value='<?=ATC_DRESS_CODE_BLUES?>'<?=($activity->dress_code==ATC_DRESS_CODE_BLUES?' selected="selected"':'')?>>No 6 Blues</option>
-		<option value='<?=ATC_DRESS_CODE_DPM?>'<?=($activity->dress_code==ATC_DRESS_CODE_DPM?' selected="selected"':'')?>>DPM</option>
-		<option value='<?=ATC_DRESS_CODE_BLUES_AND_DPM?>'<?=($activity->dress_code==ATC_DRESS_CODE_BLUES_AND_DPM?' selected="selected"':'')?>>Mix</option>
-		<option value='<?=ATC_DRESS_CODE_MUFTI?>'<?=($activity->dress_code==ATC_DRESS_CODE_MUFTI?' selected="selected"':'')?>>Mufti</option>
-	</select>
+		<label for='activity_type'>Type of activity</label><br />
+		<input type='text' id='activity_type' name='activity_type' value='<?=$activity->type?>' required='required' /><br />
+		<label for='personnel_id'>Officer In Charge</label><br />
+		<input type='text' id='personnel_name' name='personnel_name' value='<?=$activity->display_name?>' required='required' /><br />
+		<label for='2ic_personnel_id'>2<sup>nd</sup> Contact</label><br />
+		<input type='text' id='2ic_personnel_name' name='2ic_personnel_name' value='<?=$activity->twoic_display_name?>' required='required' /><br />
+		<label for='dress_code'>Dress code</label><br />
+		<select name='dress_code' id='dress_code'>
+			<option value='<?=ATC_DRESS_CODE_BLUES?>'<?=($activity->dress_code==ATC_DRESS_CODE_BLUES?' selected="selected"':'')?>>No 6 Blues</option>
+			<option value='<?=ATC_DRESS_CODE_DPM?>'<?=($activity->dress_code==ATC_DRESS_CODE_DPM?' selected="selected"':'')?>>DPM</option>
+			<option value='<?=ATC_DRESS_CODE_BLUES_AND_DPM?>'<?=($activity->dress_code==ATC_DRESS_CODE_BLUES_AND_DPM?' selected="selected"':'')?>>Mix</option>
+			<option value='<?=ATC_DRESS_CODE_MUFTI?>'<?=($activity->dress_code==ATC_DRESS_CODE_MUFTI?' selected="selected"':'')?>>Mufti</option>
+		</select>
 	</div><br style="clear:left" />
-	<fieldset id='attendees'><legend>Attendees</legend><ol class='dragdrop attendees'></ol></fieldset>
-	<fieldset id='non_attendees'><legend>Non-Attendees</legend><ol class='dragdrop attendees'></ol></fieldset>
+	<fieldset id='attendees' class='dragdrop attendees'><legend>Attendees</legend><ol class='dragdrop attendees'></ol></fieldset>
+	<fieldset id='non_attendees' class='dragdrop attendees'><legend>Non-Attendees</legend><ol class='dragdrop attendees'></ol></fieldset>
 	<input type='hidden' id='activity_id' name='activity_id' value='<?=$activity->activity_id?>' />
 	<input type='hidden' id='location_id' name='location_id' value='<?=$activity->location_id?>' />
 	<input type='hidden' id='activity_type_id' name='activity_type_id' value='<?=$activity->activity_type_id?>' />
@@ -368,6 +373,10 @@
 	$('#title').autocomplete({ source: names, minLength: 0 });
 	
 	var locations = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_locations() )) ?>' );
+	// Autocompletes need a label field to search against
+	$.each(locations, function(){
+		$(this)[0].label = $(this)[0].name + " " + $(this)[0].address;
+	});
 	$('#location').autocomplete({ 
 		minLength: 0,
 		source: locations,
@@ -406,6 +415,10 @@
 	} 
 	
 	var officers = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_personnel(null,'ASC',ATC_USER_GROUP_OFFICERS) )) ?>' );
+	// Autocompletes need a label field to search against
+	$.each(officers, function(){
+		$(this)[0].label = $(this)[0].rank + " " + $(this)[0].lastname + ", " + $(this)[0].firstname;
+	});
 	$('#personnel_name').autocomplete({ 
 		minLength: 0,
 		source: officers,
