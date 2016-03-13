@@ -65,7 +65,6 @@
 		{
 			$query = '
 				SELECT	`personnel`.*, 
-						COUNT(`next_of_kin`.`kin_id`) as `noks`,
 						'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
 						( 
    						SELECT `rank_shortname` 
@@ -82,6 +81,7 @@
 				WHERE	`personnel`.`access_rights` IN ( '.ATC_USER_GROUP_CADETS.' )
 						AND `personnel`.`personnel_id` > 0
 				GROUP BY `next_of_kin`.`personnel_id`
+				HAVING COUNT(`next_of_kin`.`kin_id`) < 1
 				ORDER BY `rank`, LOWER(`display_name`);';
 
 			$cadets = array();
