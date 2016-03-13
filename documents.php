@@ -206,13 +206,15 @@
 						
 						$attending_officers = $attending_cadets = $attending_uos = 0;
 						foreach($attendees as $attendee)
-							if($attendee->presence == ATC_ATTENDANCE_PRESENT && array_search($attendee->access_rights, explode(',', ATC_USER_GROUP_OFFICERS )) !== false ) $attending_officers++;
-							elseif($attendee->presence == ATC_ATTENDANCE_PRESENT && array_search($attendee->access_rights, explode(',', ATC_USER_GROUP_CADETS )) !== false ) $attending_cadets++;
+							if($attendee->presence === ATC_ATTENDANCE_PRESENT && array_search($attendee->access_rights, explode(',', ATC_USER_GROUP_OFFICERS )) !== false ) $attending_officers++;
+							elseif($attendee->presence === ATC_ATTENDANCE_PRESENT && array_search($attendee->access_rights, explode(',', ATC_USER_LEVEL_NCO )) !== false ) $attending_uos++;
+							elseif($attendee->presence === ATC_ATTENDANCE_PRESENT && array_search($attendee->access_rights, explode(',', ATC_USER_GROUP_CADETS )) !== false ) $attending_cadets++;
+							
 						
 						echo '<tr>';
 						echo '	<td> '.date('M d', $activity->startdate).($length>1?'-'.date('M d', $activity->enddate):'').' '.$activity->title.' </td>';
 						echo '	<td> '.$attending_officers.' </td>';
-						echo '	<td>  </td>';
+						echo '	<td> '.$attending_uos.' </td>';
 						echo '	<td> '.$attending_cadets.'</td>';
 						//echo '	<td> '.$officer->activity_days.' </td>';
 						//echo '	<td> '.((float)$officer->parade_hours+(float)$officer->activity_hours).' </td>';

@@ -139,7 +139,7 @@
 	if( count( $missingnok ) )
 	{
 ?>
-		<h2> Cadets missing Next of Kin </h2>
+		<h2> Cadets missing Next of Kin records </h2>
 		<table class="tablesorter">
 			<thead>
 				<tr>
@@ -153,7 +153,7 @@
 					{
 						echo '<tr>';
 						echo '	<td>'.$obj->rank.'</td>';
-						echo '	<td>'.$obj->display_name.'</td>';
+						echo '	<td><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
 						echo '</tr>';
 					}
 				?>
