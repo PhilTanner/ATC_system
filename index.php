@@ -167,7 +167,7 @@
 	$ATC_Finance = new ATC_Finance();
 	$outstandingmoney = $ATC_Finance->get_activity_money_outstanding();
 	
-	if( count($outstandingmoney) )
+	if( $ATC_Finance->user_has_permission(ATC_PERMISSION_FINANCE_VIEW) && count($outstandingmoney) )
 	{
 ?>
 		<h2> Cadets needing to pay for activities </h2>
