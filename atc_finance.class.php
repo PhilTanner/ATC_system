@@ -6,7 +6,6 @@
 	
 	class ATC_Finance extends ATC
 	{
-		
 		function currency_format( $format, $amount )
 		{
 			$str = '';
@@ -42,6 +41,51 @@
 			}
 			return $str;
 		}
+		
+		public function get_activity_money_outstanding(  )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_VIEW ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			if( !self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW) )
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+						
+			$query = '
+				SELECT	`activity_register`.*,
+					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
+					( 
+   					SELECT `rank_shortname` 
+   					FROM `personnel_rank` 
+							INNER JOIN `rank` 
+								ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
+   					WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
+   					ORDER BY `date_achieved` DESC 
+   					LIMIT 1 
+					) AS `rank`,
+					`personnel`.`mobile_phone`,
+					`activity`.`cost`,
+					`activity`.`title`,
+					`activity`.`startdate`,
+					`activity`.`enddate`
+				FROM 	`activity_register`
+					INNER JOIN `personnel`
+						ON `activity_register`.`personnel_id` = `personnel`.`personnel_id`
+					INNER JOIN `activity`
+						ON `activity_register`.`activity_id` = `activity`.`activity_id`
+				WHERE 	`activity_register`.`amount_paid` < `activity`.`cost`
+					-- Only cadets pay fees
+					AND `personnel`.`access_rights` = '.ATC_USER_LEVEL_CADET.'
+				ORDER BY `activity`.`startdate`, `activity`.`title`, `personnel`.`lastname`, `personnel`.`firstname`;';
+
+			$dues = array();
+			if ($result = self::$mysqli->query($query))
+				while ( $obj = $result->fetch_object() )
+					$dues[] = $obj;
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $dues;
+		}
+		
 	}
 	
 	if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') 
