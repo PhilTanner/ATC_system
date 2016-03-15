@@ -11,8 +11,10 @@
 	
 	
 	$nzcf20 = $ATC->nzcf20_stats( $year, $month );
-		
+	
+	$ATC->dump_userperms();
 ?>
+	
 	<form name="datepicker" id="datepicker">
 		<fieldset>
 			<legend>Choose date</legend>
