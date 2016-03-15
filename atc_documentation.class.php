@@ -3,6 +3,41 @@
 	
 	class ATC_Documentation extends ATC
 	{
+		
+		public function dump_userperms()
+		{
+			$constants = get_defined_constants(true);
+			$constants = $constants['user'];
+			
+			echo '<table class="tablesorter">';
+			echo '	<thead>';
+			echo '		<tr>';
+			echo '			<th> Level </th>';
+			foreach( $constants as $constant => $val )	
+				if( substr($constant, 0, strlen('ATC_PERMISSION_')) == 'ATC_PERMISSION_' )
+					echo '<th>'.str_replace("_", " ", strtolower(substr($constant, strlen('ATC_PERMISSION_'), 100))).'</th>';
+			echo '		</tr>';
+			echo '	</thead>';
+			echo '	<tbody>';
+			foreach( $constants as $constant => $val )
+				if( substr($constant, 0, strlen('ATC_USER_LEVEL_')) == 'ATC_USER_LEVEL_' )
+				{
+					echo '<tr>';
+					echo '	<th>'.str_replace("_", " ", strtolower(substr($constant, strlen('ATC_USER_LEVEL_'), 100))).'</th>';
+					foreach( $constants as $perm => $value )
+						if( substr($perm, 0, strlen('ATC_PERMISSION_')) == 'ATC_PERMISSION_' )
+						{
+							echo '<td>';
+							echo ( ($val & $value) == $value ? 'X':'');
+							echo '</td>';
+						}
+					echo '</tr>';
+				}
+			echo '	</tbody>';
+			echo '</table>';
+		}
+	
+		
 		public function get_cadets_enrolled_on_date( $date )
 		{
 			$query = '

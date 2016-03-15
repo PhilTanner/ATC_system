@@ -206,7 +206,8 @@
 	Document folders<br />
 	Activity status (planned/potential/alternative date/complete/etc)<br/>
 	Term week 8 with no term fee payments<br />
-	Promotion dates. Joiing dates
+	Promotion dates. Joiing dates<br />
+	User cannot edit key fields for themselves (leaving dates, user levels, etc) - add "sensitive field" values to set_personnel()<br />
 	
 	<h2> Outstanding documentation </h2>
 	<ol>
