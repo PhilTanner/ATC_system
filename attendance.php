@@ -123,8 +123,8 @@
 							foreach( $dates as $night )
 							{
 								echo '<td class="attendance user'.$obj->personnel_id.' date'.$night->date.'">';
-								// When embedding for a particular personnel page, don't let us edit
-								if( $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT, $obj->personnel_id ) && !isset($_GET['id']) )
+								// When embedding for a particular personnel page, don't let us edit - nor when they haven't started yet
+								if( $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT, $obj->personnel_id ) && !isset($_GET['id']) && (strtotime($obj->joined_date) <= strtotime($night->date)) ) 
 								{
 									echo '<select name="'.$obj->personnel_id.'|'.$night->date.'" id="'.$obj->personnel_id.'_'.$night->date.'">';
 									echo '	<option value="" selected="selected"></option>';
