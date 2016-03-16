@@ -208,7 +208,7 @@
 						$attending_officers = $attending_cadets = $attending_uos = 0;
 						foreach($attendees as $attendee)
 							if($attendee->presence === ATC_ATTENDANCE_PRESENT && array_search($attendee->access_rights, explode(',', ATC_USER_GROUP_OFFICERS )) !== false ) $attending_officers++;
-							elseif($attendee->presence === ATC_ATTENDANCE_PRESENT && array_search($attendee->access_rights, explode(',', ATC_USER_LEVEL_NCO )) !== false ) $attending_uos++;
+							elseif($attendee->presence === ATC_ATTENDANCE_PRESENT && array_search($attendee->access_rights, explode(',', ATC_USER_LEVEL_SNCO )) !== false ) $attending_uos++;
 							elseif($attendee->presence === ATC_ATTENDANCE_PRESENT && array_search($attendee->access_rights, explode(',', ATC_USER_GROUP_CADETS )) !== false ) $attending_cadets++;
 							
 						

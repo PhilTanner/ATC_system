@@ -56,7 +56,7 @@
 	
 	/* The user levels are set in the config file, so groups can't be declared until afterwards */
 	define( 'ATC_USER_GROUP_OFFICERS',			ATC_USER_LEVEL_ADJUTANT.','.ATC_USER_LEVEL_STORES.','.ATC_USER_LEVEL_TRAINING.','.ATC_USER_LEVEL_CUCDR.','.ATC_USER_LEVEL_SUPOFF.','.ATC_USER_LEVEL_OFFICER );
-	define( 'ATC_USER_GROUP_CADETS',			ATC_USER_LEVEL_CADET.','.ATC_USER_LEVEL_NCO );
+	define( 'ATC_USER_GROUP_CADETS',			ATC_USER_LEVEL_CADET.','.ATC_USER_LEVEL_SNCO );
 	define( 'ATC_USER_GROUP_PERSONNEL',			ATC_USER_GROUP_OFFICERS.','.ATC_USER_GROUP_CADETS );
 	
 	class ATCException extends Exception {
@@ -564,7 +564,7 @@
 							$query .= ' AND `access_rights` IN ('.self::$mysqli->real_escape_string($access_rights).') ';
 						
 						if( !(bool)$showall )
-							$query .= " AND `enabled` = -1 AND `access_rights` IN (".ATC_USER_GROUP_PERSONNEL.") ";
+							$query .= " AND `enabled` = -1 AND `access_rights` IN (".ATC_USER_GROUP_PERSONNEL.") AND `left_date` IS NULL";
 						$query .= " ORDER BY `enabled` ASC, `lastname` ".self::$mysqli->real_escape_string($orderby).", `firstname` ".self::$mysqli->real_escape_string($orderby).", `personnel_id` ".self::$mysqli->real_escape_string($orderby).";";
 
 						if ($result = self::$mysqli->query($query))
