@@ -13,6 +13,7 @@
 			echo '	<thead>';
 			echo '		<tr>';
 			echo '			<th> Level </th>';
+			echo '			<th> Bin2Dec </th>';
 			foreach( $constants as $constant => $val )	
 				if( substr($constant, 0, strlen('ATC_PERMISSION_')) == 'ATC_PERMISSION_' )
 					echo '<th>'.str_replace("_", " ", strtolower(substr($constant, strlen('ATC_PERMISSION_'), 100))).'</th>';
@@ -24,6 +25,7 @@
 				{
 					echo '<tr>';
 					echo '	<th>'.str_replace("_", " ", strtolower(substr($constant, strlen('ATC_USER_LEVEL_'), 100))).'</th>';
+					echo '	<td>'.$val.'</td>';
 					foreach( $constants as $perm => $value )
 						if( substr($perm, 0, strlen('ATC_PERMISSION_')) == 'ATC_PERMISSION_' )
 						{

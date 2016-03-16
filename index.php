@@ -208,6 +208,10 @@
 	Term week 8 with no term fee payments<br />
 	Promotion dates. Joiing dates<br />
 	User cannot edit key fields for themselves (leaving dates, user levels, etc) - add "sensitive field" values to set_personnel()<br />
+	USER_LEVEL_SNCO<br />
+	Default personnel list to only unit members<br />
+	Change perm structure to user level constants, which *then* map to perm structure to stop DB Unknown issues<br />
+	Confirm box on dob entry < 13yrs ago<br />
 	
 	<h2> Outstanding documentation </h2>
 	<ol>
