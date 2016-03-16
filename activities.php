@@ -290,7 +290,7 @@
 				if($n > 1 )
 				{
 					$pdf->Cell(1,$lineheight,'',0,1);
-					$pdf->Cell(35,$lineheight,'',0);
+					$pdf->Cell(40,$lineheight,'',0);
 				}
 				
 				$pdf->Cell(28,$lineheight,$nok->firstname.' '.$nok->lastname.' ('.$relation.')',1,0,'L',true);
