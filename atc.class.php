@@ -534,7 +534,7 @@
 		}
 		
 		
-		public function get_personnel( $id, $orderby = "ASC", $access_rights=null, $showdisabled=true )
+		public function get_personnel( $id, $orderby = "ASC", $access_rights=null, $showall=false )
 		{
 			$personnel = new stdClass();
 
@@ -558,14 +558,14 @@
    								ORDER BY `date_achieved` DESC 
    								LIMIT 1 
 								) AS `rank`
-							FROM `personnel` ";
+							FROM `personnel` 
+							WHERE `personnel_id` > 0 ";
 						if( !is_null($access_rights) )
-							$query .= ' WHERE `access_rights` IN ('.self::$mysqli->real_escape_string($access_rights).')  AND `personnel_id` > 0 ';
-						else 
-							$query .= ' WHERE `personnel_id` > 0 ';
-						if( !(bool)$showdisabled )
-							$query .= "AND `enabled` = -1 ";
-						$query .= "ORDER BY `enabled` ASC, `lastname` ".self::$mysqli->real_escape_string($orderby).", `firstname` ".self::$mysqli->real_escape_string($orderby).", `personnel_id` ".self::$mysqli->real_escape_string($orderby).";";
+							$query .= ' AND `access_rights` IN ('.self::$mysqli->real_escape_string($access_rights).') ';
+						
+						if( !(bool)$showall )
+							$query .= " AND `enabled` = -1 AND `access_rights` IN (".ATC_USER_GROUP_PERSONNEL.") ";
+						$query .= " ORDER BY `enabled` ASC, `lastname` ".self::$mysqli->real_escape_string($orderby).", `firstname` ".self::$mysqli->real_escape_string($orderby).", `personnel_id` ".self::$mysqli->real_escape_string($orderby).";";
 
 						if ($result = self::$mysqli->query($query))
 						{
