@@ -5,27 +5,26 @@
 		define( 'ATC_DEBUG', 					1 );
 	
 	// Permissions structure, as a bitmask
-	
 	define( 'ATC_PERMISSION_PERSONNEL_VIEW', 		1 );
-	define( 'ATC_PERMISSION_PERSONNEL_EDIT',		(ATC_PERMISSION_PERSONNEL_VIEW << 1) + ATC_PERMISSION_PERSONNEL_VIEW );
-	define( 'ATC_PERMISSION_ATTENDANCE_VIEW', 		(ATC_PERMISSION_PERSONNEL_VIEW << 2) );
-	define( 'ATC_PERMISSION_ATTENDANCE_EDIT', 		(ATC_PERMISSION_PERSONNEL_VIEW << 3) + ATC_PERMISSION_ATTENDANCE_VIEW );
-	define( 'ATC_PERMISSION_ACTIVITIES_VIEW', 		(ATC_PERMISSION_PERSONNEL_VIEW << 4) );
-	define( 'ATC_PERMISSION_ACTIVITIES_EDIT', 		(ATC_PERMISSION_PERSONNEL_VIEW << 5) + ATC_PERMISSION_ACTIVITIES_VIEW );
-	define( 'ATC_PERMISSION_FINANCE_VIEW', 			(ATC_PERMISSION_PERSONNEL_VIEW << 6) );
-	define( 'ATC_PERMISSION_FINANCE_EDIT', 			(ATC_PERMISSION_PERSONNEL_VIEW << 7) + ATC_PERMISSION_FINANCE_VIEW );
-	define( 'ATC_PERMISSION_SYSTEM_VIEW', 			(ATC_PERMISSION_PERSONNEL_VIEW << 8) );
-	define( 'ATC_PERMISSION_SYSTEM_EDIT', 			(ATC_PERMISSION_PERSONNEL_VIEW << 9) + ATC_PERMISSION_SYSTEM_VIEW );
-	define( 'ATC_PERMISSION_STORES_VIEW',			(ATC_PERMISSION_PERSONNEL_VIEW << 10) );
-	define( 'ATC_PERMISSION_STORES_EDIT',			(ATC_PERMISSION_PERSONNEL_VIEW << 11) + ATC_PERMISSION_STORES_VIEW );
-	define( 'ATC_PERMISSION_LOCATIONS_VIEW',		(ATC_PERMISSION_PERSONNEL_VIEW << 12) );
-	define( 'ATC_PERMISSION_LOCATIONS_EDIT',		(ATC_PERMISSION_PERSONNEL_VIEW << 13) + ATC_PERMISSION_LOCATIONS_VIEW );
-	define( 'ATC_PERMISSION_ACTIVITY_TYPE_EDIT',		(ATC_PERMISSION_PERSONNEL_VIEW << 14) );
-	define( 'ATC_PERMISSION_TRAINING_VIEW',		(ATC_PERMISSION_PERSONNEL_VIEW << 15) );
-	define( 'ATC_PERMISSION_TRAINING_EDIT',		(ATC_PERMISSION_PERSONNEL_VIEW << 16) + ATC_PERMISSION_TRAINING_VIEW );
+	define( 'ATC_PERMISSION_PERSONNEL_EDIT',		1 << 1 );
+	define( 'ATC_PERMISSION_ATTENDANCE_VIEW',		1 << 2 );
+	define( 'ATC_PERMISSION_ATTENDANCE_EDIT',		1 << 3 );
+	define( 'ATC_PERMISSION_ACTIVITIES_VIEW',		1 << 4 );
+	define( 'ATC_PERMISSION_ACTIVITIES_EDIT',		1 << 5 );
+	define( 'ATC_PERMISSION_FINANCE_VIEW',			1 << 6 );
+	define( 'ATC_PERMISSION_FINANCE_EDIT',			1 << 7 );
+	define( 'ATC_PERMISSION_SYSTEM_VIEW',			1 << 8 );
+	define( 'ATC_PERMISSION_SYSTEM_EDIT',			1 << 9 );
+	define( 'ATC_PERMISSION_STORES_VIEW',			1 << 10 );
+	define( 'ATC_PERMISSION_STORES_EDIT',			1 << 11 );
+	define( 'ATC_PERMISSION_LOCATIONS_VIEW',		1 << 12 );
+	define( 'ATC_PERMISSION_LOCATIONS_EDIT',		1 << 13 );
+	define( 'ATC_PERMISSION_ACTIVITY_TYPE_EDIT',		1 << 14 );
+	define( 'ATC_PERMISSION_TRAINING_VIEW',		1 << 15 );
+	define( 'ATC_PERMISSION_TRAINING_EDIT',		1 << 16 );
 
 	// Give admin everything we can think of in the future (max value of MySQL mediumint unsigned field access_rights).
-	define( 'ATC_USER_LEVEL_ADMIN',			(ATC_PERMISSION_PERSONNEL_VIEW << 24) - 1);
+	define( 'ATC_USER_LEVEL_ADMIN',			(1 << 24) - 1);
 	
 	define( 'ATC_ATTENDANCE_PRESENT',			0 );
 	define( 'ATC_ATTENDANCE_ON_LEAVE',			1 );
@@ -1130,12 +1129,13 @@
 	
 		
 			$(function(){
-				$(".navoptions ul li a").button().addClass("ui-state-disabled");
+				//$(".navoptions ul li a").button().addClass("ui-state-disabled");
 				$(".navoptions ul li a.home").button({ icons: { primary: "ui-icon-home" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Home'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.personnel").button({ icons: { primary: "ui-icon-contact" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Personnel'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.attendance").button({ icons: { primary: "ui-icon-clipboard" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Attendance'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.activities").button({ icons: { primary: "ui-icon-image" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Activities'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.documents").button({ icons: { primary: "ui-icon-folder-open" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Documentation'?'.addClass("ui-state-active")':'').';
+				$(".navoptions ul li a.system").button({ icons: { primary: "ui-icon-gear" } }).removeClass("ui-state-disabled")'.($title=='System'?'.addClass("ui-state-active")':'').';
 				
 				$(".navoptions ul li a.finance").button({ icons: { primary: "ui-icon-cart" } });
 				$(".navoptions ul li a.stores").button({ icons: { primary: "ui-icon-tag" } });
@@ -1161,7 +1161,8 @@
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_STORES_VIEW)?'<li> <a href="./" class="stores">Stores</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_TRAINING_VIEW)?'<li> <a href="./" class="training">Training</a> </li>':'').'-->
 				'.(self::$currentuser && self::user_has_permission(ATC_USER_LEVEL_ADJUTANT)?'<li> <a href="./documents.php" class="documents">Documentation</a> </li>':'').'
-		
+				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_SYSTEM_VIEW)?'<li> <a href="./system.php" class="system">System</a> </li>':'').'
+				
 				'.(self::$currentuser?'<li> <a href="./logout.php" class="logout">Logout</a> </li>':'<li> <a href="./login.php" class="login">Login</a> </li>').'				
 			</ul>
 		</nav>
