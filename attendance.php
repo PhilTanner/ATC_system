@@ -386,7 +386,7 @@
 			// Don't carry missing nights forward;
 			var missingnights = 0;
 			
-			if( '<?= ($ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ) && isset($_GET['id']) )?>'  )
+			if( '<?= ($ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ) && !isset($_GET['id']) )?>'  )
 			{
 				$(this).children('td').children('select').each(function(index, value){
 					if( $(this).val() == '<?=ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE?>' )
@@ -396,9 +396,9 @@
 				});
 			} else {
 				$(this).children('td').each(function(index, value){
-					if( $(this).html() == '<?=ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE?>' )
+					if( $(this).html() == '<?=ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE_SYMBOL?>' )
 						missingnights++;
-					else if( $(this).html() == '<?=ATC_ATTENDANCE_PRESENT?>' || $(this).val() == '<?=ATC_ATTENDANCE_ON_LEAVE?>' )
+					else if( $(this).html() == '<?=ATC_ATTENDANCE_PRESENT_SYMBOL?>' || $(this).val() == '<?=ATC_ATTENDANCE_ON_LEAVE_SYMBOL?>' )
 						missingnights = 0;
 				});
 			}
