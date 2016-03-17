@@ -2,6 +2,7 @@
 	require_once "atc.class.php";
 	$ATC = new ATC();
 	
+	// Enter a new parade night
 	if( isset( $_POST['newdate'] ) && strtotime( $_POST['newdate'] ) )
 	{
 		try {
@@ -23,6 +24,29 @@
 			echo 'Caught exception: ',  $e->getMessage(), "\n";
 		}
 		exit();
+	// Enter a new term 
+	} elseif( isset( $_POST['startdate'] ) && strtotime( $_POST['startdate'] ) && isset( $_POST['enddate'] ) && strtotime( $_POST['enddate'] ) )
+	{
+		try {
+			$ATC->add_term( strtotime($_POST['startdate']), strtotime($_POST['enddate']) );
+		} catch (ATCExceptionInsufficientPermissions $e) {
+			header("HTTP/1.0 401 Unauthorised");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		} catch (ATCExceptionDBError $e) {
+			header("HTTP/1.0 500 Internal Server Error");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		} catch (ATCExceptionDBConn $e) {
+			header("HTTP/1.0 500 Internal Server Error");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		} catch (ATCException $e) {
+			header("HTTP/1.0 400 Bad Request");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		} catch (Exception $e) {
+			header("HTTP/1.0 500 Internal Server Error");
+			echo 'Caught exception: ',  $e->getMessage(), "\n";
+		}
+		exit();
+	// Save the attendance register
 	} elseif( isset( $_POST['attendance_register'] ) && $_POST['attendance_register'] )
 	{
 		try {
@@ -49,6 +73,7 @@
 			echo 'Caught exception: ',  $e->getMessage(), "\n";
 		}
 		exit();
+	// Save the absentee reasons
 	} elseif( isset( $_POST['personnel_id'] ) ) {
 		try {
 			foreach($_POST as $field => $excuse )
@@ -75,7 +100,30 @@
 		}
 	}
 
-	$dates = $ATC->get_attendance( date('Y').'-01-01', date('Y').'-12-31' );
+	$terms = $ATC->get_terms();
+	if( !isset($_GET['termstart']) ) 
+		$targettime = time();
+	else
+		$targettime = strtotime($_GET['termstart']);
+	
+	// Try to find our beginning/end dates for a term that's been requested
+	foreach( $terms as $term )
+	{
+		if( $term->startdate <= $targettime && $term->enddate >= $targettime )
+		{
+			$termstart = date('Y-m-d', $term->startdate);
+			$termend = date('Y-m-d', $term->enddate);
+			break;
+		}
+	}
+	// Default to all this year if we can't find a term start time matching what we asked for.
+	if( !isset( $termstart ) )
+	{
+		$termstart = date('Y').'-01-01';
+		$termend = date('Y').'-12-31';
+	}
+	
+	$dates = $ATC->get_attendance( $termstart, $termend );
 	$users = $ATC->get_personnel((isset($_GET['id'])?(int)$_GET['id']:null), 'ASC', (isset($_GET['id'])?null:ATC_USER_GROUP_PERSONNEL), false );
 	if( !is_array($users) )
 	{
@@ -85,9 +133,41 @@
 	$calendar = $ATC->get_attendance_register( date('Y').'-01-01', date('Y').'-12-31' );
 
 	if( !isset($_GET['id']) )
+	{
 		$ATC->gui_output_page_header('Attendance');
 	
 ?>
+		<form name="datepicker" id="datepicker">
+			<fieldset>
+				<legend>Choose term</legend>
+				<label for="term">Pick a term:</label>
+				<select name="termstart" id="term">
+					<?php
+						$y = 0;
+						$t = 0;
+						foreach( $terms as $term )
+						{
+							if( $y != date('Y', $term->startdate) )
+							{
+								$y = date('Y', $term->startdate);
+								$t = 0;
+							}
+							$t++;
+							echo '<option value="'.date('Y-m-d', $term->startdate).'" '.($termstart==date('Y-m-d',$term->startdate)?' selected="selected"':'').'>';
+							echo 'Term '.$t.' '.$y.' ('.date(ATC_SETTING_DATE_OUTPUT,$term->startdate).'&mdash;'.date(ATC_SETTING_DATE_OUTPUT,$term->enddate).')';
+							echo '</option>';
+						}
+					?>
+				</select>
+				<?= ($ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT )?'<a href="?id=0" class="button term new"> New </a>':'')?>
+				<button type="submit" class="update">Update</button>			
+			</fieldset>
+		</form>
+		<br />
+<?php
+	}
+?>
+	
 	<form name="attendanceregister" id="attendanceregister" method="POST">
 		<input type="hidden" name="attendance_register" value="1" />
 		<table class="tablesorter">
@@ -100,7 +180,7 @@
 						foreach( $dates as $paradenight )
 							echo '<th style="font-size:70%">'.date(ATC_SETTING_DATE_OUTPUT, strtotime($paradenight->date)).'</th>'."\n".'				';
 						if( !isset($_GET['id']) && $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ))
-							echo '<td><a href="?id=0" class="button new"> New </a></td>';
+							echo '<td><a href="?id=0" class="button new night"> New </a></td>';
 					?>
 				</tr>
 			</thead>
@@ -237,6 +317,7 @@
 	}
 ?>	
 	<script>
+		$('button.update').button({ icons: { primary: 'ui-icon-refresh' } });
 		$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
 		$("#missingcadets tbody tr").not('.date<?=date('Ymd')?>').addClass('ui-state-disabled');
 		$('button.save').button({ icons: { primary: 'ui-icon-disk' } });
@@ -284,8 +365,8 @@
 			});
 			return false;						
 		});
-		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false }).click(function(){
-			$('#dialog').html("<form name='newparadenight' id='newparadenight' method='post'><label for='newdate' style='width:auto;'>New parade night date</label><input type='date' id='newdate' name='newdate' value='<?=date("Y-m-d",strtotime('next '.ATC_SETTING_PARADE_NIGHT,(isset($paradenight)?strtotime($paradenight->date):time())))?>' style='width:auto' /></form>").dialog({
+		$('a.button.new.night').button({ icons: { primary: 'ui-icon-plusthick' }, text: false }).click(function(){
+			$('#dialog').html("<form name='newparadenight' id='newparadenight' method='post'><label for='newdate' style='width:auto;'>New parade night date</label><input type='date' id='newdate' name='newdate' value='<?=date("Y-m-d",strtotime('next '.ATC_SETTING_PARADE_NIGHT,(isset($paradenight)?strtotime($paradenight->date):strtotime($termstart))))?>' style='width:auto' /></form>").dialog({
 			  modal: true,
 			  title: 'Enter new parade night date',
 			  buttons: {
@@ -341,6 +422,73 @@
 			  },
 			  open: function() {
 			  	  $('#newdate').datepicker({ 
+			  	  	dateFormat: 'yy-mm-dd',
+					showOn: "button",
+					buttonImage: "calendar.gif",
+					buttonImageOnly: true,
+					buttonText: "Select date" 
+				  });
+			  }
+			})
+			return false;
+		});
+		
+		$('a.button.new.term').button({ icons: { primary: 'ui-icon-plusthick' }, text: false }).click(function(){
+			$('#dialog').html("<form name='newterm' id='newterm' method='post'><label for='startdate' style='width:auto;'>New term start date</label><br /><input type='date' id='startdate' name='startdate' value='<?=date("Y-m-d",strtotime('next '.ATC_SETTING_PARADE_NIGHT,$term->enddate))?>' style='width:auto' /><br /><label for='enddate' style='width:auto;'>New term end date</label><br /><input type='date' id='enddate' name='enddate' value='<?=date("Y-m-d",strtotime('+10 weeks', strtotime('next '.ATC_SETTING_PARADE_NIGHT,$term->enddate)))?>' style='width:auto' /></form>").dialog({
+			  modal: true,
+			  title: 'Enter new term dates',
+			  buttons: {
+				Cancel: function() {
+				  $( this ).dialog( "close" );
+				},
+				Save: function() {
+					$.ajax({
+					   type: "POST",
+					   url: 'attendance.php',
+					   data: $("#newterm").serialize(),
+					   beforeSend: function()
+					   {
+						   $('#newterm').addClass('ui-state-disabled');
+					   },
+					   complete: function()
+					   {
+						   $('#newterm').removeClass('ui-state-disabled');
+					   },
+					   success: function(data)
+					   {
+					   	   // True to ensure we don't just use a cached version, but get a fresh copy from the server
+						   	location.reload(true);
+					   },
+					   error: function(data)
+					   {
+						   $('#dialog').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
+							  modal: true,
+							  //dialogClass: 'ui-state-error',
+							  title: 'Error!',
+							  buttons: {
+								Close: function() {
+								  $( this ).dialog( "close" );
+								}
+							  },
+							  close: function() { 
+								$( this ).dialog( "destroy" ); 
+							  },
+							  open: function() {
+								 $('.ui-dialog-titlebar').addClass('ui-state-error');
+							  }
+							}).filter('ui-dialog-titlebar');
+						   return false;
+					   }
+					 });
+				  	 
+				  $( this ).dialog( "close" );
+				}
+			  },
+			  close: function() { 
+				$( this ).dialog( "destroy" ); 
+			  },
+			  open: function() {
+			  	  $('#startdate, #enddate').datepicker({ 
 			  	  	dateFormat: 'yy-mm-dd',
 					showOn: "button",
 					buttonImage: "calendar.gif",

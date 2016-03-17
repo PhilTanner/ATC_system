@@ -4,7 +4,7 @@
 	else
 		define( 'ATC_DEBUG', 					1 );
 	
-	define( 'ATC_VERSION',						'0.7.0' );
+	define( 'ATC_VERSION',						'0.7.1' );
 	
 	// Permissions structure, as a bitmask
 	define( 'ATC_PERMISSION_PERSONNEL_VIEW', 		1 );
@@ -122,6 +122,20 @@
 			if ($result = self::$mysqli->query($query))
 			{
 				self::log_action( 'attendance', $query, self::$mysqli->insert_id );
+				return true;
+			}
+			else throw new ATCExceptionDBError(self::$mysqli->error);
+		}
+		
+		public function add_term( $startdate, $enddate )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = "INSERT INTO `term` (`startdate`,`enddate` ) VALUES ( '".date("Y-m-d",$startdate)."','".date("Y-m-d",$enddate)."' );";
+			if ($result = self::$mysqli->query($query))
+			{
+				self::log_action( 'term', $query, self::$mysqli->insert_id );
 				return true;
 			}
 			else throw new ATCExceptionDBError(self::$mysqli->error);
@@ -663,6 +677,34 @@
 				throw new ATCExceptionDBError(self::$mysqli->error);
 
 			return $ranks;
+		}
+		
+		public function get_terms( $startdate=null, $enddate=null )
+		{
+			$startdate = (is_null($startdate)?null:strtotime($startdate));
+			$enddate = (is_null($enddate)?null:strtotime($enddate));
+			
+			$query = '
+				SELECT * 
+				FROM `term`
+				WHERE 1=1
+				'. (is_null($startdate)?'':' AND `startdate` >= '.date('Y-m-d',$startdate)).'
+				'. (is_null($enddate)?'':' AND `enddate` <= '.date('Y-m-d',$enddate)).'
+				ORDER BY `startdate` ASC;';
+
+			$terms = array();
+			if ($result = self::$mysqli->query($query))
+				while ( $obj = $result->fetch_object() )
+				{
+					$obj->startdate = strtotime($obj->startdate);
+					$obj->enddate = strtotime($obj->enddate);
+					$terms[] = $obj;
+				}
+			
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $terms;
 		}
 		
 		// Keep a track of who's doing what, for later auditing.
