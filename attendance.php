@@ -176,8 +176,8 @@
 							echo '<tr class="date'.date('Ymd', strtotime($mia->date)).'">';
 							echo '	<td>'.date( ATC_SETTING_DATE_OUTPUT, strtotime($mia->date)).'</td>';
 							echo '	<td> ';
-							echo '<input type="hidden" name="personnel_id[]" value="'.$mia->personnel_id.'" />';
-							echo $mia->firstname.' '.$mia->lastname.'</td>';
+							echo '<input type="hidden" name="personnel_id[]" value="'.$mia->personnel_id.'" /><a href="personnel.php?id='.$mia->personnel_id.'">';
+							echo $mia->firstname.' '.$mia->lastname.'</a></td>';
 							echo '	<td> '.$mia->mobile_phone.'</td>';
 							echo '	<td>';
 							$n=0;
