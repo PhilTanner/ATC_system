@@ -58,6 +58,8 @@
 				FROM 	`personnel`
 				WHERE 	`personnel`.`joined_date` <= "'.date('Y-m-d', $date).'" 
 					AND (`personnel`.`left_date` >= "'.date('Y-m-d', $date).'" OR `personnel`.`left_date` IS NULL)
+					AND `enabled` = -1
+					AND `access_rights` IN ( '.ATC_USER_GROUP_PERSONNEL.' )
 				GROUP BY `personnel`.`is_female`, `nzcf_order`
 				ORDER BY `nzcf_order`';
 
