@@ -4,36 +4,29 @@
 	else
 		define( 'ATC_DEBUG', 					1 );
 	
+	define( 'ATC_VERSION',						'0.7.0' );
+	
 	// Permissions structure, as a bitmask
 	define( 'ATC_PERMISSION_PERSONNEL_VIEW', 		1 );
-	define( 'ATC_PERMISSION_PERSONNEL_EDIT',		ATC_PERMISSION_PERSONNEL_VIEW + 2 );
-	define( 'ATC_PERMISSION_ATTENDANCE_VIEW', 		4 );
-	define( 'ATC_PERMISSION_ATTENDANCE_EDIT', 		ATC_PERMISSION_ATTENDANCE_VIEW + 8 );
-	define( 'ATC_PERMISSION_ACTIVITIES_VIEW', 		16 );
-	define( 'ATC_PERMISSION_ACTIVITIES_EDIT', 		ATC_PERMISSION_ACTIVITIES_VIEW + 32 );
-	define( 'ATC_PERMISSION_FINANCE_VIEW', 			64 );
-	define( 'ATC_PERMISSION_FINANCE_EDIT', 			ATC_PERMISSION_FINANCE_VIEW + 128 );
-	define( 'ATC_PERMISSION_SYSTEM_VIEW', 			512 );
-	define( 'ATC_PERMISSION_SYSTEM_EDIT', 			ATC_PERMISSION_SYSTEM_VIEW + 1024 );
-	define( 'ATC_PERMISSION_STORES_VIEW',			2048 );
-	define( 'ATC_PERMISSION_STORES_EDIT',			ATC_PERMISSION_STORES_VIEW + 4096 );
-	define( 'ATC_PERMISSION_LOCATIONS_VIEW',		8192 );
-	define( 'ATC_PERMISSION_LOCATIONS_EDIT',		ATC_PERMISSION_LOCATIONS_VIEW + 16384 );
-	define( 'ATC_PERMISSION_ACTIVITY_TYPE_EDIT',		32768 );
-	define( 'ATC_PERMISSION_TRAINING_VIEW',		65536 );
-	define( 'ATC_PERMISSION_TRAINING_EDIT',		ATC_PERMISSION_LOCATIONS_VIEW + 131072 );
+	define( 'ATC_PERMISSION_PERSONNEL_EDIT',		1 << 1 );
+	define( 'ATC_PERMISSION_ATTENDANCE_VIEW',		1 << 2 );
+	define( 'ATC_PERMISSION_ATTENDANCE_EDIT',		1 << 3 );
+	define( 'ATC_PERMISSION_ACTIVITIES_VIEW',		1 << 4 );
+	define( 'ATC_PERMISSION_ACTIVITIES_EDIT',		1 << 5 );
+	define( 'ATC_PERMISSION_FINANCE_VIEW',			1 << 6 );
+	define( 'ATC_PERMISSION_FINANCE_EDIT',			1 << 7 );
+	define( 'ATC_PERMISSION_SYSTEM_VIEW',			1 << 8 );
+	define( 'ATC_PERMISSION_SYSTEM_EDIT',			1 << 9 );
+	define( 'ATC_PERMISSION_STORES_VIEW',			1 << 10 );
+	define( 'ATC_PERMISSION_STORES_EDIT',			1 << 11 );
+	define( 'ATC_PERMISSION_LOCATIONS_VIEW',		1 << 12 );
+	define( 'ATC_PERMISSION_LOCATIONS_EDIT',		1 << 13 );
+	define( 'ATC_PERMISSION_ACTIVITY_TYPE_EDIT',		1 << 14 );
+	define( 'ATC_PERMISSION_TRAINING_VIEW',		1 << 15 );
+	define( 'ATC_PERMISSION_TRAINING_EDIT',		1 << 16 );
 
-	/*var_dump( ATC_PERMISSION_PERSONNEL_EDIT );
-	var_dump( (ATC_PERMISSION_PERSONNEL_VIEW << 1) + ATC_PERMISSION_PERSONNEL_VIEW );
-	var_dump( ATC_PERMISSION_ATTENDANCE_VIEW );
-	var_dump( ATC_PERMISSION_PERSONNEL_VIEW << 2 );
-	var_dump( ATC_PERMISSION_ATTENDANCE_EDIT );
-	var_dump( (ATC_PERMISSION_ATTENDANCE_VIEW << 1) + ATC_PERMISSION_ATTENDANCE_VIEW  );
-	var_dump( ATC_PERMISSION_ACTIVITIES_VIEW );
-	var_dump( ATC_PERMISSION_PERSONNEL_VIEW << 4 ); */
-	
-	// Give admin everything we can think of in the future.
-	define( 'ATC_USER_LEVEL_ADMIN', 			16777215 );
+	// Give admin everything we can think of in the future (max value of MySQL mediumint unsigned field access_rights).
+	define( 'ATC_USER_LEVEL_ADMIN',			(1 << 24) - 1);
 	
 	define( 'ATC_ATTENDANCE_PRESENT',			0 );
 	define( 'ATC_ATTENDANCE_ON_LEAVE',			1 );
@@ -65,7 +58,7 @@
 	
 	/* The user levels are set in the config file, so groups can't be declared until afterwards */
 	define( 'ATC_USER_GROUP_OFFICERS',			ATC_USER_LEVEL_ADJUTANT.','.ATC_USER_LEVEL_STORES.','.ATC_USER_LEVEL_TRAINING.','.ATC_USER_LEVEL_CUCDR.','.ATC_USER_LEVEL_SUPOFF.','.ATC_USER_LEVEL_OFFICER );
-	define( 'ATC_USER_GROUP_CADETS',			ATC_USER_LEVEL_CADET.','.ATC_USER_LEVEL_NCO );
+	define( 'ATC_USER_GROUP_CADETS',			ATC_USER_LEVEL_CADET.','.ATC_USER_LEVEL_SNCO );
 	define( 'ATC_USER_GROUP_PERSONNEL',			ATC_USER_GROUP_OFFICERS.','.ATC_USER_GROUP_CADETS );
 	
 	class ATCException extends Exception {
@@ -543,7 +536,7 @@
 		}
 		
 		
-		public function get_personnel( $id, $orderby = "ASC", $access_rights=null, $showdisabled=true )
+		public function get_personnel( $id, $orderby = "ASC", $access_rights=null, $showall=false )
 		{
 			$personnel = new stdClass();
 
@@ -567,14 +560,14 @@
    								ORDER BY `date_achieved` DESC 
    								LIMIT 1 
 								) AS `rank`
-							FROM `personnel` ";
+							FROM `personnel` 
+							WHERE `personnel_id` > 0 ";
 						if( !is_null($access_rights) )
-							$query .= ' WHERE `access_rights` IN ('.self::$mysqli->real_escape_string($access_rights).')  AND `personnel_id` > 0 ';
-						else 
-							$query .= ' WHERE `personnel_id` > 0 ';
-						if( !(bool)$showdisabled )
-							$query .= "AND `enabled` = -1 ";
-						$query .= "ORDER BY `enabled` ASC, `lastname` ".self::$mysqli->real_escape_string($orderby).", `firstname` ".self::$mysqli->real_escape_string($orderby).", `personnel_id` ".self::$mysqli->real_escape_string($orderby).";";
+							$query .= ' AND `access_rights` IN ('.self::$mysqli->real_escape_string($access_rights).') ';
+						
+						if( !(bool)$showall )
+							$query .= " AND `enabled` = -1 AND `access_rights` IN (".ATC_USER_GROUP_PERSONNEL.") AND `left_date` IS NULL";
+						$query .= " ORDER BY `enabled` ASC, `lastname` ".self::$mysqli->real_escape_string($orderby).", `firstname` ".self::$mysqli->real_escape_string($orderby).", `personnel_id` ".self::$mysqli->real_escape_string($orderby).";";
 
 						if ($result = self::$mysqli->query($query))
 						{
@@ -1138,12 +1131,13 @@
 	
 		
 			$(function(){
-				$(".navoptions ul li a").button().addClass("ui-state-disabled");
+				//$(".navoptions ul li a").button().addClass("ui-state-disabled");
 				$(".navoptions ul li a.home").button({ icons: { primary: "ui-icon-home" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Home'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.personnel").button({ icons: { primary: "ui-icon-contact" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Personnel'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.attendance").button({ icons: { primary: "ui-icon-clipboard" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Attendance'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.activities").button({ icons: { primary: "ui-icon-image" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Activities'?'.addClass("ui-state-active")':'').';
 				$(".navoptions ul li a.documents").button({ icons: { primary: "ui-icon-folder-open" } })'.(self::$currentuser?'.removeClass("ui-state-disabled")':'').($title=='Documentation'?'.addClass("ui-state-active")':'').';
+				$(".navoptions ul li a.system").button({ icons: { primary: "ui-icon-gear" } }).removeClass("ui-state-disabled")'.($title=='System'?'.addClass("ui-state-active")':'').';
 				
 				$(".navoptions ul li a.finance").button({ icons: { primary: "ui-icon-cart" } });
 				$(".navoptions ul li a.stores").button({ icons: { primary: "ui-icon-tag" } });
@@ -1169,7 +1163,8 @@
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_STORES_VIEW)?'<li> <a href="./" class="stores">Stores</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_TRAINING_VIEW)?'<li> <a href="./" class="training">Training</a> </li>':'').'-->
 				'.(self::$currentuser && self::user_has_permission(ATC_USER_LEVEL_ADJUTANT)?'<li> <a href="./documents.php" class="documents">Documentation</a> </li>':'').'
-		
+				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_SYSTEM_VIEW)?'<li> <a href="./system.php" class="system">System</a> </li>':'').'
+				
 				'.(self::$currentuser?'<li> <a href="./logout.php" class="logout">Logout</a> </li>':'<li> <a href="./login.php" class="login">Login</a> </li>').'				
 			</ul>
 		</nav>

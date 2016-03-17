@@ -108,8 +108,8 @@
 							case ATC_USER_LEVEL_CADET:
 								echo '<td> Cadet </td>';
 								break;
-							case ATC_USER_LEVEL_NCO:
-								echo '<td> <acronym title="Non-Commissioned Officer">NCO</acronym> </td>';
+							case ATC_USER_LEVEL_SNCO:
+								echo '<td> <acronym title="Senior Non-Commissioned Officer">SNCO</acronym> </td>';
 								break;
 							case ATC_USER_LEVEL_ADJUTANT:
 								echo '<td> Adjutant </td>';
