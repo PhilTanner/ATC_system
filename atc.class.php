@@ -58,7 +58,7 @@
 	
 	/* The user levels are set in the config file, so groups can't be declared until afterwards */
 	define( 'ATC_USER_GROUP_OFFICERS',			ATC_USER_LEVEL_ADJUTANT.','.ATC_USER_LEVEL_STORES.','.ATC_USER_LEVEL_TRAINING.','.ATC_USER_LEVEL_CUCDR.','.ATC_USER_LEVEL_SUPOFF.','.ATC_USER_LEVEL_OFFICER );
-	define( 'ATC_USER_GROUP_CADETS',			ATC_USER_LEVEL_CADET.','.ATC_USER_LEVEL_SNCO );
+	define( 'ATC_USER_GROUP_CADETS',			ATC_USER_LEVEL_CADET );
 	define( 'ATC_USER_GROUP_PERSONNEL',			ATC_USER_GROUP_OFFICERS.','.ATC_USER_GROUP_CADETS );
 	
 	class ATCException extends Exception {
@@ -323,15 +323,7 @@
 			$query = '
 				SELECT	`activity_register`.*,
 					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
-					( 
-   					SELECT `rank_shortname` 
-   					FROM `personnel_rank` 
-							INNER JOIN `rank` 
-								ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
-   					WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
-   					ORDER BY `date_achieved` DESC 
-   					LIMIT 1 
-					) AS `rank`,
+					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
 					`personnel`.`mobile_phone`,
 					`personnel`.`allergies`,
 					`personnel`.`access_rights`,
@@ -565,15 +557,7 @@
 						$query = "
 							SELECT 	*, 
 								".ATC_SETTING_DISPLAY_NAME." AS `display_name`,
-								( 
-   								SELECT `rank_shortname` 
-   								FROM `personnel_rank` 
-										INNER JOIN `rank` 
-											ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
-   								WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
-   								ORDER BY `date_achieved` DESC 
-   								LIMIT 1 
-								) AS `rank`
+								".ATC_SETTING_DISPLAY_RANK_SHORTNAME." AS `rank`
 							FROM `personnel` 
 							WHERE `personnel_id` > 0 ";
 						if( !is_null($access_rights) )
@@ -611,15 +595,7 @@
 				
 					$query = "SELECT *,
 						".ATC_SETTING_DISPLAY_NAME." AS `display_name`,
-					( 
-   					SELECT `rank_shortname` 
-   					FROM `personnel_rank` 
-							INNER JOIN `rank` 
-								ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
-   					WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
-   					ORDER BY `date_achieved` DESC 
-   					LIMIT 1 
-					) AS `rank` 
+						".ATC_SETTING_DISPLAY_RANK_SHORTNAME." AS `rank` 
 					FROM `personnel` 
 					WHERE `personnel_id` = ".(int)$id." 
 					LIMIT 1;";
@@ -790,8 +766,21 @@
 					break;
 				}
 			}
+			// Allow 2IC to be an emergency contact too.
 			if( !$isofficer )
-				throw new ATCExceptionBadData('Alternate OIC needs to be an officer');
+			{
+				$officers = self::get_personnel(null,'ASC',ATC_USER_LEVEL_EMRG_CONTACT);
+				foreach( $officers as $officer )
+				{
+					if( $officer->personnel_id == $personnel_id )
+					{
+						$isofficer = true;
+						break;
+					}
+				}
+			}
+			if( !$isofficer )
+				throw new ATCExceptionBadData('Alternate OIC needs to be an officer or emergency contact');
 			
 			if( !(int)$activity_id )
 			{
@@ -1201,8 +1190,8 @@
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW, self::$currentuser)?'<li> <a href="./personnel.php" class="personnel">Personnel</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ATTENDANCE_VIEW)?'<li> <a href="./attendance.php" class="attendance">Attendance</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ACTIVITIES_VIEW)?'<li> <a href="./activities.php" class="activities">Activities</a> </li>':'').'
-				<!--'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW)?'<li> <a href="./" class="finance">Finance</a> </li>':'').'
-				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_STORES_VIEW)?'<li> <a href="./" class="stores">Stores</a> </li>':'').'
+				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW)?'<li> <a href="./finance.php" class="finance">Finance</a> </li>':'').'
+				<!--'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_STORES_VIEW)?'<li> <a href="./" class="stores">Stores</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_TRAINING_VIEW)?'<li> <a href="./" class="training">Training</a> </li>':'').'-->
 				'.(self::$currentuser && self::user_has_permission(ATC_USER_LEVEL_ADJUTANT)?'<li> <a href="./documents.php" class="documents">Documentation</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_SYSTEM_VIEW)?'<li> <a href="./system.php" class="system">System</a> </li>':'').'

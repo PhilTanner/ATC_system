@@ -105,15 +105,7 @@
 			$query = '
 				SELECT	`personnel`.*, 
 						'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
-						( 
-   						SELECT `rank_shortname` 
-   						FROM `personnel_rank` 
-								INNER JOIN `rank` 
-									ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
-   						WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
-   						ORDER BY `date_achieved` DESC 
-   						LIMIT 1 
-						) AS `rank`
+						'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`
 				FROM	`personnel` 
 						LEFT JOIN `next_of_kin` 
 							ON `next_of_kin`.`personnel_id` = `personnel`.`personnel_id`
@@ -150,15 +142,7 @@
    					ORDER BY `date_achieved` DESC 
    					LIMIT 1 
 					) AS `rank_order`,
-					( 
-   					SELECT `rank_shortname` 
-   					FROM `personnel_rank` 
-							INNER JOIN `rank` 
-								ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
-   					WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
-   					ORDER BY `date_achieved` DESC 
-   					LIMIT 1 
-					) AS `rank`,
+					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
 					COUNT(DISTINCT `attendance_register`.`date`) as `parades`,
 					COUNT(DISTINCT `attendance_register`.`date`)*3 as `parade_hours`,
 					(

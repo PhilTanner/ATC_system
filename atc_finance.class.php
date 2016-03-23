@@ -1,7 +1,22 @@
 <?php
 	require_once "atc.class.php";
 	
-	define( 'ATC_SETTING_MONEYFORMAT', '%(#2.2n' );
+	define( 'ATC_SETTING_MONEYFORMAT_PARENTHESIS', 0 );
+	define( 'ATC_SETTING_MONEYFORMAT_TEXTUAL', 1 );
+	
+	define( 'ATC_PAYMENT_TYPE_INVOICE_TERM_FEE', 			0 );
+	define( 'ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE', 		1 );
+	define( 'ATC_PAYMENT_TYPE_INVOICE_OUTSTANDING_MONEY',	2 );
+	define( 'ATC_PAYMENT_TYPE_INVOICE_UNIFORM_DEPOSIT',		3 );
+	define( 'ATC_PAYMENT_TYPE_INVOICE_FUNDRAISING',			4 );
+	define( 'ATC_PAYMENT_TYPE_INVOICE_MISCELLANEOUS',		19 );
+	
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_TERM_FEE', 			20 );
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_ACTIVITY_FEE', 		21 );
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_OUTSTANDING_MONEY', 	22 );
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_UNIFORM_DEPOSIT', 		23 );
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_FUNDRAISING',			24 );
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_MISCELLANEOUS',		39 );
 	
 	
 	class ATC_Finance extends ATC
@@ -11,7 +26,7 @@
 			$str = '';
 			switch($format)
 			{
-				case MONEYFORMAT_PARENTHESIS:
+				case ATC_SETTING_MONEYFORMAT_PARENTHESIS:
 					if( (float)$amount < 0 )
 						$str .= '(';
 					$str .= '$ ';
@@ -23,7 +38,7 @@
 					if( (float)$amount < 0 )
 						$str .= ')';
 					break;
-				case MONEYFORMAT_TEXTUAL:
+				case ATC_SETTING_MONEYFORMAT_TEXTUAL:
 					$str .= '$ ';
 					
 					if( (float)$amount == 0 )
@@ -33,7 +48,7 @@
 					else
 						$str .= number_format( (float)$amount, 2, '.', ',' ).' cr';
 					break;
-				case MONEYFORMAT:
+				case ATC_SETTING_MONEYFORMAT:
 				default:
 					$str .= '$ ';
 					$str .= number_format( (float)$amount, 2, '.', ',' );
@@ -52,15 +67,7 @@
 			$query = '
 				SELECT	`activity_register`.*,
 					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
-					( 
-   					SELECT `rank_shortname` 
-   					FROM `personnel_rank` 
-							INNER JOIN `rank` 
-								ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
-   					WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
-   					ORDER BY `date_achieved` DESC 
-   					LIMIT 1 
-					) AS `rank`,
+					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
 					`personnel`.`mobile_phone`,
 					`activity`.`cost`,
 					`activity`.`title`,
@@ -73,7 +80,7 @@
 						ON `activity_register`.`activity_id` = `activity`.`activity_id`
 				WHERE 	`activity_register`.`amount_paid` < `activity`.`cost`
 					-- Only cadets pay fees
-					AND `personnel`.`access_rights` = '.ATC_USER_LEVEL_CADET.'
+					AND `personnel`.`access_rights` IN ( '.ATC_USER_GROUP_CADETS.' )
 				ORDER BY `activity`.`startdate`, `activity`.`title`, `personnel`.`lastname`, `personnel`.`firstname`;';
 
 			$dues = array();
@@ -85,6 +92,57 @@
 
 			return $dues;
 		}
+	
+		public function get_term_fees_outstanding( $personnel_id=null )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_VIEW ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			if( !self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW) )
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+						
+			$query = '
+				SELECT `personnel`.`personnel_id`,
+					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
+					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
+					`debts`.`amount_due`,
+					`credits`.`amount_paid`
+				FROM	`personnel`
+					LEFT JOIN ( 
+						SELECT `payment`.`personnel_id`,
+							SUM(`amount`) AS `amount_due`
+						FROM	`payment`
+							-- Left join because outstading monies do not have terms assoc with themm, but they still need to be counted
+							LEFT JOIN `term` 
+								ON `payment`.`related_to_id` = `term`.`term_id`
+						WHERE `payment_type` IN ('.ATC_PAYMENT_TYPE_INVOICE_TERM_FEE.','.ATC_PAYMENT_TYPE_INVOICE_OUTSTANDING_MONEY.')
+						GROUP BY `payment`.`personnel_id`
+					) `debts`
+						ON `debts`.`personnel_id` = `personnel`.`personnel_id`
+					LEFT JOIN ( 
+						SELECT `payment`.`personnel_id`,
+							SUM(`amount`) AS `amount_paid`
+						FROM	`payment`
+							-- Left join because outstading monies do not have terms assoc with themm, but they still need to be counted
+							LEFT JOIN `term` 
+								ON `payment`.`related_to_id` = `term`.`term_id`
+						WHERE `payment_type` IN ('.ATC_PAYMENT_TYPE_RECEIPT_TERM_FEE.','.ATC_PAYMENT_TYPE_RECEIPT_OUTSTANDING_MONEY.')
+						GROUP BY `payment`.`personnel_id`
+					) `credits`
+						ON `credits`.`personnel_id` = `personnel`.`personnel_id`
+					WHERE `personnel`.`enabled` = -1
+						'.(is_null($personnel_id)?'':'AND `personnel`.`personnel_id` = '.(int)$personnel_id).'
+					HAVING (`debts`.`amount_due` - `credits`.`amount_paid`) <> 0';
+
+			$dues = array();
+			if ($result = self::$mysqli->query($query))
+				while ( $obj = $result->fetch_object() )
+					$dues[] = $obj;
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $dues;
+		}
+		
 		
 	}
 	
