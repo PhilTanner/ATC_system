@@ -57,31 +57,54 @@
 			return $str;
 		}
 		
-		public function get_activity_money_outstanding(  )
+		public function get_activity_money_outstanding( $personnel_id=null  )
 		{
 			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_VIEW ))
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
-			if( !self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW) )
+			if( !self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW, $personnel_id) )
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
-						
+			
+			
 			$query = '
-				SELECT	`activity_register`.*,
+				SELECT
+					`personnel`.`personnel_id`,
 					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
 					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
-					`personnel`.`mobile_phone`,
-					`activity`.`cost`,
-					`activity`.`title`,
-					`activity`.`startdate`,
-					`activity`.`enddate`
-				FROM 	`activity_register`
-					INNER JOIN `personnel`
-						ON `activity_register`.`personnel_id` = `personnel`.`personnel_id`
-					INNER JOIN `activity`
-						ON `activity_register`.`activity_id` = `activity`.`activity_id`
-				WHERE 	`activity_register`.`amount_paid` < `activity`.`cost`
-					-- Only cadets pay fees
-					AND `personnel`.`access_rights` IN ( '.ATC_USER_GROUP_CADETS.' )
-				ORDER BY `activity`.`startdate`, `activity`.`title`, `personnel`.`lastname`, `personnel`.`firstname`;';
+					SUM(`payments_tmp`.`amount_due`) AS `due`,
+					SUM(`payments_tmp`.`amount_paid`) AS `paid`,
+					( SUM(`payments_tmp`.`amount_due`) + SUM(`payments_tmp`.`amount_paid`) ) AS `remaining`,
+					`payments_tmp`.`activity_id`,
+					`payments_tmp`.`title`,
+					`payments_tmp`.`startdate`
+				FROM 
+					`personnel`
+					LEFT JOIN (
+						SELECT 
+							`payment`.`personnel_id`,
+							CASE WHEN `payment_type` = '.ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE.' THEN `payment`.`amount` ELSE 0 END AS `amount_due`,
+							CASE WHEN `payment_type` = '.ATC_PAYMENT_TYPE_RECEIPT_ACTIVITY_FEE.' THEN (0-`payment`.`amount`) ELSE 0 END AS `amount_paid`,
+							`activity`.`activity_id` AS `activity_id`,
+							`activity`.`title` AS `title`,
+							`activity`.`startdate` AS `startdate`
+						FROM 
+							`payment`
+							INNER JOIN `activity`
+								ON `payment`.`related_to_id` = `activity`.`activity_id`
+						WHERE 
+							`payment_type` IN ('.ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE.','.ATC_PAYMENT_TYPE_RECEIPT_ACTIVITY_FEE.')
+					) `payments_tmp`
+						ON `payments_tmp`.`personnel_id` = `personnel`.`personnel_id`
+				WHERE 
+					`personnel`.`enabled` = -1
+					AND not (`payments_tmp`.`amount_due` IS NULL AND `payments_tmp`.`amount_paid` IS NULL)
+				GROUP BY 
+					`payments_tmp`.`activity_id`, 
+					`personnel`.`personnel_id`
+				HAVING 
+					(SUM( `payments_tmp`.`amount_due` ) + SUM( `payments_tmp`.`amount_paid` )) > 0
+				ORDER BY 
+					`display_name`, 
+					`startdate`;';
 
 			$dues = array();
 			if ($result = self::$mysqli->query($query))
@@ -97,41 +120,48 @@
 		{
 			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_VIEW ))
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
-			if( !self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW) )
+			if( !self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW, $personnel_id) )
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
-						
+			
 			$query = '
-				SELECT `personnel`.`personnel_id`,
+				SELECT
+					`personnel`.`personnel_id`,
 					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
 					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
-					`debts`.`amount_due`,
-					`credits`.`amount_paid`
-				FROM	`personnel`
-					LEFT JOIN ( 
-						SELECT `payment`.`personnel_id`,
-							SUM(`amount`) AS `amount_due`
-						FROM	`payment`
-							-- Left join because outstading monies do not have terms assoc with themm, but they still need to be counted
-							LEFT JOIN `term` 
+					SUM(`payments_tmp`.`amount_due`) AS `due`,
+					SUM(`payments_tmp`.`amount_paid`) AS `paid`,
+					( SUM(`payments_tmp`.`amount_due`) + SUM(`payments_tmp`.`amount_paid`) ) AS `remaining`,
+					-- `payments_tmp`.`term_id`,
+					`payments_tmp`.`enddate`,
+					`payments_tmp`.`startdate`
+				FROM 
+					`personnel`
+					LEFT JOIN (
+						SELECT 
+							`payment`.`personnel_id`,
+							CASE WHEN `payment_type` = '.ATC_PAYMENT_TYPE_INVOICE_TERM_FEE.' THEN `payment`.`amount` ELSE 0 END AS `amount_due`,
+							CASE WHEN `payment_type` = '.ATC_PAYMENT_TYPE_RECEIPT_TERM_FEE.' THEN (0-`payment`.`amount`) ELSE 0 END AS `amount_paid`,
+							`term`.`startdate`,
+							`term`.`enddate`
+						FROM 
+							`payment`
+							INNER JOIN `term`
 								ON `payment`.`related_to_id` = `term`.`term_id`
-						WHERE `payment_type` IN ('.ATC_PAYMENT_TYPE_INVOICE_TERM_FEE.','.ATC_PAYMENT_TYPE_INVOICE_OUTSTANDING_MONEY.')
-						GROUP BY `payment`.`personnel_id`
-					) `debts`
-						ON `debts`.`personnel_id` = `personnel`.`personnel_id`
-					LEFT JOIN ( 
-						SELECT `payment`.`personnel_id`,
-							SUM(`amount`) AS `amount_paid`
-						FROM	`payment`
-							-- Left join because outstading monies do not have terms assoc with themm, but they still need to be counted
-							LEFT JOIN `term` 
-								ON `payment`.`related_to_id` = `term`.`term_id`
-						WHERE `payment_type` IN ('.ATC_PAYMENT_TYPE_RECEIPT_TERM_FEE.','.ATC_PAYMENT_TYPE_RECEIPT_OUTSTANDING_MONEY.')
-						GROUP BY `payment`.`personnel_id`
-					) `credits`
-						ON `credits`.`personnel_id` = `personnel`.`personnel_id`
-					WHERE `personnel`.`enabled` = -1
-						'.(is_null($personnel_id)?'':'AND `personnel`.`personnel_id` = '.(int)$personnel_id).'
-					HAVING (`debts`.`amount_due` - `credits`.`amount_paid`) <> 0';
+						WHERE 
+							`payment_type` IN ('.ATC_PAYMENT_TYPE_INVOICE_TERM_FEE.','.ATC_PAYMENT_TYPE_RECEIPT_TERM_FEE.')
+					) `payments_tmp`
+						ON `payments_tmp`.`personnel_id` = `personnel`.`personnel_id`
+				WHERE 
+					`personnel`.`enabled` = -1
+					AND not (`payments_tmp`.`amount_due` IS NULL AND `payments_tmp`.`amount_paid` IS NULL)
+				GROUP BY 
+					`payments_tmp`.`startdate`, 
+					`personnel`.`personnel_id`
+				HAVING 
+					(SUM( `payments_tmp`.`amount_due` ) + SUM( `payments_tmp`.`amount_paid` )) > 0
+				ORDER BY 
+					`display_name`, 
+					`startdate`;';
 
 			$dues = array();
 			if ($result = self::$mysqli->query($query))

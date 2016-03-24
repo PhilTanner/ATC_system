@@ -10,14 +10,18 @@
 		<table class="tablesorter" id="termfees">
 			<thead>
 				<tr>
-					<th> Rank </th>
-					<th> Name </th>
-					<th> Amount outstanding </th>
+					<th rowspan="2"> Rank </th>
+					<th rowspan="2"> Name </th>
+					<th colspan="2"> Term </th>
+					<th rowspan="2"> Outstanding </th>
 				</tr>
+				<tr>
+					<th> Start date </th>
+					<th> End date </th>
 			</thead>
 			<tfoot>
 				<tr>
-					<th colspan="2">Total</th>
+					<th colspan="4">Total</th>
 					<td style="font-weight:bold; text-align:right;"></td>
 				</tr>
 			</tfoot>
@@ -30,9 +34,11 @@
 					echo '<tr>';
 					echo '	<td>'.$obj->rank.'</td>';
 					echo '	<td><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
-					echo '	<td style="text-align:right">'.$ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT,($obj->amount_paid-$obj->amount_due)).'</td>';
+					echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->startdate)).'</td>';
+					echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->enddate)).'</td>';
+					echo '	<td style="text-align:right">'.$ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT,$obj->remaining).'</td>';
 					echo '</tr>';
-					$total += ($obj->amount_paid-$obj->amount_due);
+					$total += $obj->remaining;
 				}
 ?>
 			</tbody>
@@ -40,19 +46,27 @@
 		<script> $('#termfees tfoot td').html('<?= $ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT, $total ) ?>'); </script>
 		
 		<h2> Cadets needing to pay for activities </h2>
-		<table class="tablesorter">
+		<table class="tablesorter" id="activityfees">
 			<thead>
 				<tr>
 					<th> Rank </th>
 					<th> Name </th>
 					<th> Activity </th>
 					<th> Activity date </th>
+					<th> Cost </th>
 					<th> Outstanding </th>
 				</tr>
 			</thead>
+			<tfoot>
+				<tr>
+					<th colspan="5"> Total </th>
+					<td style="font-weight:bold; text-align:right"> </td>
+				</tr>
+			</tfoot>
 			<tbody>
 <?php
 				$activitiesoutstanding = $ATC->get_activity_money_outstanding();
+				$total=0;
 				foreach( $activitiesoutstanding as $obj )
 				{
 					echo '<tr>';
@@ -60,12 +74,15 @@
 					echo '	<td><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
 					echo '	<td><a href="activities.php?id='.$obj->activity_id.'" class="activity edit">'.$obj->title.'</a></td>';
 					echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->startdate)).'</td>';
-					echo '	<td>'.$ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT,($obj->cost-$obj->amount_paid)).'</td>';
+					echo '	<td style="text-align:right">'.$ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT,$obj->due).'</td>';
+					echo '	<td style="text-align:right">'.$ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT,$obj->remaining).'</td>';
 					echo '</tr>';
+					$total += $obj->remaining;
 				}
 ?>
 			</tbody>
 		</table>
+		<script> $('#activityfees tfoot td').html('<?= $ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT, $total ) ?>'); </script>
 	
 	
 	
