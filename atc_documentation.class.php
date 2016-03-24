@@ -42,6 +42,9 @@
 		
 		public function get_cadets_enrolled_on_date( $date )
 		{
+			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ) )
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			
 			$query = '
 				SELECT	COUNT(DISTINCT `personnel`.`personnel_id`) as `count`,
 						`personnel`.`is_female`,
@@ -79,6 +82,9 @@
 		
 		public function get_cadet_attendance( $startdate, $enddate )
 		{
+			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW) )
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			
 			$query = '
 				SELECT	COUNT(DISTINCT `personnel`.`personnel_id`) as `count`
 				FROM 	`personnel`
@@ -102,6 +108,9 @@
 		
 		public function get_cadet_without_nok()
 		{
+			if(!self::user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW) )
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			
 			$query = '
 				SELECT	`personnel`.*, 
 						'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
@@ -127,6 +136,9 @@
 		
 		public function get_officer_attendance( $startdate, $enddate, $supplimentary=false )
 		{
+			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW) )
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			
 			$query = '
 				SELECT	`personnel`.`personnel_id`,
 					`personnel`.`firstname`,
