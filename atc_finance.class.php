@@ -21,6 +21,20 @@
 	
 	class ATC_Finance extends ATC
 	{
+		public function add_payment( $personnel_id, $amount, $reference, $payment_type, $related_to_id )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_FINANCE_EDIT ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = "INSERT INTO `payment` (`personnel_id`, `amount`, `reference`, `payment_type`, `related_to_id`, `created_by` ) VALUES ( ".(int)$personnel_id.", ".(float)$amount.", '".self::$mysqli->real_escape_string($reference)."', ".(int)$payment_type.", ".(int)$related_to_id.", ".(int)self::$currentuser." );";
+			if ($result = self::$mysqli->query($query))
+			{
+				self::log_action( 'payment', $query, self::$mysqli->insert_id );
+				return true;
+			}
+			else throw new ATCExceptionDBError(self::$mysqli->error);
+		}
+		
 		function currency_format( $format, $amount )
 		{
 			$str = '';
@@ -115,11 +129,49 @@
 
 			return $dues;
 		}
+		
+		public function get_missing_invoices( $personnel_id=null )
+		{
+			if( !self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW, $personnel_id) )
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			
+			$query = '
+				SELECT DISTINCT
+					`personnel`.`personnel_id`,
+					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
+					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
+					`term`.`startdate`,
+					`term`.`enddate`,
+					`term`.`term_id`
+				FROM 
+					`personnel` 
+					INNER JOIN `attendance_register` 
+						ON `personnel`.`personnel_id` = `attendance_register`.`personnel_id`
+					INNER JOIN `term`
+						ON `attendance_register`.`date` between `term`.`startdate` and `term`.`enddate`
+						AND `attendance_register`.`presence` IN ( '.ATC_ATTENDANCE_PRESENT.','.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE.' )
+					LEFT JOIN `payment`
+						ON `payment`.`related_to_id` = `term`.`term_id` 
+						AND `payment`.`personnel_id` = `personnel`.`personnel_id` 
+						AND `payment`.`payment_type` = '.ATC_PAYMENT_TYPE_INVOICE_TERM_FEE.'
+				WHERE
+					`payment`.`amount` IS NULL
+					AND `personnel`.`enabled` = -1
+					-- Only cadets pay term fees
+					AND `personnel`.`access_rights` IN ( '.ATC_USER_GROUP_CADETS.' );';
+
+			$response = array();
+			if ($result = self::$mysqli->query($query))
+				while ( $obj = $result->fetch_object() )
+					$response[] = $obj;
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $response;
+		}
 	
 		public function get_term_fees_outstanding( $personnel_id=null )
 		{
-			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_VIEW ))
-			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
 			if( !self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW, $personnel_id) )
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
 			
@@ -172,8 +224,6 @@
 
 			return $dues;
 		}
-		
-		
 	}
 	
 	if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') 

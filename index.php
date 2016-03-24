@@ -1,8 +1,9 @@
 <?php
 	require_once "atc_documentation.class.php";
 	require_once "atc_finance.class.php";
-	$ATC = new ATC_Documentation();	
-		
+	$ATC = new ATC_Documentation();
+	$ATC_Finance = new ATC_Finance();
+	
 	$ATC->gui_output_page_header('Home');
 	
 	try {
@@ -164,10 +165,44 @@
 	} catch (ATCExceptionInsufficientPermissions $e) { 
 		// We just don't show the error if it was a permission issue, that's fine, we don't know who's logged in, after all 
 	}
-
-	require_once "atc_finance.class.php";
-	$ATC_Finance = new ATC_Finance();
 	
+	try {
+		$missinginvoices = $ATC_Finance->get_missing_invoices();
+		if( count($missinginvoices) )
+		{
+?>
+			<h2> Cadets missing term invoices for attendance </h2>
+			<table class="tablesorter" id="missinginvoices">
+				<thead>
+					<tr>
+						<th rowspan="2"> Rank </th>
+						<th rowspan="2"> Name </th>
+						<th colspan="2"> Term </th>
+					</tr>
+					<tr>
+						<th> Start date </th>
+						<th> End date </th>
+				</thead>
+				<tbody>
+<?php
+					foreach( $missinginvoices as $obj )
+					{
+						echo '<tr>';
+						echo '	<td>'.$obj->rank.'</td>';
+						echo '	<td><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
+						echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->startdate)).'</td>';
+						echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->enddate)).'</td>';
+						echo '</tr>';
+					}
+?>
+				</tbody>
+			</table>
+<?php
+		}
+	} catch (ATCExceptionInsufficientPermissions $e) { 
+		// We just don't show the error if it was a permission issue, that's fine, we don't know who's logged in, after all 
+	}
+		
 	try {
 		$termfeesoutstanding = $ATC_Finance->get_term_fees_outstanding();
 		if( count($termfeesoutstanding) )
@@ -194,7 +229,6 @@
 				</tfoot>
 				<tbody>
 <?php
-					$termfeesoutstanding = $ATC_Finance->get_term_fees_outstanding();
 					$total = 0;
 					foreach( $termfeesoutstanding as $obj )
 					{
@@ -216,6 +250,7 @@
 	} catch (ATCExceptionInsufficientPermissions $e) { 
 		// We just don't show the error if it was a permission issue, that's fine, we don't know who's logged in, after all 
 	}
+	
 	
 	try {
 		$activitiesoutstanding = $ATC_Finance->get_activity_money_outstanding();
@@ -270,7 +305,7 @@
 	if(ATC_DEBUG)
 	{
 ?>
-	
+	<hr />
 	Current user login sessions<br />
 	Next/Prev years activity lists<br />
 	Document folders<br />
@@ -282,6 +317,7 @@
 	Confirm box on dob entry < 13yrs ago<br />
 	EMERGY CONT can also be 2ic<br />
 	Cadet alternate email<br />
+	Auto add/remove cadet activity invoices<br />
 	
 	<h2> Outstanding documentation </h2>
 	<ol>
