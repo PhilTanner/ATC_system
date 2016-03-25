@@ -115,7 +115,7 @@
 					`payments_tmp`.`activity_id`, 
 					`personnel`.`personnel_id`
 				HAVING 
-					(SUM( `payments_tmp`.`amount_due` ) + SUM( `payments_tmp`.`amount_paid` )) > 0
+					(SUM( `payments_tmp`.`amount_due` ) + SUM( `payments_tmp`.`amount_paid` )) <> 0
 				ORDER BY 
 					`display_name`, 
 					`startdate`;';
@@ -185,7 +185,8 @@
 					( SUM(`payments_tmp`.`amount_due`) + SUM(`payments_tmp`.`amount_paid`) ) AS `remaining`,
 					-- `payments_tmp`.`term_id`,
 					`payments_tmp`.`enddate`,
-					`payments_tmp`.`startdate`
+					`payments_tmp`.`startdate`,
+					`payments_tmp`.`term_id`
 				FROM 
 					`personnel`
 					LEFT JOIN (
@@ -194,7 +195,8 @@
 							CASE WHEN `payment_type` = '.ATC_PAYMENT_TYPE_INVOICE_TERM_FEE.' THEN `payment`.`amount` ELSE 0 END AS `amount_due`,
 							CASE WHEN `payment_type` = '.ATC_PAYMENT_TYPE_RECEIPT_TERM_FEE.' THEN (0-`payment`.`amount`) ELSE 0 END AS `amount_paid`,
 							`term`.`startdate`,
-							`term`.`enddate`
+							`term`.`enddate`,
+							`term`.`term_id`
 						FROM 
 							`payment`
 							INNER JOIN `term`
@@ -210,7 +212,7 @@
 					`payments_tmp`.`startdate`, 
 					`personnel`.`personnel_id`
 				HAVING 
-					(SUM( `payments_tmp`.`amount_due` ) + SUM( `payments_tmp`.`amount_paid` )) > 0
+					(SUM( `payments_tmp`.`amount_due` ) + SUM( `payments_tmp`.`amount_paid` )) <> 0
 				ORDER BY 
 					`display_name`, 
 					`startdate`;';

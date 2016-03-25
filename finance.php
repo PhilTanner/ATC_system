@@ -100,6 +100,7 @@
 			<tbody>
 <?php
 				$termfeesoutstanding = $ATC->get_term_fees_outstanding();
+				
 				$total = 0;
 				foreach( $termfeesoutstanding as $obj )
 				{
@@ -109,6 +110,8 @@
 					echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->startdate)).'</td>';
 					echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->enddate)).'</td>';
 					echo '	<td style="text-align:right">'.$ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT,$obj->remaining).'</td>';
+					if( $ATC->user_has_permission(ATC_PERMISSION_FINANCE_EDIT) )
+							echo '	<td><a href="?id=0" personnel_id="'.$obj->personnel_id.'" term_id="'.$obj->term_id.'" class="invoice button pay">Pay</a></td>';
 					echo '</tr>';
 					$total += $obj->remaining;
 				}
@@ -148,6 +151,8 @@
 					echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->startdate)).'</td>';
 					echo '	<td style="text-align:right">'.$ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT,$obj->due).'</td>';
 					echo '	<td style="text-align:right">'.$ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT,$obj->remaining).'</td>';
+					if( $ATC->user_has_permission(ATC_PERMISSION_FINANCE_EDIT) )
+							echo '	<td><a href="?id=0" personnel_id="'.$obj->personnel_id.'" activity_id="'.$obj->activity_id.'" class="invoice button pay">Pay</a></td>';
 					echo '</tr>';
 					$total += $obj->remaining;
 				}
@@ -160,6 +165,7 @@
 		
 		<script>
 			$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false });
+			$('a.button.pay').button({ icons: { primary: 'ui-icon-arrowthick-1-sw' }, text: false });
 
 			$('#missinginvoices a.button.new').click(function(e){
 				e.preventDefault(); // stop the link actually firing
@@ -170,6 +176,134 @@
 					modal: true,
 					width: 600,
 					title: 'Enter Invoice',
+					buttons: {
+						Cancel: function() {
+							$( this ).dialog( "close" );
+						},
+						Save: function() {
+							$.ajax({
+						 	  type: "POST",
+						  	 url: href,
+						   	data: $("#dialogform").serialize(),
+						   	beforeSend: function()
+						   	{
+							   	$('#newrank').addClass('ui-state-disabled');
+						   	},
+						   	complete: function()
+						   	{
+							   	$('#newrank').removeClass('ui-state-disabled');
+						   	},
+						   	success: function(data)
+						   	{
+							   	// True to ensure we don't just use a cached version, but get a fresh copy from the server
+							   	location.reload(true);
+						   	},
+						   	error: function(data)
+						   	{
+							   	$('#dialog').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
+								  	modal: true,
+								  	//dialogClass: 'ui-state-error',
+								  	title: 'Error!',
+								  	buttons: {
+										Close: function() {
+									 	 $( this ).dialog( "close" );
+										}
+								 	 },
+								 	 close: function() { 
+										$( this ).dialog( "destroy" ); 
+										$('#save_indicator').fadeOut(1500, function(){ $('#save_indicator').remove() });
+								 	 },
+								  	open: function() {
+									 	$('.ui-dialog-titlebar').addClass('ui-state-error');
+								  	}
+									}).filter('ui-dialog-titlebar');
+							   	return false;
+						   	}
+						 	});
+						 
+							$( this ).dialog( "close" );
+						}
+				  	},
+				  	close: function() { 
+						$( this ).dialog( "destroy" ); 
+				  	}
+				});
+				return false;
+			});
+			
+			$('#termfees a.button.pay').click(function(e){
+				e.preventDefault(); // stop the link actually firing
+				var href = $(this).attr("href");
+				var term_id = $(this).attr("term_id");
+				var personnel_id = $(this).attr("personnel_id");
+				$('#dialog').html('<form method="post" id="dialogform"><input type="hidden" name="personnel_id" value="'+personnel_id+'" /><input type="hidden" name="term_id" value="'+term_id+'" /><input type="hidden" name="payment_type" value="<?= ATC_PAYMENT_TYPE_RECEIPT_TERM_FEE ?>" /><label for="reference">Receipt/reference #</label><br /><input type="text" maxlength="35" name="reference" id="reference" /><br /><label for="amount">Amount</label><br /><input type="number" min="0.1" step="0.1" name="amount" id="amount" value="<?= ATC_SETTING_FINANCE_TERM_FEES ?>" /></form>').dialog({
+					modal: true,
+					width: 600,
+					title: 'Record payment',
+					buttons: {
+						Cancel: function() {
+							$( this ).dialog( "close" );
+						},
+						Save: function() {
+							$.ajax({
+						 	  type: "POST",
+						  	 url: href,
+						   	data: $("#dialogform").serialize(),
+						   	beforeSend: function()
+						   	{
+							   	$('#newrank').addClass('ui-state-disabled');
+						   	},
+						   	complete: function()
+						   	{
+							   	$('#newrank').removeClass('ui-state-disabled');
+						   	},
+						   	success: function(data)
+						   	{
+							   	// True to ensure we don't just use a cached version, but get a fresh copy from the server
+							   	location.reload(true);
+						   	},
+						   	error: function(data)
+						   	{
+							   	$('#dialog').html("There has been a problem. The server responded:<br /><br /> <code>"+data.responseText+"</code>").dialog({
+								  	modal: true,
+								  	//dialogClass: 'ui-state-error',
+								  	title: 'Error!',
+								  	buttons: {
+										Close: function() {
+									 	 $( this ).dialog( "close" );
+										}
+								 	 },
+								 	 close: function() { 
+										$( this ).dialog( "destroy" ); 
+										$('#save_indicator').fadeOut(1500, function(){ $('#save_indicator').remove() });
+								 	 },
+								  	open: function() {
+									 	$('.ui-dialog-titlebar').addClass('ui-state-error');
+								  	}
+									}).filter('ui-dialog-titlebar');
+							   	return false;
+						   	}
+						 	});
+						 
+							$( this ).dialog( "close" );
+						}
+				  	},
+				  	close: function() { 
+						$( this ).dialog( "destroy" ); 
+				  	}
+				});
+				return false;
+			});
+			
+			$('#activityfees a.button.pay').click(function(e){
+				e.preventDefault(); // stop the link actually firing
+				var href = $(this).attr("href");
+				var term_id = $(this).attr("activity_id");
+				var personnel_id = $(this).attr("personnel_id");
+				$('#dialog').html('<form method="post" id="dialogform"><input type="hidden" name="personnel_id" value="'+personnel_id+'" /><input type="hidden" name="term_id" value="'+term_id+'" /><input type="hidden" name="payment_type" value="<?= ATC_PAYMENT_TYPE_RECEIPT_ACTIVITY_FEE ?>" /><label for="reference">Receipt/reference #</label><br /><input type="text" maxlength="35" name="reference" id="reference" /><br /><label for="amount">Amount</label><br /><input type="number" min="0.1" step="0.1" name="amount" id="amount" /></form>').dialog({
+					modal: true,
+					width: 600,
+					title: 'Record payment',
 					buttons: {
 						Cancel: function() {
 							$( this ).dialog( "close" );
