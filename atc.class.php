@@ -389,9 +389,6 @@
 			$startdate = strtotime($startdate);
 			$enddate = strtotime($enddate);
 
-			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ))
-			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
-				
 			$query = 'SELECT * FROM `attendance` WHERE `date` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" ORDER BY `date` ASC;';
 			
 			$dates = array();
@@ -410,9 +407,6 @@
 		{
 			$startdate = strtotime($startdate);
 			$enddate = strtotime($enddate);
-
-			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ))
-			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
 				
 			$query = '
 			SELECT	`attendance_register`.*,
@@ -442,9 +436,6 @@
 		{
 			$startdate = strtotime($startdate);
 			$enddate = strtotime($enddate);
-
-			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ))
-			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
 			
 			$query = '
 			SELECT	`attendance_register`.*,
@@ -475,6 +466,9 @@
 		
 		public function get_cadets_risking_sign_off()
 		{
+			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			
 			$query = '
 				SELECT 
 					`T3`.*, 
@@ -574,10 +568,7 @@
 		}
 		
 		public function get_nok( $for_personnel_id, $nok_id=null )
-		{
-			if(!self::user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $for_personnel_id ))
-			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this user");
-				
+		{				
 			$query = '
 			SELECT	*
 			FROM 	`next_of_kin`
@@ -1351,6 +1342,7 @@
 					return true;
 				switch($permission)
 				{
+					case ATC_PERMISSION_ATTENDANCE_VIEW:
 					case ATC_PERMISSION_PERSONNEL_VIEW:
 					case ATC_PERMISSION_PERSONNEL_EDIT:
 						// If we're wanting to view/edit our own user, we're all good.

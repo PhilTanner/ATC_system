@@ -239,7 +239,7 @@
 <?php
 	$date = date('Y-m-d', time());
 	$nonattendingcadets = $ATC->get_awol(date('Y').'-01-01', date('Y').'-12-31');
-	if( count($nonattendingcadets) && $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ) )
+	if( count($nonattendingcadets) )
 	{
 ?>
 	<form name="missingcadets" id="missingcadets" method="post" style="margin-top:2em;">
