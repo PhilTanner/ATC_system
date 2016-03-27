@@ -473,6 +473,61 @@
 			return $awollers;
 		}
 		
+		public function get_cadets_risking_sign_off()
+		{
+			$query = '
+				SELECT 
+					`T3`.*, 
+					`personnel`.`personnel_id`, 
+					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
+					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
+					COUNT(*) AS `missed_nights`
+				FROM
+					(
+						SELECT 
+							*
+						FROM
+							(
+								SELECT
+									`T1`.`date`,
+									`T1`.`presence`, 
+									`T1`.personnel_id,
+									(
+										SELECT 
+											MAX(`date`) 
+										FROM 
+											`attendance_register` `T` 
+										WHERE 
+											`T`.`date` < `T1`.`date` 
+											AND `T`.`presence` <> `T1`.`presence`
+									) AS `MaxDate`
+								FROM 
+									`attendance_register` `T1`
+								ORDER BY 
+									`date` DESC
+							) `T2`
+						WHERE 
+							`presence` = '.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE.'
+					) `T3`
+					INNER JOIN `personnel` 
+						ON `T3`.`personnel_id` = `personnel`.`personnel_id`
+				GROUP BY
+					`T3`.`personnel_id`
+				HAVING
+					`date` = (SELECT MAX(`date`) FROM `attendance_register`) 
+					AND COUNT(*) >= 2
+				ORDER BY
+					`display_name`;';
+					
+			$results = array();
+			if ($result = self::$mysqli->query($query))
+				while ( $obj = $result->fetch_object() )
+					$results[] = $obj;
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+			return $results;
+		}
+		
 		public function get_currentuser_id() { return self::$currentuser; }
 		
 		public function get_flights()
@@ -587,6 +642,7 @@
 						$personnel->rank = null;
 						$personnel->enabled = -1;
 						$personnel->created = date("d/m/Y h:i a", time());
+						$personnel->display_name = "New user";
 					}
 					break;
 				default:

@@ -2,6 +2,7 @@
 	require_once "atc.class.php";
 	$ATC = new ATC();
 	
+	/*
 	// Enter a new parade night
 	if( isset( $_POST['newdate'] ) && strtotime( $_POST['newdate'] ) )
 	{
@@ -25,7 +26,9 @@
 		}
 		exit();
 	// Enter a new term 
-	} elseif( isset( $_POST['startdate'] ) && strtotime( $_POST['startdate'] ) && isset( $_POST['enddate'] ) && strtotime( $_POST['enddate'] ) )
+	} else
+	*/
+	if( isset( $_POST['startdate'] ) && strtotime( $_POST['startdate'] ) && isset( $_POST['enddate'] ) && strtotime( $_POST['enddate'] ) )
 	{
 		try {
 			$ATC->add_term( strtotime($_POST['startdate']), strtotime($_POST['enddate']) );
@@ -175,18 +178,22 @@
 				<tr>
 					<th>Flight</th>
 					<th>Rank</th>
-					<th> Name </th>
+					<th> Name </th>						
 					<?php
-						foreach( $dates as $paradenight )
-							echo '<th style="font-size:70%">'.date(ATC_SETTING_DATE_OUTPUT, strtotime($paradenight->date)).'</th>'."\n".'				';
-						if( !isset($_GET['id']) && $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ))
-							echo '<td><a href="?id=0" class="button new night"> New </a></td>';
+						$night = strtotime($termstart);
+						$n=3;
+						while( $night <= strtotime($termend) )
+						{
+							echo '<th style="font-size:70%">'.date(ATC_SETTING_DATE_OUTPUT, $night).'</th>'."\n".'				';
+							$night = strtotime( "next ".ATC_SETTING_PARADE_NIGHT, $night);
+							$n++;
+						}
 					?>
 				</tr>
 			</thead>
 			<tfoot>
 				<tr>
-					<td colspan="<?=count($dates)+2?>"><?= ($ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ) && !isset($_GET['id']) ?'<button type="submit" class="save">Save</button>':'')?></td>
+					<td colspan="<?=$n?>"><?= ($ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ) && !isset($_GET['id']) ?'<button type="submit" class="save">Save attendance</button>':'')?></td>
 				</tr>
 			</tfoot>
 			<tbody>
@@ -200,13 +207,16 @@
 							echo '	<td>'.$obj->rank.'</td>';
 							echo '	<td><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
 							$missednights = 0;
-							foreach( $dates as $night )
+							
+							$night = strtotime($termstart);
+							while( $night <= strtotime($termend) )
 							{
-								echo '<td class="attendance user'.$obj->personnel_id.' date'.$night->date.'">';
+								
+								echo '<td class="attendance user'.$obj->personnel_id.' date'.date(ATC_SETTING_DATE_INPUT,$night).'">';
 								// When embedding for a particular personnel page, don't let us edit - nor when they haven't started yet
-								if( $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT, $obj->personnel_id ) && !isset($_GET['id']) && (strtotime($obj->joined_date) <= strtotime($night->date)) ) 
+								if( $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT, $obj->personnel_id ) && !isset($_GET['id']) && (strtotime($obj->joined_date) <= $night) ) 
 								{
-									echo '<select name="'.$obj->personnel_id.'|'.$night->date.'" id="'.$obj->personnel_id.'_'.$night->date.'">';
+									echo '<select name="'.$obj->personnel_id.'|'.date(ATC_SETTING_DATE_INPUT,$night).'" id="'.$obj->personnel_id.'_'.date(ATC_SETTING_DATE_INPUT,$night).'">';
 									echo '	<option value="" selected="selected"></option>';
 									echo '	<option value="'.ATC_ATTENDANCE_PRESENT.'">'.ATC_ATTENDANCE_PRESENT_SYMBOL.'</option>';
 									echo '	<option value="'.ATC_ATTENDANCE_ON_LEAVE.'">'.ATC_ATTENDANCE_ON_LEAVE_SYMBOL.'</option>';
@@ -214,7 +224,10 @@
 									echo '</select>';
 								}
 								echo '</td>';
+
+								$night = strtotime( "next ".ATC_SETTING_PARADE_NIGHT, $night);
 							}
+							
 							echo '</tr>';
 						}
 					}
@@ -239,7 +252,7 @@
 					<th> Contact number </th>
 					<th> Next of Kin contact </th>
 					<th> Reason for absence </th>
-					<td> <?= ($ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT) && !isset($_GET['id']) ?'<button type="submit" class="save">Save</button>':'')?> </td>
+					<td> <?= ($ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT) && !isset($_GET['id']) ?'<button type="submit" class="save">Save absences</button>':'')?> </td>
 				</tr>
 			</thead>
 			<tfoot>

@@ -302,6 +302,40 @@
 		// We just don't show the error if it was a permission issue, that's fine, we don't know who's logged in, after all 
 	}
 	
+	try {
+		$cadetsriskingsignout = $ATC->get_cadets_risking_sign_off();
+		if( count($cadetsriskingsignout) )
+		{
+?>
+			<h2> Cadets risking being signed out (BETA - might not be accurate)</h2>
+			<table class="tablesorter" id="cadetsriskingsignout">
+				<thead>
+					<tr>
+						<th> Rank </th>
+						<th> Name </th>
+						<th> Parade nights missed </th>
+					</tr>
+				</thead>
+				<tbody>
+<?php
+					foreach( $cadetsriskingsignout as $obj )
+					{
+						echo '<tr>';
+						echo '	<td>'.$obj->rank.'</td>';
+						echo '	<td><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
+						echo '	<td>'.$obj->missed_nights.'</td>';
+						echo '</tr>';
+					}
+?>
+				</tbody>
+			</table>
+
+<?php
+		}
+	} catch (ATCExceptionInsufficientPermissions $e) { 
+		// We just don't show the error if it was a permission issue, that's fine, we don't know who's logged in, after all 
+	}
+	
 	if(ATC_DEBUG)
 	{
 ?>
@@ -317,7 +351,7 @@
 	Confirm box on dob entry < 13yrs ago<br />
 	EMERGY CONT can also be 2ic<br />
 	Cadet alternate email<br />
-	Auto add/remove cadet activity invoices<br />
+	
 	
 	<h2> Outstanding documentation </h2>
 	<ol>
