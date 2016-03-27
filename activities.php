@@ -1,6 +1,6 @@
 <?php
-	require_once "atc.class.php";
-	$ATC = new ATC();
+	require_once "atc_finance.class.php";
+	$ATC = new ATC_Finance();
 	
 	if($_SERVER['REQUEST_METHOD'] == 'POST')
 	{
@@ -46,7 +46,7 @@
 						$foo = explode("_", $key);
 						// Exclude the attendance_register entry, only go if we've got a real person record
 						if( (int)$foo[1] )
-							$register[] = array('personnel_id' => $foo[1], 'attendance' => $value, 'note' => $_POST['note_'.$foo[1]], 'amount_paid' => $_POST['amtpaid_'.$foo[1]]);
+							$register[] = array('personnel_id' => $foo[1], 'attendance' => $value, 'note' => $_POST['note_'.$foo[1]] );
 					}
 				}
 				$ATC->set_activity_attendance( (int)$_POST['activity_id'], $register );
@@ -110,7 +110,7 @@
 					<th colspan="2"> Name </th>
 					<th> <?= $activity->title ?> Attendance </th>
 					<th> Note </th>
-					<th> Amount paid </th>
+					<th> To pay </th>
 				</tr>
 			</thead>
 			<tbody>
@@ -131,7 +131,11 @@
 						echo '	</select>';
 						echo '</td>';
 						echo '<td><input type="text" name="note_'.$obj->personnel_id.'" id="note_'.$obj->personnel_id.'" value="'.htmlentities($obj->note).'" maxlength="255" /></td>';
-						echo '<td><input type="number" step="0.1" name="amtpaid_'.$obj->personnel_id.'" id="amtpaid_'.$obj->personnel_id.'" value="'.htmlentities($obj->amount_paid).'" min="0" style="width:3em;" '.($ATC->user_has_permission(ATC_PERMISSION_FINANCE_EDIT)?'':'readonly="readonly"').'/></td>';
+						// echo '<td><input type="number" step="0.1" name="amtpaid_'.$obj->personnel_id.'" id="amtpaid_'.$obj->personnel_id.'" value="'.htmlentities($obj->amount_paid).'" min="0" style="width:3em;" '.($ATC->user_has_permission(ATC_PERMISSION_FINANCE_EDIT)?'':'readonly="readonly"').'/></td>';
+						
+						$payments = $ATC->get_activity_money_outstanding($obj->personnel_id, $activity->activity_id);
+						if( count($payments) )
+							echo '<td nowrap="nowrap" style="text-align:right">'.($ATC->user_has_permission(ATC_PERMISSION_FINANCE_VIEW,$obj->personnel_id)?$ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT,$payments[0]->remaining):'<em>Hidden</em>').'</td>';
 						echo '</tr>';
 					}
 				?>
@@ -414,7 +418,7 @@
 		.appendTo( ul );
 	} 
 	
-	var officers = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_personnel(null,'ASC',ATC_USER_GROUP_OFFICERS) )) ?>' );
+	var officers = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_personnel(null,'ASC',ATC_USER_GROUP_OFFICERS.','.ATC_USER_LEVEL_EMRG_CONTACT) )) ?>' );
 	// Autocompletes need a label field to search against
 	$.each(officers, function(){
 		$(this)[0].label = $(this)[0].rank + " " + $(this)[0].lastname + ", " + $(this)[0].firstname;
@@ -615,8 +619,7 @@
 									}
 								  },
 								  close: function() { 
-									$( this ).dialog( "destroy" ); 
-									$('#save_indicator').fadeOut(1500, function(){ $('#save_indicator').remove() });
+									$( this ).dialog( "destroy" );
 								  },
 								  open: function() {
 									 $('.ui-dialog-titlebar').addClass('ui-state-error');
@@ -625,8 +628,6 @@
 							   return false;
 						   }
 						 });
-						 
-						$( this ).dialog( "close" );
 					} <?php } ?>
 				  },
 				  close: function() { 

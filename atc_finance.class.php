@@ -71,7 +71,7 @@
 			return $str;
 		}
 		
-		public function get_activity_money_outstanding( $personnel_id=null  )
+		public function get_activity_money_outstanding( $personnel_id=null, $activity_id=null  )
 		{
 			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_VIEW ))
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
@@ -109,13 +109,13 @@
 					) `payments_tmp`
 						ON `payments_tmp`.`personnel_id` = `personnel`.`personnel_id`
 				WHERE 
-					`personnel`.`enabled` = -1
+					`personnel`.'.(is_null($personnel_id)?'`enabled` = -1':'`personnel_id`='.(int)$personnel_id).'
 					AND not (`payments_tmp`.`amount_due` IS NULL AND `payments_tmp`.`amount_paid` IS NULL)
+					'.(is_null($activity_id)?'':'AND `payments_tmp`.`activity_id`='.(int)$activity_id).'
 				GROUP BY 
 					`payments_tmp`.`activity_id`, 
 					`personnel`.`personnel_id`
-				HAVING 
-					(SUM( `payments_tmp`.`amount_due` ) + SUM( `payments_tmp`.`amount_paid` )) <> 0
+				'.(is_null($personnel_id)&&is_null($activity_id)?'HAVING (SUM( `payments_tmp`.`amount_due` ) + SUM( `payments_tmp`.`amount_paid` )) <> 0':'').'
 				ORDER BY 
 					`display_name`, 
 					`startdate`;';

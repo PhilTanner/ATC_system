@@ -60,7 +60,6 @@ CREATE TABLE IF NOT EXISTS `term` (
   PRIMARY KEY (`term_id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
-
 CREATE TABLE IF NOT EXISTS `payment` (
   `payment_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `personnel_id` int(11) unsigned NOT NULL,
@@ -73,7 +72,7 @@ CREATE TABLE IF NOT EXISTS `payment` (
   PRIMARY KEY (`payment_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
-
+ALTER TABLE `activity_register` DROP `amount_paid`;
 
 
 

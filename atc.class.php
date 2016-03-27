@@ -813,7 +813,26 @@
 					$attendees = explode(',', $attendees);
 					foreach($attendees as $personnel_id)
 						if( $personnel_id )
+						{
 							self::$mysqli->query("INSERT INTO `activity_register` (`activity_id`, `personnel_id`) VALUES (".(int)$activity_id.", ".(int)$personnel_id.");");
+							if( (float)$cost )
+								self::$mysqli->query("
+									INSERT INTO `payment` (
+										`personnel_id`, 
+										`amount`, 
+										`reference`,
+										`payment_type`,
+										`related_to_id`,
+										`created_by`
+									) VALUES (
+										".(int)$personnel_id.",
+										".(float)$cost.",
+										'".self::$mysqli->real_escape_string($title)."',
+										".ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE." 
+										".(int)$activity_id.", 
+										".self::$currentuser."
+									);");
+						}
 					return $activity_id;
 				}
 				else throw new ATCExceptionDBError(self::$mysqli->error);
@@ -835,12 +854,72 @@
 				{
 					self::log_action( 'activity', $query, (int)$activity_id );
 					$attendees = explode(",", $attendees);
-					// Remove everyone, simpler than working out who has been dragged out of the box
-					// But only remove them if they're not recorded as attending already. At that point, not sure what we do, but DB leaves them alone
-					self::$mysqli->query("DELETE FROM `activity_register` WHERE `activity_id` = ".(int)$activity_id." AND `presence` IS NULL;");
+					
+					// Find out if our attendees have changed
+					$activitydetails = self::get_activity($activity_id);
+					
 					foreach($attendees as $personnel_id)
-						if( $personnel_id )
-							self::$mysqli->query("INSERT INTO `activity_register` (`activity_id`, `personnel_id`) VALUES (".(int)$activity_id.", ".(int)$personnel_id.");");
+					{
+						// We didn't previously know about this person, so let's add them
+						if( array_search( $personnel_id, $activitydetails[0]->attendees ) === false && $personnel_id)
+						{
+							// Attendance register
+							if( !self::$mysqli->query("INSERT INTO `activity_register` (`activity_id`, `personnel_id`) VALUES (".(int)$activity_id.", ".(int)$personnel_id.");") )
+								throw new ATCExceptionDBError(self::$mysqli->error);
+							// And an invoice, if necessary
+							if( (float)$cost )
+							{
+								echo "
+									INSERT INTO `payment` (
+										`personnel_id`, 
+										`amount`, 
+										`reference`,
+										`payment_type`,
+										`related_to_id`,
+										`created_by`
+									) VALUES (
+										".(int)$personnel_id.",
+										".(float)$cost.",
+										'".self::$mysqli->real_escape_string($title)."',
+										".ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE." 
+										".(int)$activity_id.", 
+										".self::$currentuser."
+									);";
+								if( !self::$mysqli->query("
+									INSERT INTO `payment` (
+										`personnel_id`, 
+										`amount`, 
+										`reference`,
+										`payment_type`,
+										`related_to_id`,
+										`created_by`
+									) VALUES (
+										".(int)$personnel_id.",
+										".(float)$cost.",
+										'".self::$mysqli->real_escape_string($title)."',
+										".ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE.", 
+										".(int)$activity_id.", 
+										".self::$currentuser."
+									);") )
+									throw new ATCExceptionDBError(self::$mysqli->error);
+							}
+						}
+					}
+					// Now look for people who were attending, who now aren't.
+					foreach($activitydetails[0]->attendees as $personnel_id)
+					{
+						// We can't find the attendee in the new list, so delete them
+						if( array_search( $personnel_id, $attendees ) === false && $personnel_id)
+						{
+							// Attendance register
+							if( !self::$mysqli->query("DELETE FROM `activity_register` WHERE `activity_id` = ".(int)$activity_id." AND `personnel_id` = ".(int)$personnel_id." LIMIT 1;") )
+								throw new ATCExceptionDBError(self::$mysqli->error);
+							// And delete the invoice. Will make them show up as overpayment if they've paid anything. This is deliberate
+							if( !self::$mysqli->query("DELETE FROM `payment` WHERE `related_to_id` = ".(int)$activity_id." AND `personnel_id` = ".(int)$personnel_id." AND `payment_type` = ".ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE." LIMIT 1;") )
+								throw new ATCExceptionDBError(self::$mysqli->error);
+						}
+					}
+					
 					return (int)$activity_id;
 				}
 				else throw new ATCExceptionDBError(self::$mysqli->error);
@@ -867,12 +946,12 @@
 					$presence = 'NULL';
 				$note = $value['note'];
 				$updatenote = strlen(trim($note));
-				$amount_paid = (float)$value['amount_paid'];
+				//$amount_paid = (float)$value['amount_paid'];
 				
 				if( $presence != ATC_ATTENDANCE_PRESENT && $presence != ATC_ATTENDANCE_ON_LEAVE && $presence != ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE )
 					throw new ATCExceptionBadData('Unknown presence value');
 
-				$query = "INSERT INTO `activity_register` (`personnel_id`, `activity_id`, `presence`".($updatenote?', `note`':'').", `amount_paid`) VALUES ( ".(int)$personnel_id.", ".(int)$activity_id.", ".$presence.($updatenote?", '".self::$mysqli->real_escape_string($note)."'":'').", ".$amount_paid.") ON DUPLICATE KEY UPDATE `presence` = ".$presence.($updatenote?", `note` = '".self::$mysqli->real_escape_string($note)."'":'').", `amount_paid` = ".$amount_paid.";";
+				$query = "INSERT INTO `activity_register` (`personnel_id`, `activity_id`, `presence`".($updatenote?', `note`':'').") VALUES ( ".(int)$personnel_id.", ".(int)$activity_id.", ".$presence.($updatenote?", '".self::$mysqli->real_escape_string($note)."'":'').") ON DUPLICATE KEY UPDATE `presence` = ".$presence.($updatenote?", `note` = '".self::$mysqli->real_escape_string($note)."'":'').";";
 				
 				if ($result = self::$mysqli->query($query))
 					self::log_action( 'activity_register', $query, $activity_id );
