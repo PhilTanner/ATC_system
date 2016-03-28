@@ -216,6 +216,7 @@
 					`personnel`.`personnel_id`,
 					'.str_replace("personnel","2ic_personnel",ATC_SETTING_DISPLAY_NAME).' AS `twoic_display_name`,
 					`2ic_personnel`.`personnel_id` AS `twoic_personnel_id`,
+					CASE WHEN `activity`.`enddate` < now() THEN 1 ELSE 0 END AS `sortorder`, 
 					(
 						SELECT	COUNT(`personnel`.`personnel_id`)
 						FROM	`activity_register`
@@ -247,7 +248,7 @@
 						ON `activity`.`2ic_personnel_id` = `2ic_personnel`.`personnel_id`
 				WHERE 	`activity`.`startdate` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" 
 					AND `activity`.`activity_id` > 0
-				ORDER BY `startdate` ASC;';
+				ORDER BY `sortorder`, `startdate` ASC;';
 
 			$activities = array();
 			if ($result = self::$mysqli->query($query))
