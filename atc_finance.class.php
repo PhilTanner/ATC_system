@@ -1,17 +1,46 @@
 <?php
 	require_once "atc.class.php";
 	
-	define( 'ATC_SETTING_MONEYFORMAT', '%(#2.2n' );
+	define( 'ATC_SETTING_MONEYFORMAT_PARENTHESIS', 0 );
+	define( 'ATC_SETTING_MONEYFORMAT_TEXTUAL', 1 );
+	
+	define( 'ATC_PAYMENT_TYPE_INVOICE_TERM_FEE', 			0 );
+	define( 'ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE', 		1 );
+	define( 'ATC_PAYMENT_TYPE_INVOICE_OUTSTANDING_MONEY',	2 );
+	define( 'ATC_PAYMENT_TYPE_INVOICE_UNIFORM_DEPOSIT',		3 );
+	define( 'ATC_PAYMENT_TYPE_INVOICE_FUNDRAISING',			4 );
+	define( 'ATC_PAYMENT_TYPE_INVOICE_MISCELLANEOUS',		19 );
+	
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_TERM_FEE', 			20 );
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_ACTIVITY_FEE', 		21 );
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_OUTSTANDING_MONEY', 	22 );
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_UNIFORM_DEPOSIT', 		23 );
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_FUNDRAISING',			24 );
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_MISCELLANEOUS',		39 );
 	
 	
 	class ATC_Finance extends ATC
 	{
+		public function add_payment( $personnel_id, $amount, $reference, $payment_type, $related_to_id )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_FINANCE_EDIT ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = "INSERT INTO `payment` (`personnel_id`, `amount`, `reference`, `payment_type`, `related_to_id`, `created_by` ) VALUES ( ".(int)$personnel_id.", ".(float)$amount.", '".self::$mysqli->real_escape_string($reference)."', ".(int)$payment_type.", ".(int)$related_to_id.", ".(int)self::$currentuser." );";
+			if ($result = self::$mysqli->query($query))
+			{
+				self::log_action( 'payment', $query, self::$mysqli->insert_id );
+				return true;
+			}
+			else throw new ATCExceptionDBError(self::$mysqli->error);
+		}
+		
 		function currency_format( $format, $amount )
 		{
 			$str = '';
 			switch($format)
 			{
-				case MONEYFORMAT_PARENTHESIS:
+				case ATC_SETTING_MONEYFORMAT_PARENTHESIS:
 					if( (float)$amount < 0 )
 						$str .= '(';
 					$str .= '$ ';
@@ -23,7 +52,7 @@
 					if( (float)$amount < 0 )
 						$str .= ')';
 					break;
-				case MONEYFORMAT_TEXTUAL:
+				case ATC_SETTING_MONEYFORMAT_TEXTUAL:
 					$str .= '$ ';
 					
 					if( (float)$amount == 0 )
@@ -33,7 +62,7 @@
 					else
 						$str .= number_format( (float)$amount, 2, '.', ',' ).' cr';
 					break;
-				case MONEYFORMAT:
+				case ATC_SETTING_MONEYFORMAT:
 				default:
 					$str .= '$ ';
 					$str .= number_format( (float)$amount, 2, '.', ',' );
@@ -42,39 +71,54 @@
 			return $str;
 		}
 		
-		public function get_activity_money_outstanding(  )
+		public function get_activity_money_outstanding( $personnel_id=null, $activity_id=null  )
 		{
 			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_VIEW ))
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
-			if( !self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW) )
+			if( !self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW, $personnel_id) )
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
-						
+			
+			
 			$query = '
-				SELECT	`activity_register`.*,
+				SELECT
+					`personnel`.`personnel_id`,
 					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
-					( 
-   					SELECT `rank_shortname` 
-   					FROM `personnel_rank` 
-							INNER JOIN `rank` 
-								ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
-   					WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
-   					ORDER BY `date_achieved` DESC 
-   					LIMIT 1 
-					) AS `rank`,
-					`personnel`.`mobile_phone`,
-					`activity`.`cost`,
-					`activity`.`title`,
-					`activity`.`startdate`,
-					`activity`.`enddate`
-				FROM 	`activity_register`
-					INNER JOIN `personnel`
-						ON `activity_register`.`personnel_id` = `personnel`.`personnel_id`
-					INNER JOIN `activity`
-						ON `activity_register`.`activity_id` = `activity`.`activity_id`
-				WHERE 	`activity_register`.`amount_paid` < `activity`.`cost`
-					-- Only cadets pay fees
-					AND `personnel`.`access_rights` = '.ATC_USER_LEVEL_CADET.'
-				ORDER BY `activity`.`startdate`, `activity`.`title`, `personnel`.`lastname`, `personnel`.`firstname`;';
+					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
+					SUM(`payments_tmp`.`amount_due`) AS `due`,
+					SUM(`payments_tmp`.`amount_paid`) AS `paid`,
+					( SUM(`payments_tmp`.`amount_due`) + SUM(`payments_tmp`.`amount_paid`) ) AS `remaining`,
+					`payments_tmp`.`activity_id`,
+					`payments_tmp`.`title`,
+					`payments_tmp`.`startdate`
+				FROM 
+					`personnel`
+					LEFT JOIN (
+						SELECT 
+							`payment`.`personnel_id`,
+							CASE WHEN `payment_type` = '.ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE.' THEN `payment`.`amount` ELSE 0 END AS `amount_due`,
+							CASE WHEN `payment_type` = '.ATC_PAYMENT_TYPE_RECEIPT_ACTIVITY_FEE.' THEN (0-`payment`.`amount`) ELSE 0 END AS `amount_paid`,
+							`activity`.`activity_id` AS `activity_id`,
+							`activity`.`title` AS `title`,
+							`activity`.`startdate` AS `startdate`
+						FROM 
+							`payment`
+							INNER JOIN `activity`
+								ON `payment`.`related_to_id` = `activity`.`activity_id`
+						WHERE 
+							`payment_type` IN ('.ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE.','.ATC_PAYMENT_TYPE_RECEIPT_ACTIVITY_FEE.')
+					) `payments_tmp`
+						ON `payments_tmp`.`personnel_id` = `personnel`.`personnel_id`
+				WHERE 
+					`personnel`.'.(is_null($personnel_id)?'`enabled` = -1':'`personnel_id`='.(int)$personnel_id).'
+					AND not (`payments_tmp`.`amount_due` IS NULL AND `payments_tmp`.`amount_paid` IS NULL)
+					'.(is_null($activity_id)?'':'AND `payments_tmp`.`activity_id`='.(int)$activity_id).'
+				GROUP BY 
+					`payments_tmp`.`activity_id`, 
+					`personnel`.`personnel_id`
+				'.(is_null($personnel_id)&&is_null($activity_id)?'HAVING (SUM( `payments_tmp`.`amount_due` ) + SUM( `payments_tmp`.`amount_paid` )) <> 0':'').'
+				ORDER BY 
+					`display_name`, 
+					`startdate`;';
 
 			$dues = array();
 			if ($result = self::$mysqli->query($query))
@@ -86,6 +130,102 @@
 			return $dues;
 		}
 		
+		public function get_missing_invoices( $personnel_id=null )
+		{
+			if( !self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW, $personnel_id) )
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			
+			$query = '
+				SELECT DISTINCT
+					`personnel`.`personnel_id`,
+					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
+					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
+					`term`.`startdate`,
+					`term`.`enddate`,
+					`term`.`term_id`
+				FROM 
+					`personnel` 
+					INNER JOIN `attendance_register` 
+						ON `personnel`.`personnel_id` = `attendance_register`.`personnel_id`
+					INNER JOIN `term`
+						ON `attendance_register`.`date` between `term`.`startdate` and `term`.`enddate`
+						AND `attendance_register`.`presence` IN ( '.ATC_ATTENDANCE_PRESENT.','.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE.' )
+					LEFT JOIN `payment`
+						ON `payment`.`related_to_id` = `term`.`term_id` 
+						AND `payment`.`personnel_id` = `personnel`.`personnel_id` 
+						AND `payment`.`payment_type` = '.ATC_PAYMENT_TYPE_INVOICE_TERM_FEE.'
+				WHERE
+					`payment`.`amount` IS NULL
+					AND `personnel`.`enabled` = -1
+					-- Only cadets pay term fees
+					AND `personnel`.`access_rights` IN ( '.ATC_USER_GROUP_CADETS.' );';
+
+			$response = array();
+			if ($result = self::$mysqli->query($query))
+				while ( $obj = $result->fetch_object() )
+					$response[] = $obj;
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $response;
+		}
+	
+		public function get_term_fees_outstanding( $personnel_id=null )
+		{
+			if( !self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW, $personnel_id) )
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			
+			$query = '
+				SELECT
+					`personnel`.`personnel_id`,
+					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
+					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
+					SUM(`payments_tmp`.`amount_due`) AS `due`,
+					SUM(`payments_tmp`.`amount_paid`) AS `paid`,
+					( SUM(`payments_tmp`.`amount_due`) + SUM(`payments_tmp`.`amount_paid`) ) AS `remaining`,
+					-- `payments_tmp`.`term_id`,
+					`payments_tmp`.`enddate`,
+					`payments_tmp`.`startdate`,
+					`payments_tmp`.`term_id`
+				FROM 
+					`personnel`
+					LEFT JOIN (
+						SELECT 
+							`payment`.`personnel_id`,
+							CASE WHEN `payment_type` = '.ATC_PAYMENT_TYPE_INVOICE_TERM_FEE.' THEN `payment`.`amount` ELSE 0 END AS `amount_due`,
+							CASE WHEN `payment_type` = '.ATC_PAYMENT_TYPE_RECEIPT_TERM_FEE.' THEN (0-`payment`.`amount`) ELSE 0 END AS `amount_paid`,
+							`term`.`startdate`,
+							`term`.`enddate`,
+							`term`.`term_id`
+						FROM 
+							`payment`
+							INNER JOIN `term`
+								ON `payment`.`related_to_id` = `term`.`term_id`
+						WHERE 
+							`payment_type` IN ('.ATC_PAYMENT_TYPE_INVOICE_TERM_FEE.','.ATC_PAYMENT_TYPE_RECEIPT_TERM_FEE.')
+					) `payments_tmp`
+						ON `payments_tmp`.`personnel_id` = `personnel`.`personnel_id`
+				WHERE 
+					`personnel`.`enabled` = -1
+					AND not (`payments_tmp`.`amount_due` IS NULL AND `payments_tmp`.`amount_paid` IS NULL)
+				GROUP BY 
+					`payments_tmp`.`startdate`, 
+					`personnel`.`personnel_id`
+				HAVING 
+					(SUM( `payments_tmp`.`amount_due` ) + SUM( `payments_tmp`.`amount_paid` )) <> 0
+				ORDER BY 
+					`display_name`, 
+					`startdate`;';
+
+			$dues = array();
+			if ($result = self::$mysqli->query($query))
+				while ( $obj = $result->fetch_object() )
+					$dues[] = $obj;
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $dues;
+		}
 	}
 	
 	if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') 

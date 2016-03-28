@@ -51,6 +51,31 @@ ALTER TABLE `activity` ADD `cost` DECIMAL(10,2) NOT NULL DEFAULT '0.00' ;
 ALTER TABLE `activity_register` ADD `amount_paid` DECIMAL(10,2) NOT NULL DEFAULT '0.00' ;
 
 
+-- ver 0.7.1
+
+CREATE TABLE IF NOT EXISTS `term` (
+  `term_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `startdate` date NOT NULL,
+  `enddate` date NOT NULL,
+  PRIMARY KEY (`term_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `payment` (
+  `payment_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `personnel_id` int(11) unsigned NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `reference` varchar(35) DEFAULT NULL,
+  `payment_type` smallint(5) unsigned NOT NULL,
+  `related_to_id` int(11) unsigned DEFAULT NULL,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_by` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`payment_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+ALTER TABLE `activity_register` DROP `amount_paid`;
+
+
+
 CREATE USER 'atc'@'localhost' IDENTIFIED BY 'ZIERIESs5ESa';
 GRANT SELECT, INSERT ON `atc`.`log_changes` TO 'atc'@'localhost';
 GRANT SELECT, INSERT, UPDATE, DELETE, REFERENCES ON `atc`.`attendance` TO 'atc'@'localhost';

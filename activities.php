@@ -1,6 +1,6 @@
 <?php
-	require_once "atc.class.php";
-	$ATC = new ATC();
+	require_once "atc_finance.class.php";
+	$ATC = new ATC_Finance();
 	
 	if($_SERVER['REQUEST_METHOD'] == 'POST')
 	{
@@ -46,7 +46,7 @@
 						$foo = explode("_", $key);
 						// Exclude the attendance_register entry, only go if we've got a real person record
 						if( (int)$foo[1] )
-							$register[] = array('personnel_id' => $foo[1], 'attendance' => $value, 'note' => $_POST['note_'.$foo[1]], 'amount_paid' => $_POST['amtpaid_'.$foo[1]]);
+							$register[] = array('personnel_id' => $foo[1], 'attendance' => $value, 'note' => $_POST['note_'.$foo[1]] );
 					}
 				}
 				$ATC->set_activity_attendance( (int)$_POST['activity_id'], $register );
@@ -110,7 +110,7 @@
 					<th colspan="2"> Name </th>
 					<th> <?= $activity->title ?> Attendance </th>
 					<th> Note </th>
-					<th> Amount paid </th>
+					<th> To pay </th>
 				</tr>
 			</thead>
 			<tbody>
@@ -131,7 +131,11 @@
 						echo '	</select>';
 						echo '</td>';
 						echo '<td><input type="text" name="note_'.$obj->personnel_id.'" id="note_'.$obj->personnel_id.'" value="'.htmlentities($obj->note).'" maxlength="255" /></td>';
-						echo '<td><input type="number" step="0.1" name="amtpaid_'.$obj->personnel_id.'" id="amtpaid_'.$obj->personnel_id.'" value="'.htmlentities($obj->amount_paid).'" min="0" style="width:3em;" '.($ATC->user_has_permission(ATC_PERMISSION_FINANCE_EDIT)?'':'readonly="readonly"').'/></td>';
+						// echo '<td><input type="number" step="0.1" name="amtpaid_'.$obj->personnel_id.'" id="amtpaid_'.$obj->personnel_id.'" value="'.htmlentities($obj->amount_paid).'" min="0" style="width:3em;" '.($ATC->user_has_permission(ATC_PERMISSION_FINANCE_EDIT)?'':'readonly="readonly"').'/></td>';
+						
+						$payments = $ATC->get_activity_money_outstanding($obj->personnel_id, $activity->activity_id);
+						if( count($payments) )
+							echo '<td nowrap="nowrap" style="text-align:right">'.($ATC->user_has_permission(ATC_PERMISSION_FINANCE_VIEW,$obj->personnel_id)?$ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT,$payments[0]->remaining):'<em>Hidden</em>').'</td>';
 						echo '</tr>';
 					}
 				?>
@@ -335,25 +339,25 @@
 <form name='editactivity' id='editactivity' method='post'>
 	<div style="width:49%; float:left;">
 		<label for='title'>Activity name</label><br />
-		<input type='text' id='title' name='title' value='<?=htmlentities($activity->title)?>' required='required' /><br />
+		<input type='text' id='title' name='title' value='<?=htmlentities($activity->title)?>' required='required' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
 		<label for='startdate'>Assemble date/time</label><br />
-		<input type='datetime-local' id='startdate' name='startdate' value='<?=$activity->startdate?>' required='required' /><br />
+		<input type='datetime-local' id='startdate' name='startdate' value='<?=$activity->startdate?>' required='required' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
 		<label for='enddate'>Dispersal date/time</label><br />
-		<input type='datetime-local' id='enddate' name='enddate' value='<?=$activity->enddate?>' required='required' /><br />
+		<input type='datetime-local' id='enddate' name='enddate' value='<?=$activity->enddate?>' required='required' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
 		<label for='location'>Activity location</label><br />
-		<input type='text' id='location' name='location' value='<?=htmlentities($activity->name)?>' required='required' /><br />
+		<input type='text' id='location' name='location' value='<?=htmlentities($activity->name)?>' required='required' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
 		<label for='cost'>Activity cost</label><br />
-		<input type="number" step="0.1" name="cost" id="cost" value="<?=htmlentities($activity->cost)?>" min="0" /><br />
+		<input type="number" step="0.1" name="cost" id="cost" value="<?=htmlentities($activity->cost)?>" min="0" <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
 	</div>
 	<div style="width:45%; float:left;">
 		<label for='activity_type'>Type of activity</label><br />
-		<input type='text' id='activity_type' name='activity_type' value='<?=$activity->type?>' required='required' /><br />
+		<input type='text' id='activity_type' name='activity_type' value='<?=$activity->type?>' required='required' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
 		<label for='personnel_id'>Officer In Charge</label><br />
-		<input type='text' id='personnel_name' name='personnel_name' value='<?=$activity->display_name?>' required='required' /><br />
+		<input type='text' id='personnel_name' name='personnel_name' value='<?=$activity->display_name?>' required='required' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
 		<label for='2ic_personnel_id'>2<sup>nd</sup> Contact</label><br />
-		<input type='text' id='2ic_personnel_name' name='2ic_personnel_name' value='<?=$activity->twoic_display_name?>' required='required' /><br />
+		<input type='text' id='2ic_personnel_name' name='2ic_personnel_name' value='<?=$activity->twoic_display_name?>' required='required' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
 		<label for='dress_code'>Dress code</label><br />
-		<select name='dress_code' id='dress_code'>
+		<select name='dress_code' id='dress_code' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly" disabled="disabled"' ) ?>>
 			<option value='<?=ATC_DRESS_CODE_BLUES?>'<?=($activity->dress_code==ATC_DRESS_CODE_BLUES?' selected="selected"':'')?>>No 6 Blues</option>
 			<option value='<?=ATC_DRESS_CODE_DPM?>'<?=($activity->dress_code==ATC_DRESS_CODE_DPM?' selected="selected"':'')?>>DPM</option>
 			<option value='<?=ATC_DRESS_CODE_BLUES_AND_DPM?>'<?=($activity->dress_code==ATC_DRESS_CODE_BLUES_AND_DPM?' selected="selected"':'')?>>Mix</option>
@@ -414,7 +418,7 @@
 		.appendTo( ul );
 	} 
 	
-	var officers = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_personnel(null,'ASC',ATC_USER_GROUP_OFFICERS) )) ?>' );
+	var officers = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_personnel(null,'ASC',ATC_USER_GROUP_OFFICERS.','.ATC_USER_LEVEL_EMRG_CONTACT) )) ?>' );
 	// Autocompletes need a label field to search against
 	$.each(officers, function(){
 		$(this)[0].label = $(this)[0].rank + " " + $(this)[0].lastname + ", " + $(this)[0].firstname;
@@ -466,7 +470,7 @@
 				$('#non_attendees ol.dragdrop').append('<li personnel_id="'+person.personnel_id+'">'+person.rank+' '+person.lastname+', '+person.firstname+'</li>'); 
 		}
 	});
-	$('#attendees ol.dragdrop,#non_attendees ol.dragdrop').sortable({ connectWith: ".dragdrop.attendees" }).disableSelection();
+	<?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '$("#attendees ol.dragdrop,#non_attendees ol.dragdrop").sortable({ connectWith: ".dragdrop.attendees" }).disableSelection();':'' ) ?> 
 	
 </script>
 <?php
@@ -505,9 +509,9 @@
 					foreach( $activities as $obj )
 					{
 						echo '<tr'.(strtotime($obj->enddate) < time()?' class="ui-state-disabled"':'').'>';
-						echo '	<td'.(array_search($ATC->get_currentuser_id(),explode(',',$obj->attendees))!==false?' class="highlighted"':'').'><!--<span class="ui-icon ui-icon-'.($obj->nzcf_status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> -->'.$obj->title.'</td>';
+						echo '	<td'.(array_search($ATC->get_currentuser_id(),explode(',',$obj->attendees))!==false?' class="highlighted"':'').'><!--<span class="ui-icon ui-icon-'.($obj->nzcf_status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> --><a href="?id='.$obj->activity_id.'" class="edit">'.$obj->title.'</a></td>';
 						echo '	<td'.($obj->personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
-						echo '	<td'.($obj->twoic_personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'>'.$obj->twoic_display_name.'</td>';
+						echo '	<td'.($obj->twoic_personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'><a href="personnel.php?id='.$obj->twoic_personnel_id.'">'.$obj->twoic_display_name.'</a></td>';
 						echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->startdate)).'</td>';
 						echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->enddate)).'</td>';
 						echo '	<td style="text-align:center;">'.$obj->officers_attending.'</td>';
@@ -569,7 +573,7 @@
 		$('a.button.documentation').button({ icons: { primary: 'ui-icon-folder-open' }, text: false });
 		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false });
 		$('#activitylist a.button.attendance').button({ icons: { primary: 'ui-icon-clipboard' }, text: false });
-		$('a.button.edit, a.button.new, #activitylist a.button.attendance').click(function(e){
+		$('a.edit, a.button.new, #activitylist a.button.attendance').click(function(e){
 			e.preventDefault(); // stop the link actually firing
 			var href = $(this).attr("href");
 			$('#dialog').empty().load(href).dialog({
@@ -579,7 +583,7 @@
 				buttons: {
 					Cancel: function() {
 						$( this ).dialog( "close" );
-					},
+					}<?php if( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ) { ?> ,
 					Save: function() {
 						var attendees = '&attendees=0';
 						$('#attendees ol.dragdrop li').each(function(index){
@@ -615,8 +619,7 @@
 									}
 								  },
 								  close: function() { 
-									$( this ).dialog( "destroy" ); 
-									$('#save_indicator').fadeOut(1500, function(){ $('#save_indicator').remove() });
+									$( this ).dialog( "destroy" );
 								  },
 								  open: function() {
 									 $('.ui-dialog-titlebar').addClass('ui-state-error');
@@ -625,9 +628,7 @@
 							   return false;
 						   }
 						 });
-						 
-						$( this ).dialog( "close" );
-					}
+					} <?php } ?>
 				  },
 				  close: function() { 
 					$( this ).dialog( "destroy" ); 

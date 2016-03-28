@@ -22,7 +22,13 @@
 	define( 'ATC_SETTING_DATE_OUTPUT',         "j M");
 	define( 'ATC_SETTING_FULL_DISPLAY_NAME',		'CONCAT("RNK, ", `personnel`.`lastname`,", ",`personnel`.`firstname`)' );
 	define( 'ATC_SETTING_DISPLAY_NAME',		'CONCAT(`personnel`.`lastname`,", ",`personnel`.`firstname`)' );
+	define( 'ATC_SETTING_DISPLAY_RANK_SHORTNAME', '( SELECT `rank_shortname` FROM `personnel_rank` INNER JOIN `rank` ON `rank`.`rank_id` = `personnel_rank`.`rank_id` WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` ORDER BY `date_achieved` DESC LIMIT 1 )');
 	
+	/* Money settings */
+	define( 'ATC_SETTING_FINANCE_TERM_FEES',			50.00 );
+	define( 'ATC_SETTING_FINANCE_UNIFORM_DEPOSIT',		50.00 );
+	define( 'ATC_SETTING_FINANCE_MONEYFORMAT', 	'%(#2.2n' );
+		
 	/* Rank level permission setttings */		
 	define( 'ATC_USER_LEVEL_CADET',			  ATC_PERMISSION_TRAINING_VIEW | ATC_PERMISSION_ACTIVITIES_VIEW );
 	define( 'ATC_USER_LEVEL_SNCO', 				ATC_USER_LEVEL_CADET | ATC_PERMISSION_PERSONNEL_VIEW | ATC_PERMISSION_LOCATIONS_VIEW);

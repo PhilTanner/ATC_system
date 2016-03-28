@@ -4,7 +4,7 @@
 	else
 		define( 'ATC_DEBUG', 					1 );
 	
-	define( 'ATC_VERSION',						'0.7.0' );
+	define( 'ATC_VERSION',						'0.7.2' );
 	
 	// Permissions structure, as a bitmask
 	define( 'ATC_PERMISSION_PERSONNEL_VIEW', 		1 );
@@ -58,7 +58,7 @@
 	
 	/* The user levels are set in the config file, so groups can't be declared until afterwards */
 	define( 'ATC_USER_GROUP_OFFICERS',			ATC_USER_LEVEL_ADJUTANT.','.ATC_USER_LEVEL_STORES.','.ATC_USER_LEVEL_TRAINING.','.ATC_USER_LEVEL_CUCDR.','.ATC_USER_LEVEL_SUPOFF.','.ATC_USER_LEVEL_OFFICER );
-	define( 'ATC_USER_GROUP_CADETS',			ATC_USER_LEVEL_CADET.','.ATC_USER_LEVEL_SNCO );
+	define( 'ATC_USER_GROUP_CADETS',			ATC_USER_LEVEL_CADET );
 	define( 'ATC_USER_GROUP_PERSONNEL',			ATC_USER_GROUP_OFFICERS.','.ATC_USER_GROUP_CADETS );
 	
 	class ATCException extends Exception {
@@ -122,6 +122,20 @@
 			if ($result = self::$mysqli->query($query))
 			{
 				self::log_action( 'attendance', $query, self::$mysqli->insert_id );
+				return true;
+			}
+			else throw new ATCExceptionDBError(self::$mysqli->error);
+		}
+		
+		public function add_term( $startdate, $enddate )
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = "INSERT INTO `term` (`startdate`,`enddate` ) VALUES ( '".date("Y-m-d",$startdate)."','".date("Y-m-d",$enddate)."' );";
+			if ($result = self::$mysqli->query($query))
+			{
+				self::log_action( 'term', $query, self::$mysqli->insert_id );
 				return true;
 			}
 			else throw new ATCExceptionDBError(self::$mysqli->error);
@@ -309,15 +323,7 @@
 			$query = '
 				SELECT	`activity_register`.*,
 					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
-					( 
-   					SELECT `rank_shortname` 
-   					FROM `personnel_rank` 
-							INNER JOIN `rank` 
-								ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
-   					WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
-   					ORDER BY `date_achieved` DESC 
-   					LIMIT 1 
-					) AS `rank`,
+					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
 					`personnel`.`mobile_phone`,
 					`personnel`.`allergies`,
 					`personnel`.`access_rights`,
@@ -383,9 +389,6 @@
 			$startdate = strtotime($startdate);
 			$enddate = strtotime($enddate);
 
-			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ))
-			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
-				
 			$query = 'SELECT * FROM `attendance` WHERE `date` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" ORDER BY `date` ASC;';
 			
 			$dates = array();
@@ -404,9 +407,6 @@
 		{
 			$startdate = strtotime($startdate);
 			$enddate = strtotime($enddate);
-
-			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ))
-			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
 				
 			$query = '
 			SELECT	`attendance_register`.*,
@@ -436,9 +436,6 @@
 		{
 			$startdate = strtotime($startdate);
 			$enddate = strtotime($enddate);
-
-			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ))
-			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
 			
 			$query = '
 			SELECT	`attendance_register`.*,
@@ -465,6 +462,64 @@
 			else
 				throw new ATCExceptionDBError(self::$mysqli->error);
 			return $awollers;
+		}
+		
+		public function get_cadets_risking_sign_off()
+		{
+			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			
+			$query = '
+				SELECT 
+					`T3`.*, 
+					`personnel`.`personnel_id`, 
+					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
+					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
+					COUNT(*) AS `missed_nights`
+				FROM
+					(
+						SELECT 
+							*
+						FROM
+							(
+								SELECT
+									`T1`.`date`,
+									`T1`.`presence`, 
+									`T1`.personnel_id,
+									(
+										SELECT 
+											MAX(`date`) 
+										FROM 
+											`attendance_register` `T` 
+										WHERE 
+											`T`.`date` < `T1`.`date` 
+											AND `T`.`presence` <> `T1`.`presence`
+									) AS `MaxDate`
+								FROM 
+									`attendance_register` `T1`
+								ORDER BY 
+									`date` DESC
+							) `T2`
+						WHERE 
+							`presence` = '.ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE.'
+					) `T3`
+					INNER JOIN `personnel` 
+						ON `T3`.`personnel_id` = `personnel`.`personnel_id`
+				GROUP BY
+					`T3`.`personnel_id`
+				HAVING
+					`date` = (SELECT MAX(`date`) FROM `attendance_register`) 
+					AND COUNT(*) >= 2
+				ORDER BY
+					`display_name`;';
+					
+			$results = array();
+			if ($result = self::$mysqli->query($query))
+				while ( $obj = $result->fetch_object() )
+					$results[] = $obj;
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+			return $results;
 		}
 		
 		public function get_currentuser_id() { return self::$currentuser; }
@@ -513,10 +568,7 @@
 		}
 		
 		public function get_nok( $for_personnel_id, $nok_id=null )
-		{
-			if(!self::user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $for_personnel_id ))
-			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this user");
-				
+		{				
 			$query = '
 			SELECT	*
 			FROM 	`next_of_kin`
@@ -551,15 +603,7 @@
 						$query = "
 							SELECT 	*, 
 								".ATC_SETTING_DISPLAY_NAME." AS `display_name`,
-								( 
-   								SELECT `rank_shortname` 
-   								FROM `personnel_rank` 
-										INNER JOIN `rank` 
-											ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
-   								WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
-   								ORDER BY `date_achieved` DESC 
-   								LIMIT 1 
-								) AS `rank`
+								".ATC_SETTING_DISPLAY_RANK_SHORTNAME." AS `rank`
 							FROM `personnel` 
 							WHERE `personnel_id` > 0 ";
 						if( !is_null($access_rights) )
@@ -589,6 +633,7 @@
 						$personnel->rank = null;
 						$personnel->enabled = -1;
 						$personnel->created = date("d/m/Y h:i a", time());
+						$personnel->display_name = "New user";
 					}
 					break;
 				default:
@@ -597,15 +642,7 @@
 				
 					$query = "SELECT *,
 						".ATC_SETTING_DISPLAY_NAME." AS `display_name`,
-					( 
-   					SELECT `rank_shortname` 
-   					FROM `personnel_rank` 
-							INNER JOIN `rank` 
-								ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
-   					WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
-   					ORDER BY `date_achieved` DESC 
-   					LIMIT 1 
-					) AS `rank` 
+						".ATC_SETTING_DISPLAY_RANK_SHORTNAME." AS `rank` 
 					FROM `personnel` 
 					WHERE `personnel_id` = ".(int)$id." 
 					LIMIT 1;";
@@ -663,6 +700,34 @@
 				throw new ATCExceptionDBError(self::$mysqli->error);
 
 			return $ranks;
+		}
+		
+		public function get_terms( $startdate=null, $enddate=null )
+		{
+			$startdate = (is_null($startdate)?null:strtotime($startdate));
+			$enddate = (is_null($enddate)?null:strtotime($enddate));
+			
+			$query = '
+				SELECT * 
+				FROM `term`
+				WHERE 1=1
+				'. (is_null($startdate)?'':' AND `startdate` >= '.date('Y-m-d',$startdate)).'
+				'. (is_null($enddate)?'':' AND `enddate` <= '.date('Y-m-d',$enddate)).'
+				ORDER BY `startdate` ASC;';
+
+			$terms = array();
+			if ($result = self::$mysqli->query($query))
+				while ( $obj = $result->fetch_object() )
+				{
+					$obj->startdate = strtotime($obj->startdate);
+					$obj->enddate = strtotime($obj->enddate);
+					$terms[] = $obj;
+				}
+			
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $terms;
 		}
 		
 		// Keep a track of who's doing what, for later auditing.
@@ -748,8 +813,21 @@
 					break;
 				}
 			}
+			// Allow 2IC to be an emergency contact too.
 			if( !$isofficer )
-				throw new ATCExceptionBadData('Alternate OIC needs to be an officer');
+			{
+				$officers = self::get_personnel(null,'ASC',ATC_USER_LEVEL_EMRG_CONTACT);
+				foreach( $officers as $officer )
+				{
+					if( $officer->personnel_id == $personnel_id )
+					{
+						$isofficer = true;
+						break;
+					}
+				}
+			}
+			if( !$isofficer )
+				throw new ATCExceptionBadData('Alternate OIC needs to be an officer or emergency contact');
 			
 			if( !(int)$activity_id )
 			{
@@ -782,7 +860,26 @@
 					$attendees = explode(',', $attendees);
 					foreach($attendees as $personnel_id)
 						if( $personnel_id )
+						{
 							self::$mysqli->query("INSERT INTO `activity_register` (`activity_id`, `personnel_id`) VALUES (".(int)$activity_id.", ".(int)$personnel_id.");");
+							if( (float)$cost )
+								self::$mysqli->query("
+									INSERT INTO `payment` (
+										`personnel_id`, 
+										`amount`, 
+										`reference`,
+										`payment_type`,
+										`related_to_id`,
+										`created_by`
+									) VALUES (
+										".(int)$personnel_id.",
+										".(float)$cost.",
+										'".self::$mysqli->real_escape_string($title)."',
+										".ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE." 
+										".(int)$activity_id.", 
+										".self::$currentuser."
+									);");
+						}
 					return $activity_id;
 				}
 				else throw new ATCExceptionDBError(self::$mysqli->error);
@@ -804,12 +901,72 @@
 				{
 					self::log_action( 'activity', $query, (int)$activity_id );
 					$attendees = explode(",", $attendees);
-					// Remove everyone, simpler than working out who has been dragged out of the box
-					// But only remove them if they're not recorded as attending already. At that point, not sure what we do, but DB leaves them alone
-					self::$mysqli->query("DELETE FROM `activity_register` WHERE `activity_id` = ".(int)$activity_id." AND `presence` IS NULL;");
+					
+					// Find out if our attendees have changed
+					$activitydetails = self::get_activity($activity_id);
+					
 					foreach($attendees as $personnel_id)
-						if( $personnel_id )
-							self::$mysqli->query("INSERT INTO `activity_register` (`activity_id`, `personnel_id`) VALUES (".(int)$activity_id.", ".(int)$personnel_id.");");
+					{
+						// We didn't previously know about this person, so let's add them
+						if( array_search( $personnel_id, $activitydetails[0]->attendees ) === false && $personnel_id)
+						{
+							// Attendance register
+							if( !self::$mysqli->query("INSERT INTO `activity_register` (`activity_id`, `personnel_id`) VALUES (".(int)$activity_id.", ".(int)$personnel_id.");") )
+								throw new ATCExceptionDBError(self::$mysqli->error);
+							// And an invoice, if necessary
+							if( (float)$cost )
+							{
+								echo "
+									INSERT INTO `payment` (
+										`personnel_id`, 
+										`amount`, 
+										`reference`,
+										`payment_type`,
+										`related_to_id`,
+										`created_by`
+									) VALUES (
+										".(int)$personnel_id.",
+										".(float)$cost.",
+										'".self::$mysqli->real_escape_string($title)."',
+										".ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE." 
+										".(int)$activity_id.", 
+										".self::$currentuser."
+									);";
+								if( !self::$mysqli->query("
+									INSERT INTO `payment` (
+										`personnel_id`, 
+										`amount`, 
+										`reference`,
+										`payment_type`,
+										`related_to_id`,
+										`created_by`
+									) VALUES (
+										".(int)$personnel_id.",
+										".(float)$cost.",
+										'".self::$mysqli->real_escape_string($title)."',
+										".ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE.", 
+										".(int)$activity_id.", 
+										".self::$currentuser."
+									);") )
+									throw new ATCExceptionDBError(self::$mysqli->error);
+							}
+						}
+					}
+					// Now look for people who were attending, who now aren't.
+					foreach($activitydetails[0]->attendees as $personnel_id)
+					{
+						// We can't find the attendee in the new list, so delete them
+						if( array_search( $personnel_id, $attendees ) === false && $personnel_id)
+						{
+							// Attendance register
+							if( !self::$mysqli->query("DELETE FROM `activity_register` WHERE `activity_id` = ".(int)$activity_id." AND `personnel_id` = ".(int)$personnel_id." LIMIT 1;") )
+								throw new ATCExceptionDBError(self::$mysqli->error);
+							// And delete the invoice. Will make them show up as overpayment if they've paid anything. This is deliberate
+							if( !self::$mysqli->query("DELETE FROM `payment` WHERE `related_to_id` = ".(int)$activity_id." AND `personnel_id` = ".(int)$personnel_id." AND `payment_type` = ".ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE." LIMIT 1;") )
+								throw new ATCExceptionDBError(self::$mysqli->error);
+						}
+					}
+					
 					return (int)$activity_id;
 				}
 				else throw new ATCExceptionDBError(self::$mysqli->error);
@@ -836,12 +993,12 @@
 					$presence = 'NULL';
 				$note = $value['note'];
 				$updatenote = strlen(trim($note));
-				$amount_paid = (float)$value['amount_paid'];
+				//$amount_paid = (float)$value['amount_paid'];
 				
 				if( $presence != ATC_ATTENDANCE_PRESENT && $presence != ATC_ATTENDANCE_ON_LEAVE && $presence != ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE )
 					throw new ATCExceptionBadData('Unknown presence value');
 
-				$query = "INSERT INTO `activity_register` (`personnel_id`, `activity_id`, `presence`".($updatenote?', `note`':'').", `amount_paid`) VALUES ( ".(int)$personnel_id.", ".(int)$activity_id.", ".$presence.($updatenote?", '".self::$mysqli->real_escape_string($note)."'":'').", ".$amount_paid.") ON DUPLICATE KEY UPDATE `presence` = ".$presence.($updatenote?", `note` = '".self::$mysqli->real_escape_string($note)."'":'').", `amount_paid` = ".$amount_paid.";";
+				$query = "INSERT INTO `activity_register` (`personnel_id`, `activity_id`, `presence`".($updatenote?', `note`':'').") VALUES ( ".(int)$personnel_id.", ".(int)$activity_id.", ".$presence.($updatenote?", '".self::$mysqli->real_escape_string($note)."'":'').") ON DUPLICATE KEY UPDATE `presence` = ".$presence.($updatenote?", `note` = '".self::$mysqli->real_escape_string($note)."'":'').";";
 				
 				if ($result = self::$mysqli->query($query))
 					self::log_action( 'activity_register', $query, $activity_id );
@@ -1072,7 +1229,7 @@
 			$("table.tablesorter").tablesorter().on("sortStart", function(){ $("tbody tr").removeClass("evenrow"); }).on("sortEnd", function(){ $("tbody tr:odd").not(".ui-state-highlight, .ui-state-error").addClass("evenrow"); });
 		</script>
 		<footer>
-			<p> Built on the ATC system code available at <a target="blank" href="https://github.com/PhilTanner/ATC_system">https://github.com/PhilTanner/ATC_system</a> </p>
+			<p> Built on the ATC system code available at <a target="blank" href="https://github.com/PhilTanner/ATC_system">https://github.com/PhilTanner/ATC_system</a> &ndash; Version '.ATC_VERSION.' </p>
 			'.(ATC_DEBUG?'<p style="font-size:75%;">DEBUG INFO: Logged in as user: '.self::$currentuser.' - access rights: '.self::$currentpermissions.'</p>':'').'
 			'.(ATC_DEBUG?'<!--':'').'<img src="49squadron.png" style="position:absolute; bottom: 1em; right: 1em; z-index: -1;" />'.(ATC_DEBUG?'-->':'').'
 		</footer>
@@ -1159,8 +1316,8 @@
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW, self::$currentuser)?'<li> <a href="./personnel.php" class="personnel">Personnel</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ATTENDANCE_VIEW)?'<li> <a href="./attendance.php" class="attendance">Attendance</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ACTIVITIES_VIEW)?'<li> <a href="./activities.php" class="activities">Activities</a> </li>':'').'
-				<!--'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW)?'<li> <a href="./" class="finance">Finance</a> </li>':'').'
-				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_STORES_VIEW)?'<li> <a href="./" class="stores">Stores</a> </li>':'').'
+				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW)?'<li> <a href="./finance.php" class="finance">Finance</a> </li>':'').'
+				<!--'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_STORES_VIEW)?'<li> <a href="./" class="stores">Stores</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_TRAINING_VIEW)?'<li> <a href="./" class="training">Training</a> </li>':'').'-->
 				'.(self::$currentuser && self::user_has_permission(ATC_USER_LEVEL_ADJUTANT)?'<li> <a href="./documents.php" class="documents">Documentation</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_SYSTEM_VIEW)?'<li> <a href="./system.php" class="system">System</a> </li>':'').'
@@ -1185,6 +1342,7 @@
 					return true;
 				switch($permission)
 				{
+					case ATC_PERMISSION_ATTENDANCE_VIEW:
 					case ATC_PERMISSION_PERSONNEL_VIEW:
 					case ATC_PERMISSION_PERSONNEL_EDIT:
 						// If we're wanting to view/edit our own user, we're all good.
