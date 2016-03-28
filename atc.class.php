@@ -4,7 +4,7 @@
 	else
 		define( 'ATC_DEBUG', 					1 );
 	
-	define( 'ATC_VERSION',						'0.7.2' );
+	define( 'ATC_VERSION',						'0.7.3' );
 	
 	// Permissions structure, as a bitmask
 	define( 'ATC_PERMISSION_PERSONNEL_VIEW', 		1 );
@@ -59,7 +59,7 @@
 	/* The user levels are set in the config file, so groups can't be declared until afterwards */
 	define( 'ATC_USER_GROUP_OFFICERS',			ATC_USER_LEVEL_ADJUTANT.','.ATC_USER_LEVEL_STORES.','.ATC_USER_LEVEL_TRAINING.','.ATC_USER_LEVEL_CUCDR.','.ATC_USER_LEVEL_SUPOFF.','.ATC_USER_LEVEL_OFFICER );
 	define( 'ATC_USER_GROUP_CADETS',			ATC_USER_LEVEL_CADET );
-	define( 'ATC_USER_GROUP_PERSONNEL',			ATC_USER_GROUP_OFFICERS.','.ATC_USER_GROUP_CADETS );
+	define( 'ATC_USER_GROUP_PERSONNEL',			ATC_USER_GROUP_OFFICERS.','.ATC_USER_GROUP_CADETS.','.ATC_USER_LEVEL_SNCO );
 	
 	class ATCException extends Exception {
 		/**
@@ -216,6 +216,7 @@
 					`personnel`.`personnel_id`,
 					'.str_replace("personnel","2ic_personnel",ATC_SETTING_DISPLAY_NAME).' AS `twoic_display_name`,
 					`2ic_personnel`.`personnel_id` AS `twoic_personnel_id`,
+					CASE WHEN `activity`.`enddate` < now() THEN 1 ELSE 0 END AS `sortorder`, 
 					(
 						SELECT	COUNT(`personnel`.`personnel_id`)
 						FROM	`activity_register`
@@ -247,7 +248,7 @@
 						ON `activity`.`2ic_personnel_id` = `2ic_personnel`.`personnel_id`
 				WHERE 	`activity`.`startdate` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" 
 					AND `activity`.`activity_id` > 0
-				ORDER BY `startdate` ASC;';
+				ORDER BY `sortorder`, `startdate` ASC;';
 
 			$activities = array();
 			if ($result = self::$mysqli->query($query))
