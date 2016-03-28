@@ -232,7 +232,9 @@
 					$total = 0;
 					foreach( $termfeesoutstanding as $obj )
 					{
-						echo '<tr>';
+						
+						$class = (strtotime("+5 weeks", strtotime($obj->startdate))<time()?"ui-state-error":(strtotime("+6 weeks", strtotime($obj->startdate))<time()?"ui-state-highlight":''));
+						echo '<tr class="'.$class.'">';
 						echo '	<td>'.$obj->rank.'</td>';
 						echo '	<td><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
 						echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->startdate)).'</td>';
@@ -344,13 +346,13 @@
 	Next/Prev years activity lists<br />
 	Document folders<br />
 	Activity status (planned/potential/alternative date/complete/etc)<br/>
-	Term week 8 with no term fee payments<br />
 	Promotion dates. Joiing dates<br />
 	User cannot edit key fields for themselves (leaving dates, user levels, etc) - add "sensitive field" values to set_personnel()<br />
 	Change perm structure to user level constants, which *then* map to perm structure to stop DB Unknown issues<br />
 	Confirm box on dob entry < 13yrs ago<br />
 	EMERGY CONT can also be 2ic<br />
 	Cadet alternate email<br />
+	Popups/links standardised into single JS file<br /> 
 	
 	
 	<h2> Outstanding documentation </h2>

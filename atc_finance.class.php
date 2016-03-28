@@ -214,8 +214,8 @@
 				HAVING 
 					(SUM( `payments_tmp`.`amount_due` ) + SUM( `payments_tmp`.`amount_paid` )) <> 0
 				ORDER BY 
-					`display_name`, 
-					`startdate`;';
+					`startdate`,
+					`display_name`;';
 
 			$dues = array();
 			if ($result = self::$mysqli->query($query))
