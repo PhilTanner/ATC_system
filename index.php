@@ -232,7 +232,9 @@
 					$total = 0;
 					foreach( $termfeesoutstanding as $obj )
 					{
-						echo '<tr>';
+						
+						$class = (strtotime("+5 weeks", strtotime($obj->startdate))<time()?"ui-state-error":(strtotime("+6 weeks", strtotime($obj->startdate))<time()?"ui-state-highlight":''));
+						echo '<tr class="'.$class.'">';
 						echo '	<td>'.$obj->rank.'</td>';
 						echo '	<td><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
 						echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->startdate)).'</td>';
@@ -340,46 +342,49 @@
 	{
 ?>
 	<hr />
-	Current user login sessions<br />
-	Next/Prev years activity lists<br />
-	Document folders<br />
-	Activity status (planned/potential/alternative date/complete/etc)<br/>
-	Term week 8 with no term fee payments<br />
-	Promotion dates. Joiing dates<br />
-	User cannot edit key fields for themselves (leaving dates, user levels, etc) - add "sensitive field" values to set_personnel()<br />
-	Change perm structure to user level constants, which *then* map to perm structure to stop DB Unknown issues<br />
-	Confirm box on dob entry < 13yrs ago<br />
-	EMERGY CONT can also be 2ic<br />
-	Cadet alternate email<br />
-	
-	
-	<h2> Outstanding documentation </h2>
+	<h2> Future enhancement ideas </h2>
 	<ol>
-		<li>NZCF11</li>
-		<li>NZCF8</li>
-		<li>NZCF11a</li>
-	</ol>
-	
-	<h2> Alerts to build </h2>
-	<ol>
-		<li> Cadets signed up to activities without term fees </li>
-		<li> Cadets signed up to activities without NZCF8s </li>
-		<li> Cadets who will qualify for uniform </li>
-		<li> Activities with unknown start/end dates </li>
-		<li> Activities with unknown locations </li>
-		<li> Activities with NZCF8 outstanding </li>
-		<li> Activities which have passed but have no attendees set up </li>
-	</ol>
-	
-	<h2> Automated emails </h2>
-	<ol>
-		<li> Email parents/cadets at sign up - link to NZCF8? Incl costs. Reminder, term fees and activity fees </li>
-		<li> Email parents/cadets 24hr before. Incl contact numbers &amp; equip list</li>
-		<li> Email treasurer at sign on </li>
-		<li> Email treasurer at sign out </li>
-		<li> Email treasurer at uniform in/out </li>
-	</ol>
-	
+		<li>Current user login sessions<br />
+		<li>Next/Prev years activity lists<br />
+		<li>Document folders<br />
+		<li>Activity status (planned/potential/alternative date/complete/etc)<br/>
+		<li>Promotion dates. Joiing dates<br />
+		<li>User cannot edit key fields for themselves (leaving dates, user levels, etc) - add "sensitive field" values to set_personnel()<br />
+		<li>Change perm structure to user level constants, which *then* map to perm structure to stop DB Unknown issues<br />
+		<li>Confirm box on dob entry < 13yrs ago<br />
+		<li>Cadet alternate email<br />
+		<li>Popups/links standardised into single JS file<br /> 
+		<li>
+			<h3> Outstanding documentation </h3>
+			<ol>
+				<li>NZCF11</li>
+				<li>NZCF8</li>
+				<li>NZCF11a</li>
+			</ol>
+		</li>
+		<li>
+			<h3> Alerts to build </h3>
+			<ol>
+				<li> Cadets signed up to activities without term fees </li>
+				<li> Cadets signed up to activities without NZCF8s </li>
+				<li> Cadets who will qualify for uniform </li>
+				<li> Activities with unknown start/end dates </li>
+				<li> Activities with unknown locations </li>
+				<li> Activities with NZCF8 outstanding </li>
+				<li> Activities which have passed but have no attendees set up </li>
+			</ol>
+		</li>
+		<li>
+			<h3> Automated emails </h3>
+			<ol>
+				<li> Email parents/cadets at sign up - link to NZCF8? Incl costs. Reminder, term fees and activity fees </li>
+				<li> Email parents/cadets 24hr before. Incl contact numbers &amp; equip list</li>
+				<li> Email treasurer at sign on </li>
+				<li> Email treasurer at sign out </li>
+				<li> Email treasurer at uniform in/out </li>
+			</ol>
+		</li>
+	</ol>	
 	
 	<script>
 		$('a.activity.edit').click(function(e){

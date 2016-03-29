@@ -2,32 +2,6 @@
 	require_once "atc.class.php";
 	$ATC = new ATC();
 	
-	/*
-	// Enter a new parade night
-	if( isset( $_POST['newdate'] ) && strtotime( $_POST['newdate'] ) )
-	{
-		try {
-			$ATC->add_parade_night( strtotime($_POST['newdate']) );
-		} catch (ATCExceptionInsufficientPermissions $e) {
-			header("HTTP/1.0 401 Unauthorised");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-		} catch (ATCExceptionDBError $e) {
-			header("HTTP/1.0 500 Internal Server Error");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-		} catch (ATCExceptionDBConn $e) {
-			header("HTTP/1.0 500 Internal Server Error");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-		} catch (ATCException $e) {
-			header("HTTP/1.0 400 Bad Request");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-		} catch (Exception $e) {
-			header("HTTP/1.0 500 Internal Server Error");
-			echo 'Caught exception: ',  $e->getMessage(), "\n";
-		}
-		exit();
-	// Enter a new term 
-	} else
-	*/
 	if( isset( $_POST['startdate'] ) && strtotime( $_POST['startdate'] ) && isset( $_POST['enddate'] ) && strtotime( $_POST['enddate'] ) )
 	{
 		try {
@@ -126,7 +100,6 @@
 		$termend = date('Y').'-12-31';
 	}
 	
-	$dates = $ATC->get_attendance( $termstart, $termend );
 	$users = $ATC->get_personnel((isset($_GET['id'])?(int)$_GET['id']:null), 'ASC', (isset($_GET['id'])?null:ATC_USER_GROUP_PERSONNEL), false );
 	if( !is_array($users) )
 	{
