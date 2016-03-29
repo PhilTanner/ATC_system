@@ -113,20 +113,6 @@
 					header('Location: login.php', true, 302);
 		}
 		
-		public function add_parade_night( $date )
-		{
-			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ))
-			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
-				
-			$query = "INSERT INTO `attendance` (`date` ) VALUES ( '".date("Y-m-d",$date)."' );";
-			if ($result = self::$mysqli->query($query))
-			{
-				self::log_action( 'attendance', $query, self::$mysqli->insert_id );
-				return true;
-			}
-			else throw new ATCExceptionDBError(self::$mysqli->error);
-		}
-		
 		public function add_term( $startdate, $enddate )
 		{
 			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT ))
@@ -383,25 +369,6 @@
 			else
 				throw new ATCExceptionDBError(self::$mysqli->error);
 			return $activities;
-		}
-		
-		public function get_attendance( $startdate, $enddate )
-		{
-			$startdate = strtotime($startdate);
-			$enddate = strtotime($enddate);
-
-			$query = 'SELECT * FROM `attendance` WHERE `date` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" ORDER BY `date` ASC;';
-			
-			$dates = array();
-			if ($result = self::$mysqli->query($query))
-			{
-				while ( $obj = $result->fetch_object() )
-					$dates[] = $obj;
-			}	
-			else
-				throw new ATCExceptionDBError(self::$mysqli->error);
-
-			return $dates;
 		}
 		
 		public function get_attendance_register( $startdate, $enddate )
