@@ -699,7 +699,7 @@
 		}
 		
 		// Keep a track of who's doing what, for later auditing.
-		private function log_action( $table_name, $sql_run, $idrow )
+		protected function log_action( $table_name, $sql_run, $idrow )
 		{
 			$query = "INSERT INTO `log_changes` (`personnel_id`, `sql_executed`, `table_updated`, `row_updated` ) VALUES ( ".self::$currentuser.', "'.self::$mysqli->real_escape_string($sql_run).'", "'.self::$mysqli->real_escape_string($table_name).'", '.(int)$idrow.' );';
 			if ($result = self::$mysqli->query($query))	return true;
