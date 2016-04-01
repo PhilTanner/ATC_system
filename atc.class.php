@@ -53,6 +53,16 @@
 	define( 'ATC_NOK_TYPE_OTHER',				7 );
 	define( 'ATC_NOK_TYPE_GRANDMOTHER',			8 );
 	define( 'ATC_NOK_TYPE_GRANDFATHER',			9 );
+	
+	// New Zealand Cadet Forces, as a bitmask - used for lesson training
+	define( 'ATC_NZCF_ATC', 		1 );
+	define( 'ATC_NZCF_CADETS',		1 << 1 );
+	define( 'ATC_NZCF_SEA',		1 << 2 );
+	
+	define( 'ATC_LESSON_LEVEL_ADVANCED', 	1 );
+	define( 'ATC_LESSON_LEVEL_PROFICIENT',	1 << 1 );
+	define( 'ATC_LESSON_LEVEL_BASIC',		1 << 2 );
+
 
 	require_once 'config.php';
 	
@@ -1195,7 +1205,11 @@
 			$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
 			$("tbody tr:odd").not(".ui-state-highlight, .ui-state-error").addClass("evenrow");
 			$("table.tablesorter").tablesorter().on("sortStart", function(){ $("tbody tr").removeClass("evenrow"); }).on("sortEnd", function(){ $("tbody tr:odd").not(".ui-state-highlight, .ui-state-error").addClass("evenrow"); });
-		</script>
+			$("a.button.edit").button({ icons: { primary: "ui-icon-pencil" }, text: false });
+			$("a.button.new").button({ icons: { primary: "ui-icon-plusthick" }, text: false });
+		</script>';
+			if( strlen(trim($title)) )
+				echo '
 		<footer>
 			<p> Built on the ATC system code available at <a target="blank" href="https://github.com/PhilTanner/ATC_system">https://github.com/PhilTanner/ATC_system</a> &ndash; Version '.ATC_VERSION.' </p>
 			'.(ATC_DEBUG?'<p style="font-size:75%;">DEBUG INFO: Logged in as user: '.self::$currentuser.' - access rights: '.self::$currentpermissions.'</p>':'').'
@@ -1285,8 +1299,8 @@
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ATTENDANCE_VIEW)?'<li> <a href="./attendance.php" class="attendance">Attendance</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ACTIVITIES_VIEW)?'<li> <a href="./activities.php" class="activities">Activities</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW)?'<li> <a href="./finance.php" class="finance">Finance</a> </li>':'').'
-				<!--'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_STORES_VIEW)?'<li> <a href="./" class="stores">Stores</a> </li>':'').'
-				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_TRAINING_VIEW)?'<li> <a href="./" class="training">Training</a> </li>':'').'-->
+				<!--'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_STORES_VIEW)?'<li> <a href="./" class="stores">Stores</a> </li>':'').'-->
+				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_TRAINING_VIEW)?'<li> <a href="./training.php" class="training">Training</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_USER_LEVEL_ADJUTANT)?'<li> <a href="./documents.php" class="documents">Documentation</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_SYSTEM_VIEW)?'<li> <a href="./system.php" class="system">System</a> </li>':'').'
 				

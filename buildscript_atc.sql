@@ -523,6 +523,42 @@ CREATE TABLE IF NOT EXISTS `user_session` (
 
 TRUNCATE TABLE `user_session`;
 
+
+-- Version 0.8.0
+CREATE TABLE IF NOT EXISTS `lesson` (
+  `lesson_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `lesson_category_id` int(11) unsigned NOT NULL,
+  `code` varchar(10) NOT NULL,
+  `title` varchar(50) NOT NULL,
+  `nzqa_qualifies` tinyint(1) NOT NULL DEFAULT '0',
+  `level` tinyint(3) unsigned NOT NULL,
+  `nzcf` tinyint(3) unsigned NOT NULL,
+  PRIMARY KEY (`lesson_id`),
+  UNIQUE KEY `code` (`code`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
+
+CREATE TABLE IF NOT EXISTS `lesson_category` (
+  `lesson_category_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `category` varchar(50) NOT NULL,
+  `colour` varchar(7) NOT NULL,
+  `category_short` varchar(3) NOT NULL,
+  `suggested_group` tinyint(4) NOT NULL COMMENT 'ADV/PROF/BASIC',
+  `suggested_nzcf` tinyint(4) NOT NULL,
+  PRIMARY KEY (`lesson_category_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
+
+CREATE TABLE IF NOT EXISTS `lesson_timetable` (
+  `lesson_timetable_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `lesson_id` int(11) unsigned NOT NULL,
+  `personnel_id` int(11) unsigned NOT NULL,
+  `location_id` int(11) unsigned NOT NULL DEFAULT '7',
+  `startdate` datetime NOT NULL,
+  `enddate` datetime NOT NULL,
+  `group` varchar(5) NOT NULL COMMENT 'ADV/PROF/BASIC',
+  PRIMARY KEY (`lesson_timetable_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+-- /Version 0.8.0
+
 --
 -- Constraints for dumped tables
 --

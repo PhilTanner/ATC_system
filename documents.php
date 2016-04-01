@@ -260,5 +260,5 @@
 	</script>
 		
 <?php
-	$ATC->gui_output_page_footer('Personnel');
+	$ATC->gui_output_page_footer('Documents');
 ?>
