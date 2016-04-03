@@ -5,17 +5,12 @@
 	if($_SERVER['REQUEST_METHOD'] == 'POST')
 	{
 		try {
-			//var_dump($_POST);
-			$groups = 0;
-			foreach( $_POST['suggested_group'] as $group )
-				$groups += $group;
-			
 			$ATC->set_lesson_category( 
 				$_GET['id'], 
 				$_POST['category'], 
 				$_POST['color'], 
+				$_POST['textcolor'], 
 				$_POST['code'], 
-				$groups, 
 				7 
 			);
 		} catch (ATCExceptionInsufficientPermissions $e) {	
@@ -46,7 +41,6 @@
 				<tr>
 					<th> Code </th>
 					<th> Category </th>
-					<th> Group </th>
 					<td> <a href="system_lesson_category.php?id=0" class="button new">New</a>
 				</tr>
 			</thead>
@@ -55,13 +49,8 @@
 					foreach( $categories as $category )
 					{
 						echo '<tr>';
-						echo '	<td style="background-color:#'.$category->colour.'">'.$category->category_short.'</td>';
-						echo '	<td style="background-color:#'.$category->colour.'">'.$category->category.'</td>';
-						echo '	<td> ';
-						echo (($category->suggested_group & ATC_LESSON_LEVEL_ADVANCED)?'Advanced ':'');
-						echo (($category->suggested_group & ATC_LESSON_LEVEL_PROFICIENT)?'Proficient ':'');
-						echo (($category->suggested_group & ATC_LESSON_LEVEL_BASIC)?'Basic ':'');
-						echo '	</td>';
+						echo '	<td style="background-color:'.$category->colour.'; color:'.$category->text_colour.'">'.$category->category_short.'</td>';
+						echo '	<td style="background-color:'.$category->colour.'"; color:'.$category->text_colour.'>'.$category->category.'</td>';
 						if( $ATC->user_has_permission( ATC_PERMISSION_SYSTEM_EDIT ))
 							echo '	<td> <a href="system_lesson_category.php?id='.$category->lesson_category_id.'" class="button edit">Edit</a> </td>';
 						echo '</tr>';
@@ -142,7 +131,7 @@
 			$category->category_short = null;
 			$category->category = null;
 			$category->colour = '#ffffff';
-			$category->suggested_group = 0;
+			$category->text_colour = '#000000';
 		}
 ?>
 		<form method="POST">
@@ -152,12 +141,8 @@
 			<input type="text" name="category" id="category" maxlength="50" value="<?= htmlentities($category->category) ?>" /><br />
 			<label for="color">Colour</label><br />
 			<input type="color" name="color" id="color" value="<?= strtoupper(htmlentities($category->colour)) ?>" defaultvalue="<?= strtoupper(htmlentities($category->colour)) ?>" style="width:2em;" /><br />
-			<label for="suggested_group">Level</label><br />
-			<select name="suggested_group[]" id="suggested_group" multiple="multiple">
-				<option value="<?= ATC_LESSON_LEVEL_ADVANCED ?>"<?= (($category->suggested_group & ATC_LESSON_LEVEL_ADVANCED)?' selected="selected"':'') ?>>Advanced</option>
-				<option value="<?= ATC_LESSON_LEVEL_PROFICIENT ?>"<?= (($category->suggested_group & ATC_LESSON_LEVEL_PROFICIENT)?' selected="selected"':'') ?>>Proficient</option>
-				<option value="<?= ATC_LESSON_LEVEL_BASIC ?>"<?= (($category->suggested_group & ATC_LESSON_LEVEL_BASIC)?' selected="selected"':'') ?>>Basic</option>
-			</select><br />
+			<label for="textcolor">Text Colour</label><br />
+			<input type="color" name="textcolor" id="textcolor" value="<?= strtoupper(htmlentities($category->text_colour)) ?>" defaultvalue="<?= strtoupper(htmlentities($category->text_colour)) ?>" style="width:2em;" /><br />
 		</form>
 <?php
 	}

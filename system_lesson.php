@@ -16,7 +16,7 @@
 				$_GET['id'], 
 				$_POST['lesson_category_id'], 
 				$_POST['code'], 
-				$_POST['title'], 
+				$_POST['description'], 
 				$_POST['nzqa_qualifies'], 
 				$groups, 
 				7
@@ -49,7 +49,6 @@
 				<tr>
 					<th> Category </th>
 					<th> Code </th>
-					<th> Title </th>
 					<th> NZQA </th>
 					<th> Group </th>
 					<td> <a href="system_lesson.php?id=0" class="button new">New</a>
@@ -60,14 +59,13 @@
 					foreach( $lessons as $lesson )
 					{
 						echo '<tr>';
-						echo '	<td style="background-color:#'.$lesson->colour.'">'.$lesson->category_short.'</td>';
-						echo '	<td style="background-color:#'.$lesson->colour.'">'.$lesson->code.'</td>';
-						echo '	<td style="background-color:#'.$lesson->colour.'">'.$lesson->title.'</td>';
-						echo '	<td style="background-color:#'.$lesson->colour.'">'.($lesson->nzqa_qualifies?'Y':'').'</td>';
+						echo '	<td style="background-color:'.$lesson->colour.'">'.$lesson->category_short.'</td>';
+						echo '	<td style="background-color:'.$lesson->colour.'">'.$lesson->code.'</td>';
+						echo '	<td>'.($lesson->nzqa_qualifies?'Y':'').'</td>';
 						echo '	<td> ';
-						echo (($lesson->suggested_group & ATC_LESSON_LEVEL_ADVANCED)?'Advanced ':'');
-						echo (($lesson->suggested_group & ATC_LESSON_LEVEL_PROFICIENT)?'Proficient ':'');
-						echo (($lesson->suggested_group & ATC_LESSON_LEVEL_BASIC)?'Basic ':'');
+						echo (($lesson->level & ATC_LESSON_LEVEL_ADVANCED)?'Advanced ':'');
+						echo (($lesson->level & ATC_LESSON_LEVEL_PROFICIENT)?'Proficient ':'');
+						echo (($lesson->level & ATC_LESSON_LEVEL_BASIC)?'Basic ':'');
 						echo '	</td>';
 						if( $ATC->user_has_permission( ATC_PERMISSION_SYSTEM_EDIT ))
 							echo '	<td> <a href="system_lesson.php?id='.$lesson->lesson_id.'" class="button edit">Edit</a> </td>';
@@ -149,9 +147,9 @@
 			$lesson->lesson_id = 0;
 			$lesson->lesson_category_id = 0;
 			$lesson->code = null;
-			$lesson->title = null;
 			$lesson->nzqa_qualifies = 0;
 			$lesson->level = 0;
+			$lesson->description = null;
 		}
 ?>
 		<form method="POST">
@@ -168,8 +166,8 @@
 			</select><br />
 			<label for="code">Lesson Code</label><br />
 			<input type="text" maxlength="10" id="code" name="code" value="<?= htmlentities($lesson->code) ?>" /><br />
-			<label for="title">Title</label><br />
-			<input type="text" name="title" id="title" maxlength="50" value="<?= htmlentities($lesson->title) ?>" /><br />
+			<label for="description">Description</label><br />
+			<input type="text" name="description" id="description" maxlength="255" value="<?= htmlentities($lesson->description) ?>" /><br />
 			<label for="nzqa_qualifies">NZQA qualifies</label><br />
 			<input type="checkbox" name="nzqa_qualifies" id="nzqa_qualifies" value="1" <?= ($lesson->nzqa_qualifies?' checked="checked"':'') ?> /><br />
 			<label for="level">Level</label><br />

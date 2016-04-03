@@ -28,6 +28,15 @@
 	define( 'ATC_SETTING_FINANCE_TERM_FEES',			50.00 );
 	define( 'ATC_SETTING_FINANCE_UNIFORM_DEPOSIT',		50.00 );
 	define( 'ATC_SETTING_FINANCE_MONEYFORMAT', 	'%(#2.2n' );
+	
+	define( 'ATC_DRESS_CODE_BLUES_NAME',				'No 6 Blues' );
+	define( 'ATC_DRESS_CODE_DPM_NAME',				'DPM' );
+	define( 'ATC_DRESS_CODE_BLUES_AND_DPM_NAME',	'Mixed' );
+	define( 'ATC_DRESS_CODE_MUFTI_NAME',			'Mufti' );
+	
+	define( 'ATC_ATTENDANCE_PRESENT_SYMBOL',		"X" );
+	define( 'ATC_ATTENDANCE_ON_LEAVE_SYMBOL',		"L" );
+	define( 'ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE_SYMBOL',	"o" );
 		
 	/* Rank level permission setttings */		
 	define( 'ATC_USER_LEVEL_CADET',			  ATC_PERMISSION_TRAINING_VIEW | ATC_PERMISSION_ACTIVITIES_VIEW );

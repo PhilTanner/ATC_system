@@ -530,6 +530,8 @@ CREATE TABLE IF NOT EXISTS `lesson` (
   `lesson_category_id` int(11) unsigned NOT NULL,
   `code` varchar(10) NOT NULL,
   `title` varchar(50) NOT NULL,
+  `description` varchar(255) NOT NULL,
+  `dress_code` smallint(5) unsigned NOT NULL,
   `nzqa_qualifies` tinyint(1) NOT NULL DEFAULT '0',
   `level` tinyint(3) unsigned NOT NULL,
   `nzcf` tinyint(3) unsigned NOT NULL,
@@ -537,15 +539,18 @@ CREATE TABLE IF NOT EXISTS `lesson` (
   UNIQUE KEY `code` (`code`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
 
+
 CREATE TABLE IF NOT EXISTS `lesson_category` (
   `lesson_category_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `category` varchar(50) NOT NULL,
-  `colour` varchar(7) NOT NULL,
+  `colour` varchar(7) NOT NULL DEFAULT '#ffffff',
+  `text_colour` varchar(7) NOT NULL DEFAULT '#000000',
   `category_short` varchar(3) NOT NULL,
   `suggested_group` tinyint(4) NOT NULL COMMENT 'ADV/PROF/BASIC',
   `suggested_nzcf` tinyint(4) NOT NULL,
   PRIMARY KEY (`lesson_category_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=3 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=9 ;
+
 
 CREATE TABLE IF NOT EXISTS `lesson_timetable` (
   `lesson_timetable_id` int(11) unsigned NOT NULL AUTO_INCREMENT,

@@ -338,6 +338,8 @@
 		// We just don't show the error if it was a permission issue, that's fine, we don't know who's logged in, after all 
 	}
 	
+	
+	
 	if(ATC_DEBUG)
 	{
 ?>
@@ -354,6 +356,7 @@
 		<li>Confirm box on dob entry < 13yrs ago<br />
 		<li>Cadet alternate email<br />
 		<li>Popups/links standardised into single JS file<br /> 
+		<li>Calendar iCal formats for Training & Activities https://support.office.com/en-us/article/View-and-subscribe-to-Internet-Calendars-f6248506-e144-4508-b658-c838b6067597#bm2
 		<li>
 			<h3> Outstanding documentation </h3>
 			<ol>

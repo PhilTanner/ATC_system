@@ -31,9 +31,6 @@
 	define( 'ATC_ATTENDANCE_PRESENT',			0 );
 	define( 'ATC_ATTENDANCE_ON_LEAVE',			1 );
 	define( 'ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE',		2 );
-	define( 'ATC_ATTENDANCE_PRESENT_SYMBOL',		"X" );
-	define( 'ATC_ATTENDANCE_ON_LEAVE_SYMBOL',		"L" );
-	define( 'ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE_SYMBOL',	"o" );
 
 	define( 'ATC_ACTIVITY_RECOGNISED',			0 );
 	define( 'ATC_ACTIVITY_AUTHORISED',			1 );
@@ -69,7 +66,8 @@
 	/* The user levels are set in the config file, so groups can't be declared until afterwards */
 	define( 'ATC_USER_GROUP_OFFICERS',			ATC_USER_LEVEL_ADJUTANT.','.ATC_USER_LEVEL_STORES.','.ATC_USER_LEVEL_TRAINING.','.ATC_USER_LEVEL_CUCDR.','.ATC_USER_LEVEL_SUPOFF.','.ATC_USER_LEVEL_OFFICER );
 	define( 'ATC_USER_GROUP_CADETS',			ATC_USER_LEVEL_CADET );
-	define( 'ATC_USER_GROUP_PERSONNEL',			ATC_USER_GROUP_OFFICERS.','.ATC_USER_GROUP_CADETS.','.ATC_USER_LEVEL_SNCO );
+	define( 'ATC_USER_GROUP_TRAINERS',			ATC_USER_GROUP_OFFICERS.','.ATC_USER_LEVEL_SNCO.','.ATC_USER_LEVEL_JNCO );
+	define( 'ATC_USER_GROUP_PERSONNEL',			ATC_USER_GROUP_OFFICERS.','.ATC_USER_GROUP_CADETS.','.ATC_USER_LEVEL_SNCO.','.ATC_USER_LEVEL_JNCO );
 	
 	class ATCException extends Exception {
 		/**
@@ -1209,6 +1207,7 @@
 			$("a.button.new").button({ icons: { primary: "ui-icon-plusthick" }, text: false });
 		</script>';
 			if( strlen(trim($title)) )
+			{
 				echo '
 		<footer>
 			<p> Built on the ATC system code available at <a target="blank" href="https://github.com/PhilTanner/ATC_system">https://github.com/PhilTanner/ATC_system</a> &ndash; Version '.ATC_VERSION.' </p>
@@ -1218,6 +1217,7 @@
 		'.(ATC_DEBUG?'<style>body { color:red; }</style>':'').'
 	</body>
 </html>';
+			}
 		}
 		
 		public function gui_output_page_header( $title )
