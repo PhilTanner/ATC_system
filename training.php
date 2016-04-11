@@ -539,3 +539,4 @@
 <?php
 	$ATC->gui_output_page_footer('Training');
 ?>
+

@@ -1286,6 +1286,8 @@
 				
 				$(".navoptions ul li a.logout").button({ icons: { primary: "ui-icon-unlocked" } }).removeClass("ui-state-disabled");
 				$(".navoptions ul li a.login").button({ icons: { primary: "ui-icon-locked" } })'.(self::$currentuser?'':'.removeClass("ui-state-disabled")').($title=='Login'?'.addClass("ui-state-active")':'').';
+
+				$(".navoptions ul li a.training").button({ icons: { primary: "ui-icon-calendar" } }).removeClass("ui-state-disabled")'.($title=='Training'?'.addClass("ui-state-active")':'').';
 			});
 			
 		</script>
@@ -1306,6 +1308,7 @@
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_SYSTEM_VIEW)?'<li> <a href="./system.php" class="system">System</a> </li>':'').'
 				
 				'.(self::$currentuser?'<li> <a href="./logout.php" class="logout">Logout</a> </li>':'<li> <a href="./login.php" class="login">Login</a> </li>').'				
+
 			</ul>
 		</nav>
 		<h1> '.(ATC_DEBUG?'<span style="color:Red;">DEV</span>':'ATC').' - '.$title.' </h1>
