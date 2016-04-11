@@ -361,7 +361,7 @@
 			<option value='<?=ATC_DRESS_CODE_BLUES?>'<?=($activity->dress_code==ATC_DRESS_CODE_BLUES?' selected="selected"':'')?>><?=htmlentities(ATC_DRESS_CODE_BLUES_NAME)?></option>
 			<option value='<?=ATC_DRESS_CODE_DPM?>'<?=($activity->dress_code==ATC_DRESS_CODE_DPM?' selected="selected"':'')?>><?=htmlentities(ATC_DRESS_CODE_DPM_NAME)?></option>
 			<option value='<?=ATC_DRESS_CODE_BLUES_AND_DPM?>'<?=($activity->dress_code==ATC_DRESS_CODE_BLUES_AND_DPM?' selected="selected"':'')?>><?=htmlentities(ATC_DRESS_CODE_BLUES_AND_DPM_NAME)?></option>
-			<option value='<?=ATC_DRESS_CODE_MUFTI?>'<?=($activity->dress_code==ATC_DRESS_CODE_MUFTI?' selected="selected"':'')?>><?=htmlentities(ATC_DRESS_CODE_BLUES_AND_MUFTI_NAME)?></option>
+			<option value='<?=ATC_DRESS_CODE_MUFTI?>'<?=($activity->dress_code==ATC_DRESS_CODE_MUFTI?' selected="selected"':'')?>><?=htmlentities(ATC_DRESS_CODE_MUFTI_NAME)?></option>
 		</select>
 	</div><br style="clear:left" />
 	<fieldset id='attendees' class='dragdrop attendees'><legend>Attendees</legend><ol class='dragdrop attendees'></ol></fieldset>
