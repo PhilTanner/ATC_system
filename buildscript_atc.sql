@@ -525,11 +525,16 @@ TRUNCATE TABLE `user_session`;
 
 
 -- Version 0.8.0
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lesson`
+--
+
 CREATE TABLE IF NOT EXISTS `lesson` (
   `lesson_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `lesson_category_id` int(11) unsigned NOT NULL,
   `code` varchar(10) NOT NULL,
-  `title` varchar(50) NOT NULL,
   `description` varchar(255) NOT NULL,
   `dress_code` smallint(5) unsigned NOT NULL,
   `nzqa_qualifies` tinyint(1) NOT NULL DEFAULT '0',
@@ -537,20 +542,29 @@ CREATE TABLE IF NOT EXISTS `lesson` (
   `nzcf` tinyint(3) unsigned NOT NULL,
   PRIMARY KEY (`lesson_id`),
   UNIQUE KEY `code` (`code`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=2 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lesson_category`
+--
 
 CREATE TABLE IF NOT EXISTS `lesson_category` (
   `lesson_category_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `category` varchar(50) NOT NULL,
   `colour` varchar(7) NOT NULL DEFAULT '#ffffff',
   `text_colour` varchar(7) NOT NULL DEFAULT '#000000',
-  `category_short` varchar(3) NOT NULL,
-  `suggested_group` tinyint(4) NOT NULL COMMENT 'ADV/PROF/BASIC',
+  `category_short` varchar(9) NOT NULL,
   `suggested_nzcf` tinyint(4) NOT NULL,
   PRIMARY KEY (`lesson_category_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=9 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `lesson_timetable`
+--
 
 CREATE TABLE IF NOT EXISTS `lesson_timetable` (
   `lesson_timetable_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -560,8 +574,10 @@ CREATE TABLE IF NOT EXISTS `lesson_timetable` (
   `startdate` datetime NOT NULL,
   `enddate` datetime NOT NULL,
   `group` varchar(5) NOT NULL COMMENT 'ADV/PROF/BASIC',
+  `dress_code` smallint(5) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`lesson_timetable_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
 -- /Version 0.8.0
 
 --
