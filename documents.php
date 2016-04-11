@@ -256,9 +256,8 @@
 	
 	<script>
 		$('table').css({ width: '100%', marginBottom: '1em' });
-		$('button.update').button({ icons: { primary: 'ui-icon-refresh' } });
 	</script>
 		
 <?php
-	$ATC->gui_output_page_footer('Personnel');
+	$ATC->gui_output_page_footer('Documents');
 ?>

@@ -338,6 +338,8 @@
 		// We just don't show the error if it was a permission issue, that's fine, we don't know who's logged in, after all 
 	}
 	
+	
+	
 	if(ATC_DEBUG)
 	{
 ?>
@@ -354,6 +356,11 @@
 		<li>Confirm box on dob entry < 13yrs ago<br />
 		<li>Cadet alternate email<br />
 		<li>Popups/links standardised into single JS file<br /> 
+		<li>Calendar iCal formats for Training & Activities https://support.office.com/en-us/article/View-and-subscribe-to-Internet-Calendars-f6248506-e144-4508-b658-c838b6067597#bm2
+		<li> New check - teachers on leave </li>
+		<li> New check - teachers double booked </li>
+		<li> new check - trainig locations double booked </li>
+		
 		<li>
 			<h3> Outstanding documentation </h3>
 			<ol>
@@ -372,6 +379,7 @@
 				<li> Activities with unknown locations </li>
 				<li> Activities with NZCF8 outstanding </li>
 				<li> Activities which have passed but have no attendees set up </li>
+
 			</ol>
 		</li>
 		<li>
