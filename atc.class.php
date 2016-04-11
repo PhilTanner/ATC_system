@@ -110,8 +110,6 @@
 					$details = self::check_user_session($_COOKIE['sessid']);
 					self::$currentuser = $details->personnel_id;
 					self::$currentpermissions = $details->access_rights; 
-					if(!self::$currentuser && substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
-						header('Location: login.php', true, 302);
 				} catch (ATCExceptionInvalidUserSession $e) {
 					if(substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
 						header('Location: login.php', true, 302);
@@ -1223,6 +1221,9 @@
 		
 		public function gui_output_page_header( $title )
 		{
+			if(!self::$currentuser && substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
+				header('Location: login.php', true, 302);
+				
 			echo '<!doctype html>
 <html lang="us">
 	<head>
