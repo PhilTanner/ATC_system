@@ -77,6 +77,7 @@ td.attendance select { width: auto; font-size: 70%; }
 .lesson_timetable h2 { margin:0px; border-bottom:1px solid black;  }
 .lesson_timetable p { margin:0px; padding:0.25ex 0.5ex; }
 .lesson_timetable p.unknown { font-style:italic; }
+td.lesson_block {padding:0px} 
 
 footer { position: fixed; bottom:0px; color: #ddd; margin:0px; padding:0px; width: 99%; z-index: -1; }
 footer a { color: #ccc;  }

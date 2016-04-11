@@ -29,7 +29,7 @@
 	define( 'ATC_SETTING_FINANCE_UNIFORM_DEPOSIT',		50.00 );
 	define( 'ATC_SETTING_FINANCE_MONEYFORMAT', 	'%(#2.2n' );
 	
-	define( 'ATC_DRESS_CODE_BLUES_NAME',				'No 6 Blues' );
+	define( 'ATC_DRESS_CODE_BLUES_NAME',				'No 6 GP Uniform' );
 	define( 'ATC_DRESS_CODE_DPM_NAME',				'DPM' );
 	define( 'ATC_DRESS_CODE_BLUES_AND_DPM_NAME',	'Mixed' );
 	define( 'ATC_DRESS_CODE_MUFTI_NAME',			'Mufti' );

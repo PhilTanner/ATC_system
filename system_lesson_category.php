@@ -50,7 +50,7 @@
 					{
 						echo '<tr>';
 						echo '	<td style="background-color:'.$category->colour.'; color:'.$category->text_colour.'">'.$category->category_short.'</td>';
-						echo '	<td style="background-color:'.$category->colour.'"; color:'.$category->text_colour.'>'.$category->category.'</td>';
+						echo '	<td style="background-color:'.$category->colour.'; color:'.$category->text_colour.'">'.$category->category.'</td>';
 						if( $ATC->user_has_permission( ATC_PERMISSION_SYSTEM_EDIT ))
 							echo '	<td> <a href="system_lesson_category.php?id='.$category->lesson_category_id.'" class="button edit">Edit</a> </td>';
 						echo '</tr>';
@@ -136,7 +136,7 @@
 ?>
 		<form method="POST">
 			<label for="code">Short code</label><br />
-			<input type="text" maxlength="3" id="code" name="code" value="<?= htmlentities($category->category_short) ?>" /><br />
+			<input type="text" maxlength="9" id="code" name="code" value="<?= htmlentities($category->category_short) ?>" /><br />
 			<label for="category">Category</label><br />
 			<input type="text" name="category" id="category" maxlength="50" value="<?= htmlentities($category->category) ?>" /><br />
 			<label for="color">Colour</label><br />

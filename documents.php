@@ -256,7 +256,6 @@
 	
 	<script>
 		$('table').css({ width: '100%', marginBottom: '1em' });
-		$('button.update').button({ icons: { primary: 'ui-icon-refresh' } });
 	</script>
 		
 <?php

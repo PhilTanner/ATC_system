@@ -4,12 +4,7 @@
 	
 	if($_SERVER['REQUEST_METHOD'] == 'POST')
 	{
-		try {
-			//var_dump($_POST);
-			$groups = 0;
-			foreach( $_POST['level'] as $group )
-				$groups += $group;
-			
+		try {			
 			$_POST['nzqa_qualifies'] = (isset($_POST['nzqa_qualifies'])?1:0);
 			
 			$ATC->set_lesson( 
@@ -17,8 +12,9 @@
 				$_POST['lesson_category_id'], 
 				$_POST['code'], 
 				$_POST['description'], 
+				$_POST['dress_code'],
 				$_POST['nzqa_qualifies'], 
-				$groups, 
+				$_POST['level'], 
 				7
 			);
 		} catch (ATCExceptionInsufficientPermissions $e) {	
@@ -171,10 +167,17 @@
 			<label for="nzqa_qualifies">NZQA qualifies</label><br />
 			<input type="checkbox" name="nzqa_qualifies" id="nzqa_qualifies" value="1" <?= ($lesson->nzqa_qualifies?' checked="checked"':'') ?> /><br />
 			<label for="level">Level</label><br />
-			<select name="level[]" id="level" multiple="multiple">
-				<option value="<?= ATC_LESSON_LEVEL_ADVANCED ?>"<?= (($lesson->level & ATC_LESSON_LEVEL_ADVANCED)?' selected="selected"':'') ?>>Advanced</option>
-				<option value="<?= ATC_LESSON_LEVEL_PROFICIENT ?>"<?= (($lesson->level & ATC_LESSON_LEVEL_PROFICIENT)?' selected="selected"':'') ?>>Proficient</option>
-				<option value="<?= ATC_LESSON_LEVEL_BASIC ?>"<?= (($lesson->level & ATC_LESSON_LEVEL_BASIC)?' selected="selected"':'') ?>>Basic</option>
+			<select name="level" id="level">
+				<option value="<?= ATC_LESSON_LEVEL_ADVANCED ?>"<?= (($lesson->level == ATC_LESSON_LEVEL_ADVANCED)?' selected="selected"':'') ?>>Advanced</option>
+				<option value="<?= ATC_LESSON_LEVEL_PROFICIENT ?>"<?= (($lesson->level == ATC_LESSON_LEVEL_PROFICIENT)?' selected="selected"':'') ?>>Proficient</option>
+				<option value="<?= ATC_LESSON_LEVEL_BASIC ?>"<?= (($lesson->level == ATC_LESSON_LEVEL_BASIC)?' selected="selected"':'') ?>>Basic</option>
+			</select><br />
+			<label for='dress_code'>Dress code</label><br />
+			<select name='dress_code' id='dress_code'>
+				<option value='<?=ATC_DRESS_CODE_BLUES?>'<?=($lesson->dress_code==ATC_DRESS_CODE_BLUES?' selected="selected"':'')?>><?=htmlentities(ATC_DRESS_CODE_BLUES_NAME)?></option>
+				<option value='<?=ATC_DRESS_CODE_DPM?>'<?=($lesson->dress_code==ATC_DRESS_CODE_DPM?' selected="selected"':'')?>><?=htmlentities(ATC_DRESS_CODE_DPM_NAME)?></option>
+				<option value='<?=ATC_DRESS_CODE_BLUES_AND_DPM?>'<?=($lesson->dress_code==ATC_DRESS_CODE_BLUES_AND_DPM?' selected="selected"':'')?>><?=htmlentities(ATC_DRESS_CODE_BLUES_AND_DPM_NAME)?></option>
+				<option value='<?=ATC_DRESS_CODE_MUFTI?>'<?=($lesson->dress_code==ATC_DRESS_CODE_MUFTI?' selected="selected"':'')?>><?=htmlentities(ATC_DRESS_CODE_MUFTI_NAME)?></option>
 			</select><br />
 		</form>
 <?php
