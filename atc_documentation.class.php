@@ -187,7 +187,7 @@
 					AND `attendance_register`.`presence` = '.ATC_ATTENDANCE_PRESENT.'
 					AND `personnel`.`access_rights` IN ('.ATC_USER_GROUP_OFFICERS.')
 				GROUP BY `personnel`.`personnel_id`
-				HAVING '.($supplimentary?'':'NOT ').'`rank` = \'SUPPOFF\'
+				HAVING '.($supplimentary?'':'NOT ').'`rank` = \'SUPOFF\'
 				ORDER BY `rank_order`, `lastname`, `firstname`';
 
 			$attendance = array();

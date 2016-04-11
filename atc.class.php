@@ -4,7 +4,7 @@
 	else
 		define( 'ATC_DEBUG', 					1 );
 	
-	define( 'ATC_VERSION',						'0.7.4' );
+	define( 'ATC_VERSION',						'0.8.0' );
 	
 	// Permissions structure, as a bitmask
 	define( 'ATC_PERMISSION_PERSONNEL_VIEW', 		1 );
@@ -31,9 +31,6 @@
 	define( 'ATC_ATTENDANCE_PRESENT',			0 );
 	define( 'ATC_ATTENDANCE_ON_LEAVE',			1 );
 	define( 'ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE',		2 );
-	define( 'ATC_ATTENDANCE_PRESENT_SYMBOL',		"X" );
-	define( 'ATC_ATTENDANCE_ON_LEAVE_SYMBOL',		"L" );
-	define( 'ATC_ATTENDANCE_ABSENT_WITHOUT_LEAVE_SYMBOL',	"o" );
 
 	define( 'ATC_ACTIVITY_RECOGNISED',			0 );
 	define( 'ATC_ACTIVITY_AUTHORISED',			1 );
@@ -53,13 +50,24 @@
 	define( 'ATC_NOK_TYPE_OTHER',				7 );
 	define( 'ATC_NOK_TYPE_GRANDMOTHER',			8 );
 	define( 'ATC_NOK_TYPE_GRANDFATHER',			9 );
+	
+	// New Zealand Cadet Forces, as a bitmask - used for lesson training
+	define( 'ATC_NZCF_ATC', 		1 );
+	define( 'ATC_NZCF_CADETS',		1 << 1 );
+	define( 'ATC_NZCF_SEA',		1 << 2 );
+	
+	define( 'ATC_LESSON_LEVEL_ADVANCED', 	1 );
+	define( 'ATC_LESSON_LEVEL_PROFICIENT',	1 << 1 );
+	define( 'ATC_LESSON_LEVEL_BASIC',		1 << 2 );
+
 
 	require_once 'config.php';
 	
 	/* The user levels are set in the config file, so groups can't be declared until afterwards */
 	define( 'ATC_USER_GROUP_OFFICERS',			ATC_USER_LEVEL_ADJUTANT.','.ATC_USER_LEVEL_STORES.','.ATC_USER_LEVEL_TRAINING.','.ATC_USER_LEVEL_CUCDR.','.ATC_USER_LEVEL_SUPOFF.','.ATC_USER_LEVEL_OFFICER );
 	define( 'ATC_USER_GROUP_CADETS',			ATC_USER_LEVEL_CADET );
-	define( 'ATC_USER_GROUP_PERSONNEL',			ATC_USER_GROUP_OFFICERS.','.ATC_USER_GROUP_CADETS.','.ATC_USER_LEVEL_SNCO );
+	define( 'ATC_USER_GROUP_TRAINERS',			ATC_USER_GROUP_OFFICERS.','.ATC_USER_LEVEL_SNCO.','.ATC_USER_LEVEL_JNCO );
+	define( 'ATC_USER_GROUP_PERSONNEL',			ATC_USER_GROUP_OFFICERS.','.ATC_USER_GROUP_CADETS.','.ATC_USER_LEVEL_SNCO.','.ATC_USER_LEVEL_JNCO );
 	
 	class ATCException extends Exception {
 		/**
@@ -679,8 +687,8 @@
 				SELECT * 
 				FROM `term`
 				WHERE 1=1
-				'. (is_null($startdate)?'':' AND `startdate` >= '.date('Y-m-d',$startdate)).'
-				'. (is_null($enddate)?'':' AND `enddate` <= '.date('Y-m-d',$enddate)).'
+				'. (is_null($startdate)?'':' AND `startdate` >= "'.date('Y-m-d',$startdate).'"').'
+				'. (is_null($enddate)?'':' AND `enddate` <= "'.date('Y-m-d',$enddate).'"').'
 				ORDER BY `startdate` ASC;';
 
 			$terms = array();
@@ -1195,7 +1203,13 @@
 			$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
 			$("tbody tr:odd").not(".ui-state-highlight, .ui-state-error").addClass("evenrow");
 			$("table.tablesorter").tablesorter().on("sortStart", function(){ $("tbody tr").removeClass("evenrow"); }).on("sortEnd", function(){ $("tbody tr:odd").not(".ui-state-highlight, .ui-state-error").addClass("evenrow"); });
-		</script>
+			$("a.button.edit").button({ icons: { primary: "ui-icon-pencil" }, text: false });
+			$("a.button.new").button({ icons: { primary: "ui-icon-plusthick" }, text: false });
+			$("button.update").button({ icons: { primary: "ui-icon-refresh" } });
+		</script>';
+			if( strlen(trim($title)) )
+			{
+				echo '
 		<footer>
 			<p> Built on the ATC system code available at <a target="blank" href="https://github.com/PhilTanner/ATC_system">https://github.com/PhilTanner/ATC_system</a> &ndash; Version '.ATC_VERSION.' </p>
 			'.(ATC_DEBUG?'<p style="font-size:75%;">DEBUG INFO: Logged in as user: '.self::$currentuser.' - access rights: '.self::$currentpermissions.'</p>':'').'
@@ -1204,6 +1218,7 @@
 		'.(ATC_DEBUG?'<style>body { color:red; }</style>':'').'
 	</body>
 </html>';
+			}
 		}
 		
 		public function gui_output_page_header( $title )
@@ -1271,6 +1286,8 @@
 				
 				$(".navoptions ul li a.logout").button({ icons: { primary: "ui-icon-unlocked" } }).removeClass("ui-state-disabled");
 				$(".navoptions ul li a.login").button({ icons: { primary: "ui-icon-locked" } })'.(self::$currentuser?'':'.removeClass("ui-state-disabled")').($title=='Login'?'.addClass("ui-state-active")':'').';
+
+				$(".navoptions ul li a.training").button({ icons: { primary: "ui-icon-calendar" } }).removeClass("ui-state-disabled")'.($title=='Training'?'.addClass("ui-state-active")':'').';
 			});
 			
 		</script>
@@ -1285,12 +1302,13 @@
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ATTENDANCE_VIEW)?'<li> <a href="./attendance.php" class="attendance">Attendance</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_ACTIVITIES_VIEW)?'<li> <a href="./activities.php" class="activities">Activities</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW)?'<li> <a href="./finance.php" class="finance">Finance</a> </li>':'').'
-				<!--'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_STORES_VIEW)?'<li> <a href="./" class="stores">Stores</a> </li>':'').'
-				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_TRAINING_VIEW)?'<li> <a href="./" class="training">Training</a> </li>':'').'-->
+				<!--'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_STORES_VIEW)?'<li> <a href="./" class="stores">Stores</a> </li>':'').'-->
+				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_TRAINING_VIEW)?'<li> <a href="./training.php" class="training">Training</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_USER_LEVEL_ADJUTANT)?'<li> <a href="./documents.php" class="documents">Documentation</a> </li>':'').'
 				'.(self::$currentuser && self::user_has_permission(ATC_PERMISSION_SYSTEM_VIEW)?'<li> <a href="./system.php" class="system">System</a> </li>':'').'
 				
 				'.(self::$currentuser?'<li> <a href="./logout.php" class="logout">Logout</a> </li>':'<li> <a href="./login.php" class="login">Login</a> </li>').'				
+
 			</ul>
 		</nav>
 		<h1> '.(ATC_DEBUG?'<span style="color:Red;">DEV</span>':'ATC').' - '.$title.' </h1>

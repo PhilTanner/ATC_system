@@ -358,10 +358,10 @@
 		<input type='text' id='2ic_personnel_name' name='2ic_personnel_name' value='<?=$activity->twoic_display_name?>' required='required' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
 		<label for='dress_code'>Dress code</label><br />
 		<select name='dress_code' id='dress_code' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly" disabled="disabled"' ) ?>>
-			<option value='<?=ATC_DRESS_CODE_BLUES?>'<?=($activity->dress_code==ATC_DRESS_CODE_BLUES?' selected="selected"':'')?>>No 6 Blues</option>
-			<option value='<?=ATC_DRESS_CODE_DPM?>'<?=($activity->dress_code==ATC_DRESS_CODE_DPM?' selected="selected"':'')?>>DPM</option>
-			<option value='<?=ATC_DRESS_CODE_BLUES_AND_DPM?>'<?=($activity->dress_code==ATC_DRESS_CODE_BLUES_AND_DPM?' selected="selected"':'')?>>Mix</option>
-			<option value='<?=ATC_DRESS_CODE_MUFTI?>'<?=($activity->dress_code==ATC_DRESS_CODE_MUFTI?' selected="selected"':'')?>>Mufti</option>
+			<option value='<?=ATC_DRESS_CODE_BLUES?>'<?=($activity->dress_code==ATC_DRESS_CODE_BLUES?' selected="selected"':'')?>><?=htmlentities(ATC_DRESS_CODE_BLUES_NAME)?></option>
+			<option value='<?=ATC_DRESS_CODE_DPM?>'<?=($activity->dress_code==ATC_DRESS_CODE_DPM?' selected="selected"':'')?>><?=htmlentities(ATC_DRESS_CODE_DPM_NAME)?></option>
+			<option value='<?=ATC_DRESS_CODE_BLUES_AND_DPM?>'<?=($activity->dress_code==ATC_DRESS_CODE_BLUES_AND_DPM?' selected="selected"':'')?>><?=htmlentities(ATC_DRESS_CODE_BLUES_AND_DPM_NAME)?></option>
+			<option value='<?=ATC_DRESS_CODE_MUFTI?>'<?=($activity->dress_code==ATC_DRESS_CODE_MUFTI?' selected="selected"':'')?>><?=htmlentities(ATC_DRESS_CODE_BLUES_AND_MUFTI_NAME)?></option>
 		</select>
 	</div><br style="clear:left" />
 	<fieldset id='attendees' class='dragdrop attendees'><legend>Attendees</legend><ol class='dragdrop attendees'></ol></fieldset>
