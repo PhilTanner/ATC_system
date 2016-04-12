@@ -148,9 +148,9 @@
 			else throw new ATCExceptionDBError(self::$mysqli->error);
 		}
 
-		public function check_user_session( $session )
+		public function check_user_session( $session, $useragent=null )
 		{
-			$query = "SELECT * FROM `user_session` INNER JOIN `personnel` ON `user_session`.`personnel_id` = `personnel`.`personnel_id` WHERE `session_code` = '".self::$mysqli->real_escape_string($session)."' LIMIT 1;";
+			$query = "SELECT * FROM `user_session` INNER JOIN `personnel` ON `user_session`.`personnel_id` = `personnel`.`personnel_id` WHERE `session_code` = '".self::$mysqli->real_escape_string($session)."' ".(is_null($useragent)?'':' AND `user_agent` = "'.self::$mysqli->real_escape_string($useragent).'"')." LIMIT 1;";
 			if ($result = self::$mysqli->query($query))	
 			{
 				if ( $obj = $result->fetch_object() )
@@ -722,9 +722,7 @@
 					if( validate_password($password, $obj->correct_hash) )
 					{
 						// TODO - catch unlikely key conflict to existing user
-						$uniqueid = bin2hex(openssl_random_pseudo_bytes(32));
-						$query = "INSERT INTO `user_session` (`personnel_id`, `session_code`, `user_agent`, `ip_address` ) VALUES ( ".$obj->personnel_id.", '".self::$mysqli->real_escape_string($uniqueid)."', '".self::$mysqli->real_escape_string($_SERVER['HTTP_USER_AGENT'])."', ".ip2long($_SERVER['REMOTE_ADDR'])." );";
-						if ($result = self::$mysqli->query($query))
+						if ( $uniqueid = self::store_session_key( $obj->personnel_id ) )
 						{
 							setcookie( 'sessid', $uniqueid, time()+60*60*24*30 );
 							return true;
@@ -734,6 +732,35 @@
 			}
 			else throw new ATCExceptionDBError(self::$mysqli->error);
 			return false;
+		}
+		
+		public function generate_session_key($bytes=32){ return bin2hex(openssl_random_pseudo_bytes($bytes)); }
+		public function store_session_key( $personnel_id, $session_code=null, $user_agent=null, $ip_address=null )
+		{
+			if( is_null($session_code) )
+				$session_code = self::generate_session_key();
+			if( is_null($user_agent) )
+				$user_agent = $_SERVER['HTTP_USER_AGENT'];
+			if( is_null($ip_address) )
+				$ip_address = $_SERVER['REMOTE_ADDR'];
+				
+			$query = "
+				INSERT INTO 
+					`user_session` 
+				(
+					`personnel_id`, 
+					`session_code`, 
+					`user_agent`, 
+					`ip_address` 
+				) VALUES ( 
+					".(int)$personnel_id.", 
+					'".self::$mysqli->real_escape_string($session_code)."', 
+					'".self::$mysqli->real_escape_string($user_agent)."', 
+					".ip2long($ip_address)." 
+				);";
+			if ($result = self::$mysqli->query($query))
+				return $session_code;
+			else throw new ATCExceptionDBError(self::$mysqli->error);
 		}
 		
 		public function logout( $sessid=null )
