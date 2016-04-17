@@ -54,6 +54,14 @@ For (hopefully obvious reasons) you should rename/change the password for these 
 
 ## Version history
 
+### RC 0.8.1
+- Enhancements:
+  - Now embed activity calendar in external calendar programs through ICS format
+
+### RC 0.8.0
+- Enhancements:
+  - New training program setup
+
 ### RC 0.7.4
 - Enhancements:
   - Update to this README.md file
