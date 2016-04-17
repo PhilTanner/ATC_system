@@ -17,8 +17,8 @@
 			header('Location: login.php', true, 302);
 	}
 	
-	//header('Content-type: text/calendar');
-	header('Content-type: text/text');
+	header('Content-type: text/calendar');
+	//header('Content-type: text/text');
 	
 	echo "BEGIN:VCALENDAR".$CRLF;
 	echo "VERSION:2.0".$CRLF;
