@@ -59,6 +59,8 @@
 	define( 'ATC_LESSON_LEVEL_ADVANCED', 	1 );
 	define( 'ATC_LESSON_LEVEL_PROFICIENT',	1 << 1 );
 	define( 'ATC_LESSON_LEVEL_BASIC',		1 << 2 );
+	
+	define( 'ATC_SESSION_TYPE_CALENDAR',		'activities_calendar' );
 
 
 	require_once 'config.php';
@@ -110,8 +112,6 @@
 					$details = self::check_user_session($_COOKIE['sessid']);
 					self::$currentuser = $details->personnel_id;
 					self::$currentpermissions = $details->access_rights; 
-					if(!self::$currentuser && substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
-						header('Location: login.php', true, 302);
 				} catch (ATCExceptionInvalidUserSession $e) {
 					if(substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
 						header('Location: login.php', true, 302);
@@ -150,9 +150,19 @@
 			else throw new ATCExceptionDBError(self::$mysqli->error);
 		}
 
-		public function check_user_session( $session )
+		public function check_user_session( $session, $useragent=null )
 		{
-			$query = "SELECT * FROM `user_session` INNER JOIN `personnel` ON `user_session`.`personnel_id` = `personnel`.`personnel_id` WHERE `session_code` = '".self::$mysqli->real_escape_string($session)."' LIMIT 1;";
+			$query = "
+				SELECT 
+					* 
+				FROM 
+					`user_session` 
+					INNER JOIN `personnel` 
+						ON `user_session`.`personnel_id` = `personnel`.`personnel_id` 
+				WHERE 
+					`session_code` = '".self::$mysqli->real_escape_string($session)."' 
+					".(is_null($useragent)?'':' AND `user_agent` = "'.self::$mysqli->real_escape_string($useragent).'"')." 
+				LIMIT 1;";
 			if ($result = self::$mysqli->query($query))	
 			{
 				if ( $obj = $result->fetch_object() )
@@ -174,6 +184,28 @@
 		public function current_user_id()
 		{
 			return self::$currentuser;
+		}
+		
+		public function find_current_user_session( $useragent )
+		{
+			$query = "
+				SELECT 
+					* 
+				FROM 
+					`user_session` 
+				WHERE 
+					`personnel_id` = ".self::$currentuser."
+					AND `user_agent` = '".self::$mysqli->real_escape_string($useragent)."' 
+				LIMIT 1;";
+			if ($result = self::$mysqli->query($query))	
+			{
+				if ( $obj = $result->fetch_object() )
+				{
+					return $obj;
+				} else throw new ATCExceptionInvalidUserSession('Unknown session');
+			}
+			else throw new ATCExceptionDBError(self::$mysqli->error);
+			return false;
 		}
 		
 		public function delete_activity( $id )
@@ -204,12 +236,20 @@
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
 				
 			$query = '
-				SELECT	`activity`.*,
+				SELECT
+					`activity`.*,
 					`activity_type`.*,
+					`location`.`name` AS `location_name`,
+					`location`.`address`,
 					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
+					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
 					`personnel`.`personnel_id`,
+					`personnel`.`email`,
+					`personnel`.`mobile_phone`,
 					'.str_replace("personnel","2ic_personnel",ATC_SETTING_DISPLAY_NAME).' AS `twoic_display_name`,
 					`2ic_personnel`.`personnel_id` AS `twoic_personnel_id`,
+					`2ic_personnel`.`email` AS `twoic_email`,
+					`2ic_personnel`.`mobile_phone` AS `twoic_mobile_phone`,
 					CASE WHEN `activity`.`enddate` < now() THEN 1 ELSE 0 END AS `sortorder`, 
 					(
 						SELECT	COUNT(`personnel`.`personnel_id`)
@@ -240,6 +280,8 @@
 						ON `activity`.`personnel_id` = `personnel`.`personnel_id`
 					INNER JOIN `personnel` `2ic_personnel`
 						ON `activity`.`2ic_personnel_id` = `2ic_personnel`.`personnel_id`
+					INNER JOIN `location`
+						ON `activity`.`location_id` = `location`.`location_id`
 				WHERE 	`activity`.`startdate` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" 
 					AND `activity`.`activity_id` > 0
 				ORDER BY `sortorder`, `startdate` ASC;';
@@ -724,9 +766,7 @@
 					if( validate_password($password, $obj->correct_hash) )
 					{
 						// TODO - catch unlikely key conflict to existing user
-						$uniqueid = bin2hex(openssl_random_pseudo_bytes(32));
-						$query = "INSERT INTO `user_session` (`personnel_id`, `session_code`, `user_agent`, `ip_address` ) VALUES ( ".$obj->personnel_id.", '".self::$mysqli->real_escape_string($uniqueid)."', '".self::$mysqli->real_escape_string($_SERVER['HTTP_USER_AGENT'])."', ".ip2long($_SERVER['REMOTE_ADDR'])." );";
-						if ($result = self::$mysqli->query($query))
+						if ( $uniqueid = self::store_session_key( $obj->personnel_id ) )
 						{
 							setcookie( 'sessid', $uniqueid, time()+60*60*24*30 );
 							return true;
@@ -736,6 +776,35 @@
 			}
 			else throw new ATCExceptionDBError(self::$mysqli->error);
 			return false;
+		}
+		
+		public function generate_session_key($bytes=32){ return bin2hex(openssl_random_pseudo_bytes($bytes)); }
+		public function store_session_key( $personnel_id, $session_code=null, $user_agent=null, $ip_address=null )
+		{
+			if( is_null($session_code) )
+				$session_code = self::generate_session_key();
+			if( is_null($user_agent) )
+				$user_agent = $_SERVER['HTTP_USER_AGENT'];
+			if( is_null($ip_address) )
+				$ip_address = $_SERVER['REMOTE_ADDR'];
+				
+			$query = "
+				INSERT INTO 
+					`user_session` 
+				(
+					`personnel_id`, 
+					`session_code`, 
+					`user_agent`, 
+					`ip_address` 
+				) VALUES ( 
+					".(int)$personnel_id.", 
+					'".self::$mysqli->real_escape_string($session_code)."', 
+					'".self::$mysqli->real_escape_string($user_agent)."', 
+					".ip2long($ip_address)." 
+				);";
+			if ($result = self::$mysqli->query($query))
+				return $session_code;
+			else throw new ATCExceptionDBError(self::$mysqli->error);
 		}
 		
 		public function logout( $sessid=null )
@@ -1223,6 +1292,9 @@
 		
 		public function gui_output_page_header( $title )
 		{
+			if(!self::$currentuser && substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
+				header('Location: login.php', true, 302);
+				
 			echo '<!doctype html>
 <html lang="us">
 	<head>
