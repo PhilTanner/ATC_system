@@ -59,6 +59,8 @@
 	define( 'ATC_LESSON_LEVEL_ADVANCED', 	1 );
 	define( 'ATC_LESSON_LEVEL_PROFICIENT',	1 << 1 );
 	define( 'ATC_LESSON_LEVEL_BASIC',		1 << 2 );
+	
+	define( 'ATC_SESSION_TYPE_CALENDAR',		'activities_calendar' );
 
 
 	require_once 'config.php';
@@ -150,7 +152,17 @@
 
 		public function check_user_session( $session, $useragent=null )
 		{
-			$query = "SELECT * FROM `user_session` INNER JOIN `personnel` ON `user_session`.`personnel_id` = `personnel`.`personnel_id` WHERE `session_code` = '".self::$mysqli->real_escape_string($session)."' ".(is_null($useragent)?'':' AND `user_agent` = "'.self::$mysqli->real_escape_string($useragent).'"')." LIMIT 1;";
+			$query = "
+				SELECT 
+					* 
+				FROM 
+					`user_session` 
+					INNER JOIN `personnel` 
+						ON `user_session`.`personnel_id` = `personnel`.`personnel_id` 
+				WHERE 
+					`session_code` = '".self::$mysqli->real_escape_string($session)."' 
+					".(is_null($useragent)?'':' AND `user_agent` = "'.self::$mysqli->real_escape_string($useragent).'"')." 
+				LIMIT 1;";
 			if ($result = self::$mysqli->query($query))	
 			{
 				if ( $obj = $result->fetch_object() )
@@ -172,6 +184,28 @@
 		public function current_user_id()
 		{
 			return self::$currentuser;
+		}
+		
+		public function find_current_user_session( $useragent )
+		{
+			$query = "
+				SELECT 
+					* 
+				FROM 
+					`user_session` 
+				WHERE 
+					`personnel_id` = ".self::$currentuser."
+					AND `user_agent` = '".self::$mysqli->real_escape_string($useragent)."' 
+				LIMIT 1;";
+			if ($result = self::$mysqli->query($query))	
+			{
+				if ( $obj = $result->fetch_object() )
+				{
+					return $obj;
+				} else throw new ATCExceptionInvalidUserSession('Unknown session');
+			}
+			else throw new ATCExceptionDBError(self::$mysqli->error);
+			return false;
 		}
 		
 		public function delete_activity( $id )
@@ -202,12 +236,20 @@
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
 				
 			$query = '
-				SELECT	`activity`.*,
+				SELECT
+					`activity`.*,
 					`activity_type`.*,
+					`location`.`name` AS `location_name`,
+					`location`.`address`,
 					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
+					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
 					`personnel`.`personnel_id`,
+					`personnel`.`email`,
+					`personnel`.`mobile_phone`,
 					'.str_replace("personnel","2ic_personnel",ATC_SETTING_DISPLAY_NAME).' AS `twoic_display_name`,
 					`2ic_personnel`.`personnel_id` AS `twoic_personnel_id`,
+					`2ic_personnel`.`email` AS `twoic_email`,
+					`2ic_personnel`.`mobile_phone` AS `twoic_mobile_phone`,
 					CASE WHEN `activity`.`enddate` < now() THEN 1 ELSE 0 END AS `sortorder`, 
 					(
 						SELECT	COUNT(`personnel`.`personnel_id`)
@@ -238,6 +280,8 @@
 						ON `activity`.`personnel_id` = `personnel`.`personnel_id`
 					INNER JOIN `personnel` `2ic_personnel`
 						ON `activity`.`2ic_personnel_id` = `2ic_personnel`.`personnel_id`
+					INNER JOIN `location`
+						ON `activity`.`location_id` = `location`.`location_id`
 				WHERE 	`activity`.`startdate` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" 
 					AND `activity`.`activity_id` > 0
 				ORDER BY `sortorder`, `startdate` ASC;';

@@ -482,7 +482,9 @@
 	$activities = $ATC->get_activities();
 	
 ?>
-	<form name="activitylist" id="activitylist" method="POST">
+	
+	<a href="?action=icallinks" class="button external ical"> Load this calendar into my device </a>
+	<form name="activitylist" id="activitylist" method="POST" style="clear:right;">
 		<input type="hidden" name="activitylist" value="1" />
 		<table class="tablesorter">
 			<thead>
@@ -492,10 +494,12 @@
 					<th rowspan="2"> 2<sup>nd</sup> Contact </th>
 					<th colspan="2"> Date </th>
 					<th colspan="2"> Attendance </th>
-					<?php
-						if( !isset($_GET['id']) && $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) )
-							echo '<td><a href="?id=0" class="button new"> New </a></td>';
-					?>
+					<td>
+						<?php
+							if( !isset($_GET['id']) && $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) )
+								echo '<a href="?id=0" class="button new"> New </a>';
+						?>
+					</td>
 				</tr>
 				<tr>
 					<th> Assemble </th>
@@ -535,6 +539,14 @@
 			</tbody>
 		</table>
 	</form>
+	<?php 
+		try {
+			$icalsess = $ATC->find_current_user_session(ATC_SESSION_TYPE_CALENDAR);
+			$icalsess = $icalsess->session_code;
+		} catch (ATCExceptionInvalidUserSession $e) {
+			$icalsess = $ATC->store_session_key( $ATC->get_currentuser_id(), null, ATC_SESSION_TYPE_CALENDAR );
+		}
+	?>
 	<script>
 		$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
 		
@@ -566,6 +578,26 @@
 				 open: function() {
 					$('.ui-dialog-titlebar').addClass('ui-state-highlight');
 				}
+			});
+		});
+		$('a.button.external.ical').button({ icons: { primary: 'ui-icon-calendar' }, text: true }).css({ float: 'right' }).click(function(e){
+			e.preventDefault(); // stop the link actually firing
+			var href = $(this).attr("href");
+			var ical = "http://<?=$_SERVER['HTTP_HOST'].str_replace(".php", "_ical.php", $_SERVER['SCRIPT_NAME']).'?key='.$icalsess?>";
+			$('#dialog').html(""+
+				"<p>If you would like to see these activities on your phone, or in your normal calendar program, you can embed it using the following link:<br />"+
+				"<a href='"+ical+"' target='_blank' class='external'>"+ical+"</a></p>"+
+				"<p>Instructions are available for embedding into these applications:</p>"+
+				"<ul>"+
+				"	<li> <a href='https://support.apple.com/kb/PH11523?locale=en_US' target='_blank' class='external'>Mac OSX Calendar (incl. iPhones/iPads/iPods)</a> </li>"+
+				"	<li> <a href='https://support.google.com/calendar/answer/37100?co=GENIE.Platform%3DDesktop&hl=en' target='_blank' class='external'>Google calendar (incl. Android phones)</a> </li>"+
+				"	<li> <a href='https://support.office.com/en-us/article/View-and-subscribe-to-Internet-Calendars-f6248506-e144-4508-b658-c838b6067597#bm2' target='_blank' class='external'>Outlook</a> </li>"+
+				"</ul>"+
+				"").dialog({
+				modal: true,
+				title: " Embed activities calendar externally",
+				buttons: { OK: function() { $( this ).dialog( "close" ); } },
+				 close: function() { $( this ).dialog( "destroy" ); }
 			});
 		});
 		$('a.button.edit').button({ icons: { primary: 'ui-icon-pencil' }, text: false });
