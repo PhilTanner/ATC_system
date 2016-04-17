@@ -1,7 +1,9 @@
 <?php
 	/* Location/Regional settings */
 	setlocale(LC_ALL, 'en_NZ.UTF-8');
-	date_default_timezone_set('Pacific/Auckland');
+	define( 'ATC_TZ_DEFAULT', 'Pacific/Auckland' );
+	
+	date_default_timezone_set(ATC_TZ_DEFAULT);
 	if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') 
 	{
 		// http://msdn.microsoft.com/en-us/library/cdax410z%28v=vs.90%29.aspx
