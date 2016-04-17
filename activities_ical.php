@@ -58,7 +58,47 @@
 				$description .= '  o '.$users[$userid]->rank.' '.$users[$userid]->display_name.$CRLF;
 			} else {
 				echo 'ATTENDEE;ROLE=REQ-PARTICIPANT;'.vcalendaruserstring( $users[$userid]->rank.' '.$users[$userid]->display_name, $users[$userid]->email, $users[$userid]->mobile_phone).$CRLF;
-				$description .= '  o '.$users[$userid]->rank.' '.$users[$userid]->display_name.' ('.$users[$userid]->mobile_phone.')'.$CRLF.'    <'.$users[$userid]->email.'>'.$CRLF;
+				$description .= '  o '.$users[$userid]->rank.' '.$users[$userid]->display_name.' '.($users[$userid]->mobile_phone?'('.$users[$userid]->mobile_phone.')':'').$CRLF.'    <'.$users[$userid]->email.'>'.$CRLF;
+				$noks = $ATC->get_nok($userid);
+				
+				foreach($noks as $nok)
+				{
+					$description .= '     ';
+					switch( $nok->relationship )
+					{
+						case ATC_NOK_TYPE_MOTHER:
+							$description .= ' (Mother)';
+							break;
+						case ATC_NOK_TYPE_FATHER:
+							$description .= ' (Father)';
+							break;
+						case ATC_NOK_TYPE_STEPMOTHER:
+							$description .= ' (Step-Mother)';
+							break;
+						case ATC_NOK_TYPE_STEPFATHER:
+							$description .= ' (Step-Mother)';
+							break;
+						case ATC_NOK_TYPE_SPOUSE:
+							$description .= ' (Spouse)';
+							break;
+						case ATC_NOK_TYPE_SIBLING:
+							$description .= ' (Sibling)';
+							break;
+						case ATC_NOK_TYPE_DOMPTNR:
+							$description .= ' (Domestic Partner)';
+							break;
+						case ATC_NOK_TYPE_OTHER:
+							$description .= ' (Other)';
+							break;
+						case ATC_NOK_TYPE_GRANDMOTHER:
+							$description .= ' (Grandmother)';
+							break;
+						case ATC_NOK_TYPE_GRANDFATHER:
+							$description .= ' (Grandfather)';
+							break;
+					}
+					$description .= ' '.$nok->firstname.' '.$nok->lastname.' <'.$nok->email.'> '.$nok->mobile_number.' '.$nok->home_number.$CRLF;
+				}
 			}
 			
 			
@@ -66,7 +106,7 @@
 		if( strlen(trim($description)) )
 		{
 			$description = 'Cost: '.$ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT, $obj->cost).$CRLF.'Attendees:'.$CRLF.$description;
-			echo 'DESCRIPTION:'.wordwrap($description, 75, "\n  ", true).$CRLF;
+			echo 'DESCRIPTION:'.wordwrap($description, 75, "\n  ", true);
 		}
 		
 		echo 'END:VEVENT'.$CRLF;

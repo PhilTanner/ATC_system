@@ -54,6 +54,10 @@ For (hopefully obvious reasons) you should rename/change the password for these 
 
 ## Version history
 
+### RC 0.8.2
+- Enhancements:
+  - ICS format now include NOK records if the user has ATC_PERMISSION_PERSONNEL_VIEW permission for that record
+  
 ### RC 0.8.1
 - Enhancements:
   - Now embed activity calendar in external calendar programs through ICS format
