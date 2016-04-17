@@ -106,7 +106,7 @@
 				<label for="access_rights">Access level</label>
 				<select name="access_rights" id="access_rights" <?= ($ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_EDIT)?'':' class="uneditable" readonly="readonly" disabled="disabled"')?> >
 					<option value="<?=ATC_USER_LEVEL_CADET?>"> Cadet </option>
-					<option value="<?=ATC_USER_LEVEL_NCO?>"> NCO </option>
+					<option value="<?=ATC_USER_LEVEL_SNCO?>"> SNCO </option>
 					<option value="<?=ATC_USER_LEVEL_SUPOFF?>"> Supplimentary Officer </option>
 					<option value="<?=ATC_USER_LEVEL_OFFICER?>"> Officer </option>
 					<option value="<?=ATC_USER_LEVEL_ADJUTANT?>"> Adjutant </option>	

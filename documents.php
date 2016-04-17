@@ -11,8 +11,9 @@
 	
 	
 	$nzcf20 = $ATC->nzcf20_stats( $year, $month );
-		
+	
 ?>
+	
 	<form name="datepicker" id="datepicker">
 		<fieldset>
 			<legend>Choose date</legend>
@@ -207,7 +208,7 @@
 						$attending_officers = $attending_cadets = $attending_uos = 0;
 						foreach($attendees as $attendee)
 							if($attendee->presence === ATC_ATTENDANCE_PRESENT && array_search($attendee->access_rights, explode(',', ATC_USER_GROUP_OFFICERS )) !== false ) $attending_officers++;
-							elseif($attendee->presence === ATC_ATTENDANCE_PRESENT && array_search($attendee->access_rights, explode(',', ATC_USER_LEVEL_NCO )) !== false ) $attending_uos++;
+							elseif($attendee->presence === ATC_ATTENDANCE_PRESENT && array_search($attendee->access_rights, explode(',', ATC_USER_LEVEL_SNCO )) !== false ) $attending_uos++;
 							elseif($attendee->presence === ATC_ATTENDANCE_PRESENT && array_search($attendee->access_rights, explode(',', ATC_USER_GROUP_CADETS )) !== false ) $attending_cadets++;
 							
 						
@@ -255,9 +256,8 @@
 	
 	<script>
 		$('table').css({ width: '100%', marginBottom: '1em' });
-		$('button.update').button({ icons: { primary: 'ui-icon-refresh' } });
 	</script>
 		
 <?php
-	$ATC->gui_output_page_footer('Personnel');
+	$ATC->gui_output_page_footer('Documents');
 ?>

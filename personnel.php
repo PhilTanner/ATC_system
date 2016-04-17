@@ -84,7 +84,7 @@
 		</thead>
 		<tfoot>
 			<tr>
-				<th colspan="5"> <form><label for="showall">Show all personnel?</label><input type="checkbox" name="showall" value="1" <?=($_GET['showall']?' checked="checked"':'')?> onchange="$(this).parent().submit();" /></form></th>
+				<th colspan="5"> <form><label for="showall">Show all personnel?</label><input type="checkbox" name="showall" id="showall" value="1" <?=($_GET['showall']?' checked="checked"':'')?> onchange="$(this).parent().submit();" /></form></th>
 				
 			</tr>
 		</tfoot>
@@ -103,13 +103,13 @@
 						switch( $obj->access_rights )
 						{
 							case ATC_USER_LEVEL_ADMIN:
-								echo '<td> <strong>Admin</strong> </td>';
+								echo '<td class="ui-state-highlight"> <strong>Admin</strong> </td>';
 								break;
 							case ATC_USER_LEVEL_CADET:
 								echo '<td> Cadet </td>';
 								break;
-							case ATC_USER_LEVEL_NCO:
-								echo '<td> <acronym title="Non-Commissioned Officer">NCO</acronym> </td>';
+							case ATC_USER_LEVEL_SNCO:
+								echo '<td> <acronym title="Senior Non-Commissioned Officer">SNCO</acronym> </td>';
 								break;
 							case ATC_USER_LEVEL_ADJUTANT:
 								echo '<td> Adjutant </td>';

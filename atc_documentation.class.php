@@ -3,8 +3,48 @@
 	
 	class ATC_Documentation extends ATC
 	{
+		
+		public function dump_userperms()
+		{
+			$constants = get_defined_constants(true);
+			$constants = $constants['user'];
+			
+			echo '<table class="tablesorter">';
+			echo '	<thead>';
+			echo '		<tr>';
+			echo '			<th> Level </th>';
+			echo '			<th> Bin2Dec </th>';
+			foreach( $constants as $constant => $val )	
+				if( substr($constant, 0, strlen('ATC_PERMISSION_')) == 'ATC_PERMISSION_' )
+					echo '<th>'.str_replace("_", " ", strtolower(substr($constant, strlen('ATC_PERMISSION_'), 100))).'</th>';
+			echo '		</tr>';
+			echo '	</thead>';
+			echo '	<tbody>';
+			foreach( $constants as $constant => $val )
+				if( substr($constant, 0, strlen('ATC_USER_LEVEL_')) == 'ATC_USER_LEVEL_' )
+				{
+					echo '<tr>';
+					echo '	<th>'.str_replace("_", " ", strtolower(substr($constant, strlen('ATC_USER_LEVEL_'), 100))).'</th>';
+					echo '	<td>'.$val.'</td>';
+					foreach( $constants as $perm => $value )
+						if( substr($perm, 0, strlen('ATC_PERMISSION_')) == 'ATC_PERMISSION_' )
+						{
+							echo '<td>';
+							echo ( ($val & $value) == $value ? 'X':'');
+							echo '</td>';
+						}
+					echo '</tr>';
+				}
+			echo '	</tbody>';
+			echo '</table>';
+		}
+	
+		
 		public function get_cadets_enrolled_on_date( $date )
 		{
+			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW ) )
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			
 			$query = '
 				SELECT	COUNT(DISTINCT `personnel`.`personnel_id`) as `count`,
 						`personnel`.`is_female`,
@@ -21,6 +61,8 @@
 				FROM 	`personnel`
 				WHERE 	`personnel`.`joined_date` <= "'.date('Y-m-d', $date).'" 
 					AND (`personnel`.`left_date` >= "'.date('Y-m-d', $date).'" OR `personnel`.`left_date` IS NULL)
+					AND `enabled` = -1
+					AND `access_rights` IN ( '.ATC_USER_GROUP_PERSONNEL.' )
 				GROUP BY `personnel`.`is_female`, `nzcf_order`
 				ORDER BY `nzcf_order`';
 
@@ -40,6 +82,9 @@
 		
 		public function get_cadet_attendance( $startdate, $enddate )
 		{
+			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW) )
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			
 			$query = '
 				SELECT	COUNT(DISTINCT `personnel`.`personnel_id`) as `count`
 				FROM 	`personnel`
@@ -63,18 +108,13 @@
 		
 		public function get_cadet_without_nok()
 		{
+			if(!self::user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW) )
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			
 			$query = '
 				SELECT	`personnel`.*, 
 						'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
-						( 
-   						SELECT `rank_shortname` 
-   						FROM `personnel_rank` 
-								INNER JOIN `rank` 
-									ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
-   						WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
-   						ORDER BY `date_achieved` DESC 
-   						LIMIT 1 
-						) AS `rank`
+						'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`
 				FROM	`personnel` 
 						LEFT JOIN `next_of_kin` 
 							ON `next_of_kin`.`personnel_id` = `personnel`.`personnel_id`
@@ -96,6 +136,9 @@
 		
 		public function get_officer_attendance( $startdate, $enddate, $supplimentary=false )
 		{
+			if(!self::user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW) )
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			
 			$query = '
 				SELECT	`personnel`.`personnel_id`,
 					`personnel`.`firstname`,
@@ -111,15 +154,7 @@
    					ORDER BY `date_achieved` DESC 
    					LIMIT 1 
 					) AS `rank_order`,
-					( 
-   					SELECT `rank_shortname` 
-   					FROM `personnel_rank` 
-							INNER JOIN `rank` 
-								ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
-   					WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
-   					ORDER BY `date_achieved` DESC 
-   					LIMIT 1 
-					) AS `rank`,
+					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
 					COUNT(DISTINCT `attendance_register`.`date`) as `parades`,
 					COUNT(DISTINCT `attendance_register`.`date`)*3 as `parade_hours`,
 					(
@@ -152,7 +187,7 @@
 					AND `attendance_register`.`presence` = '.ATC_ATTENDANCE_PRESENT.'
 					AND `personnel`.`access_rights` IN ('.ATC_USER_GROUP_OFFICERS.')
 				GROUP BY `personnel`.`personnel_id`
-				HAVING '.($supplimentary?'':'NOT ').'`rank` = \'SUPPOFF\'
+				HAVING '.($supplimentary?'':'NOT ').'`rank` = \'SUPOFF\'
 				ORDER BY `rank_order`, `lastname`, `firstname`';
 
 			$attendance = array();
