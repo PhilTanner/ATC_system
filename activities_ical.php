@@ -19,6 +19,7 @@
 	
 	header('Content-type: text/calendar');
 	//header('Content-type: text/text');
+	header("Content-Disposition:inline;filename=49squadron_activities.ics");
 	
 	echo "BEGIN:VCALENDAR".$CRLF;
 	echo "VERSION:2.0".$CRLF;
