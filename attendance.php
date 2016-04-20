@@ -86,7 +86,7 @@
 	// Try to find our beginning/end dates for a term that's been requested
 	foreach( $terms as $term )
 	{
-		if( $term->startdate <= $targettime && $term->enddate >= $targettime )
+		if( $term->startdate <= $targettime && $term->enddate+(24+60+60) >= $targettime )
 		{
 			$termstart = date('Y-m-d', $term->startdate);
 			$termend = date('Y-m-d', $term->enddate);

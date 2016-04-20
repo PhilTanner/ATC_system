@@ -356,7 +356,6 @@
 		<li>Confirm box on dob entry < 13yrs ago<br />
 		<li>Cadet alternate email<br />
 		<li>Popups/links standardised into single JS file<br /> 
-		<li>Calendar iCal formats for Training & Activities https://support.office.com/en-us/article/View-and-subscribe-to-Internet-Calendars-f6248506-e144-4508-b658-c838b6067597#bm2 - http://www.davidgagne.net/2008/12/17/2008-2009-ical-college-bowl-schedule/ -  http://apple.stackexchange.com/questions/125338/calendar-ical-ics-format 
 		<li> New check - teachers on leave </li>
 		<li> New check - teachers double booked </li>
 		<li> new check - trainig locations double booked </li>

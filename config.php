@@ -59,4 +59,31 @@
 	
 	define( 'ATC_USER_LEVEL_EMRG_CONTACT', 		ATC_PERMISSION_PERSONNEL_VIEW | ATC_PERMISSION_ACTIVITIES_VIEW | ATC_PERMISSION_LOCATIONS_VIEW );
 	
+	$translations = array();
+	
+	$translations['paymenttype'] = array();
+	$translations['paymenttype'][ATC_PAYMENT_TYPE_INVOICE_TERM_FEE] = 'Term invoice';
+	$translations['paymenttype'][ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE] = 'Activity invoice';
+	$translations['paymenttype'][ATC_PAYMENT_TYPE_INVOICE_OUTSTANDING_MONEY] = 'Outstanding money';
+	$translations['paymenttype'][ATC_PAYMENT_TYPE_INVOICE_UNIFORM_DEPOSIT] = 'Uniform deposit';
+	$translations['paymenttype'][ATC_PAYMENT_TYPE_INVOICE_FUNDRAISING] = 'Fundraising invoice';
+	$translations['paymenttype'][ATC_PAYMENT_TYPE_INVOICE_MISCELLANEOUS] = 'Invoice (misc.)';
+	$translations['paymenttype'][ATC_PAYMENT_TYPE_RECEIPT_TERM_FEE] = 'Term fee receipt';
+	$translations['paymenttype'][ATC_PAYMENT_TYPE_RECEIPT_ACTIVITY_FEE] = 'Activity fee receipt';
+	$translations['paymenttype'][ATC_PAYMENT_TYPE_RECEIPT_OUTSTANDING_MONEY] = 'Outstanding money payment';
+	$translations['paymenttype'][ATC_PAYMENT_TYPE_RECEIPT_UNIFORM_DEPOSIT] = 'Uniform deposit payment';
+	$translations['paymenttype'][ATC_PAYMENT_TYPE_RECEIPT_FUNDRAISING] = 'Fundraising payment';
+	$translations['paymenttype'][ATC_PAYMENT_TYPE_RECEIPT_MISCELLANEOUS] = 'Payment (misc.)';
+	
+	$translations['noktype'] = array();
+	$translations['noktype'][ATC_NOK_TYPE_MOTHER] = 'Mother';
+	$translations['noktype'][ATC_NOK_TYPE_STEPMOTHER] = 'Step-Mother';
+	$translations['noktype'][ATC_NOK_TYPE_GRANDMOTHER] = 'Grandmother';
+	$translations['noktype'][ATC_NOK_TYPE_FATHER] = 'Father';
+	$translations['noktype'][ATC_NOK_TYPE_STEPFATHER] = 'Step-Father';
+	$translations['noktype'][ATC_NOK_TYPE_GRANDFATHER] = 'Grandfather';
+	$translations['noktype'][ATC_NOK_TYPE_SPOUSE] = 'Spouse';
+	$translations['noktype'][ATC_NOK_TYPE_DOMPTNR] = 'Domestic Partner';
+	$translations['noktype'][ATC_NOK_TYPE_SIBLING] = 'Sibling'
+	
 ?>
