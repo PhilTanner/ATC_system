@@ -22,7 +22,10 @@
 	header('Content-type: text/calendar');
 	header('Content-Disposition:inline; filename=49squadron_activities.ics');
 	//header('Content-type: text/text');
-	header("Content-Disposition:inline;filename=49squadron_activities.ics");
+	//header("Content-Disposition:inline;filename=49squadron_activities.ics");
+	header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
+	header("Expires: Sat, 26 Jul 1997 05:00:00 GMT"); // Date in the past
+
 	
 	echo "BEGIN:VCALENDAR".$CRLF;
 	echo "VERSION:2.0".$CRLF;
@@ -33,6 +36,7 @@
 	{
 		echo 'BEGIN:VEVENT'.$CRLF;
 		// Use gmdate() and append 'Z' to always output in UTC, so we don't worry about daylight savings, or anyone's timezone being wrong...
+		echo 'DTSTAMP:'.gmdate("Ymd\THis\Z", strtotime($obj->startdate)).$CRLF;
 		echo 'DTSTART:'.gmdate("Ymd\THis\Z", strtotime($obj->startdate)).$CRLF;
 		echo 'DTEND:'.gmdate("Ymd\THis\Z", strtotime($obj->enddate)).$CRLF;
 		echo 'SUMMARY:'.vcalendarsafestring($obj->type).' - '.vcalendarsafestring($obj->title).$CRLF;
@@ -62,7 +66,7 @@
 				$description .= '  o '.$users[$userid]->rank.' '.$users[$userid]->display_name.$CRLF;
 			} else {
 				echo 'ATTENDEE;ROLE=REQ-PARTICIPANT;'.vcalendaruserstring( $users[$userid]->rank.' '.$users[$userid]->display_name, $users[$userid]->email, $users[$userid]->mobile_phone).$CRLF;
-				$description .= '  o '.$users[$userid]->rank.' '.$users[$userid]->display_name.' '.($users[$userid]->mobile_phone?'('.$users[$userid]->mobile_phone.')':'').$CRLF.'    <'.$users[$userid]->email.'>'.$CRLF;
+				$description .= '  o '.vcalendarsafestring($users[$userid]->rank).' '.vcalendarsafestring($users[$userid]->display_name).' '.($users[$userid]->mobile_phone?'('.vcalendarsafestring($users[$userid]->mobile_phone).')':'').$CRLF.'    <'.vcalendarsafestring($users[$userid]->email).'>'.$CRLF;
 				$noks = $ATC->get_nok($userid);
 				
 				foreach($noks as $nok)
@@ -101,7 +105,7 @@
 							$description .= ' (Grandfather)';
 							break;
 					}
-					$description .= ' '.$nok->firstname.' '.$nok->lastname.' <'.$nok->email.'> '.$nok->mobile_number.' '.$nok->home_number.$CRLF;
+					$description .= ' '.vcalendarsafestring($nok->firstname).' '.vcalendarsafestring($nok->lastname).' '.vcalendarsafestring($nok->email).' ('.vcalendarsafestring($nok->mobile_number).') ('.vcalendarsafestring($nok->home_number).')'.$CRLF;
 				}
 			}
 			
@@ -109,7 +113,7 @@
 		}
 		if( strlen(trim($description)) )
 		{
-			$description = 'Cost: '.$ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT, $obj->cost).$CRLF.'Attendees:'.$CRLF.$description;
+			$description = 'Cost\: '.$ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT, $obj->cost).$CRLF.' Attendees:'.$CRLF.' '.$description;
 			echo 'DESCRIPTION:'.wordwrap($description, 75, "\n  ", true);
 		}
 		
@@ -136,9 +140,9 @@
 		if(strlen(trim($name))> 1)
 			$string .= 'CN="'.$name.'"';
 		if(strlen(trim($email)))
-			$string .=' :MAILTO:'.$email;
+			$string .=':MAILTO:'.$email;
 		if(strlen(trim($mobile)))
-			$string .=' :TEL:+64-'.substr($mobile, 1);
+			$string .=':TEL:+64-'.substr($mobile, 1);
 		
 		return $string;
 	}
