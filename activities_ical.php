@@ -5,19 +5,22 @@
 	$CRLF = "\r\n";
 	
 	try {
-		$ATC->check_user_session( $_GET['key'], ATC_SESSION_TYPE_CALENDAR );
-		$activities = $ATC->get_activities();
-		$mydetails = $ATC->get_personnel($ATC->get_currentuser_id());
+		if( $ATC->check_user_session( $_GET['key'], ATC_SESSION_TYPE_CALENDAR ) )
+		{
+			$ATC->become_user_from_session($_GET['key']);
+			$activities = $ATC->get_activities();
+			$mydetails = $ATC->get_personnel($ATC->get_currentuser_id());
 		
-		$users = array();
-		$users[$ATC->get_currentuser_id()] = $mydetails;
-		
+			$users = array();
+			$users[$ATC->get_currentuser_id()] = $mydetails;
+		}
 	} catch (ATCExceptionInvalidUserSession $e) {
 		if(substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
 			header('Location: login.php', true, 302);
 	}
 	
 	header('Content-type: text/calendar');
+	header('Content-Disposition:inline; filename=49squadron_activities.ics');
 	//header('Content-type: text/text');
 	header("Content-Disposition:inline;filename=49squadron_activities.ics");
 	

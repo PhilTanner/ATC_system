@@ -349,5 +349,52 @@
 			});
 		</script>
 <?php
+	}  elseif( isset($_GET['action']) && $_GET['action'] == 'finance' && isset($_GET['id']) ) {
+	
+		require_once "atc_finance.class.php";
+		$ATC_Finance = new ATC_Finance();
+	
+		if($ATC_Finance->user_has_permission( ATC_PERMISSION_FINANCE_VIEW, $_GET['id']) )
+			$payments = $ATC_Finance->get_account_history($_GET['id'], '1970-01-01', date('c'));
+		
+?>
+		<table class="tablesorter">
+			<thead>
+				<tr>
+					<th> Date </th>
+					<th> Amount </th>
+					<th> Payment type </th>
+					<th> Reference </th>
+					<th> Recorded by </th>
+					<!-- <?= ($ATC->user_has_permission(ATC_PERMISSION_FINANCE_EDIT)?'<td><a href="personal.php?id='.$_GET['id'].'&amp;action=finance" class="button new">New</a></td>':'')?>-->
+				</tr>
+			</thead>
+			<tfoot>
+				<tr>
+					<th> Total: </th>
+					<td colspan="4"></td>
+				</tr>
+			</tfoot>
+			<tbody>
+				<?php
+					
+					$totalamount = 0;
+					foreach($payments as $obj)
+					{
+						$totalamount += $obj->amount;
+						echo '<tr>';
+						echo '	<td> '.date(ATC_SETTING_DATE_OUTPUT." Y", strtotime($obj->created)).' </td>';
+						echo '	<td> '.$ATC_Finance->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT, $obj->amount).' </td>';
+						echo '	<td> '.htmlentities($translations['paymenttype'][$obj->payment_type]).' </td>';
+						echo '	<td> '.htmlentities($obj->reference).' </td>';
+						echo '	<td> '.htmlentities($obj->rank.' '.$obj->display_name).' </td>';
+						echo '</tr>';
+					}
+				?>
+			</tbody>
+		</table>
+		<script>$('tfoot td').html('<?=$ATC_Finance->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT, $totalamount)?>');</script>
+<?php
+		$ATC->gui_output_page_footer(null);
 	}
 ?>

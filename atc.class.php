@@ -4,7 +4,7 @@
 	else
 		define( 'ATC_DEBUG', 					1 );
 	
-	define( 'ATC_VERSION',						'0.8.2' );
+	define( 'ATC_VERSION',						'0.8.3' );
 	
 	// Permissions structure, as a bitmask
 	define( 'ATC_PERMISSION_PERSONNEL_VIEW', 		1 );
@@ -63,6 +63,24 @@
 	define( 'ATC_SESSION_TYPE_CALENDAR',		'activities_calendar' );
 
 
+	define( 'ATC_SETTING_MONEYFORMAT_PARENTHESIS', 0 );
+	define( 'ATC_SETTING_MONEYFORMAT_TEXTUAL', 1 );
+	
+	define( 'ATC_PAYMENT_TYPE_INVOICE_TERM_FEE', 			0 );
+	define( 'ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE', 		1 );
+	define( 'ATC_PAYMENT_TYPE_INVOICE_OUTSTANDING_MONEY',	2 );
+	define( 'ATC_PAYMENT_TYPE_INVOICE_UNIFORM_DEPOSIT',		3 );
+	define( 'ATC_PAYMENT_TYPE_INVOICE_FUNDRAISING',			4 );
+	define( 'ATC_PAYMENT_TYPE_INVOICE_MISCELLANEOUS',		19 );
+	
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_TERM_FEE', 			20 );
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_ACTIVITY_FEE', 		21 );
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_OUTSTANDING_MONEY', 	22 );
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_UNIFORM_DEPOSIT', 		23 );
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_FUNDRAISING',			24 );
+	define( 'ATC_PAYMENT_TYPE_RECEIPT_MISCELLANEOUS',		39 );
+	
+
 	require_once 'config.php';
 	
 	/* The user levels are set in the config file, so groups can't be declared until afterwards */
@@ -116,9 +134,7 @@
 					if(substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
 						header('Location: login.php', true, 302);
 				}
-			} else 
-				if(substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
-					header('Location: login.php', true, 302);
+			} 
 		}
 		
 		public function add_term( $startdate, $enddate )
@@ -148,6 +164,16 @@
 				return self::$mysqli->insert_id;
 			}
 			else throw new ATCExceptionDBError(self::$mysqli->error);
+		}
+		
+		public function become_user_from_session( $sessid )
+		{
+			$details = self::check_user_session($sessid);
+			if($details)
+			{
+				self::$currentuser = $details->personnel_id;
+				self::$currentpermissions = $details->access_rights; 
+			}
 		}
 
 		public function check_user_session( $session, $useragent=null )
@@ -832,7 +858,7 @@
 
 			if( !strtotime($startdate) )
 				throw new ATCExceptionBadData('Invalid startdate');
-			if( !strtotime($startdate) )
+			if( !strtotime($enddate) )
 				throw new ATCExceptionBadData('Invalid enddate');
 			if( $dress_code != ATC_DRESS_CODE_BLUES && $dress_code != ATC_DRESS_CODE_DPM && $dress_code != ATC_DRESS_CODE_BLUES_AND_DPM && $dress_code != ATC_DRESS_CODE_MUFTI )
 				throw new ATCExceptionBadData('Unknown dress code value');
@@ -1292,6 +1318,18 @@
 		
 		public function gui_output_page_header( $title )
 		{
+			if( isset($_COOKIE['sessid']) )
+			{
+				try {
+					self::become_user_from_session($_COOKIE['sessid']);
+				} catch (ATCExceptionInvalidUserSession $e) {
+					if(substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
+						header('Location: login.php', true, 302);
+				}
+			} else 
+				if(substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
+					header('Location: login.php', true, 302);
+
 			if(!self::$currentuser && substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
 				header('Location: login.php', true, 302);
 				
