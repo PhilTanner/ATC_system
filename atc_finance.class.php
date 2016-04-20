@@ -1,24 +1,6 @@
 <?php
 	require_once "atc.class.php";
 	
-	define( 'ATC_SETTING_MONEYFORMAT_PARENTHESIS', 0 );
-	define( 'ATC_SETTING_MONEYFORMAT_TEXTUAL', 1 );
-	
-	define( 'ATC_PAYMENT_TYPE_INVOICE_TERM_FEE', 			0 );
-	define( 'ATC_PAYMENT_TYPE_INVOICE_ACTIVITY_FEE', 		1 );
-	define( 'ATC_PAYMENT_TYPE_INVOICE_OUTSTANDING_MONEY',	2 );
-	define( 'ATC_PAYMENT_TYPE_INVOICE_UNIFORM_DEPOSIT',		3 );
-	define( 'ATC_PAYMENT_TYPE_INVOICE_FUNDRAISING',			4 );
-	define( 'ATC_PAYMENT_TYPE_INVOICE_MISCELLANEOUS',		19 );
-	
-	define( 'ATC_PAYMENT_TYPE_RECEIPT_TERM_FEE', 			20 );
-	define( 'ATC_PAYMENT_TYPE_RECEIPT_ACTIVITY_FEE', 		21 );
-	define( 'ATC_PAYMENT_TYPE_RECEIPT_OUTSTANDING_MONEY', 	22 );
-	define( 'ATC_PAYMENT_TYPE_RECEIPT_UNIFORM_DEPOSIT', 		23 );
-	define( 'ATC_PAYMENT_TYPE_RECEIPT_FUNDRAISING',			24 );
-	define( 'ATC_PAYMENT_TYPE_RECEIPT_MISCELLANEOUS',		39 );
-	
-	
 	class ATC_Finance extends ATC
 	{
 		public function add_payment( $personnel_id, $amount, $reference, $payment_type, $related_to_id )
@@ -69,6 +51,64 @@
 					break;
 			}
 			return $str;
+		}
+		
+		public function get_account_history( $personnel_id, $startdate, $enddate )
+		{
+			if( !self::user_has_permission(ATC_PERMISSION_FINANCE_VIEW, $personnel_id) )
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+			if( !strtotime($startdate) )
+				throw new ATCExceptionBadData('Invalid startdate');
+			if( !strtotime($enddate) )
+				throw new ATCExceptionBadData('Invalid enddate');
+				
+			$query = '
+				SELECT
+					`personnel`.`personnel_id`,
+					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
+					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
+					`payment`.`reference`,
+					CASE 
+						WHEN `payment_type` < '.ATC_PAYMENT_TYPE_RECEIPT_TERM_FEE.' 
+						THEN (0-`payment`.`amount`) 
+						ELSE `payment`.`amount` 
+					END AS `amount`, 
+					`payment`.`created`,
+					`payment`.`payment_type`,
+					(
+						SELECT
+							SUM( 
+								CASE 
+									WHEN `payment_type` < '.ATC_PAYMENT_TYPE_RECEIPT_TERM_FEE.' 
+									THEN (0-`payment`.`amount`) 
+									ELSE `payment`.`amount` 
+								END 
+							) AS `amount`
+						FROM 
+							`payment`
+						WHERE
+							`personnel_id` = '.(int)$personnel_id.'
+							AND `created` < "'.date('Y-m-d H:i:s', strtotime($startdate) ).'"
+					)  AS `opening_balance` 
+				FROM 
+					`payment`
+					INNER JOIN `personnel`
+						ON `payment`.`created_by` = `personnel`.`personnel_id`
+				WHERE
+					`payment`.`personnel_id` = '.(int)$personnel_id.'
+					AND `payment`.`created` BETWEEN "'.date('Y-m-d H:i:s', strtotime($startdate) ).'" AND "'.date('Y-m-d H:i:s', strtotime($enddate) ).'"
+				ORDER BY 
+					`created`;';
+
+			$dues = array();
+			if ($result = self::$mysqli->query($query))
+				while ( $obj = $result->fetch_object() )
+					$dues[] = $obj;
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+
+			return $dues;
+			
 		}
 		
 		public function get_activity_money_outstanding( $personnel_id=null, $activity_id=null  )

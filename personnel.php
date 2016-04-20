@@ -28,14 +28,15 @@
 			<h2 href="personal.php?id=<?=$user->personnel_id?>&amp;action=promotion"> Promotions </h2>
 			<div id="promotion">
 			</div>
+			
+			<h2 href="personal.php?id=<?=$user->personnel_id?>&amp;action=finance"> Finance </h2>
+			<div id="finance">
+			</div>
 	<!--
 			<h2> Activites </h2>
 			<div id="activities">
 			</div>
 	
-			<h2> Finance </h2>
-			<div id="finance">
-			</div>
 	
 			<h2> Stores </h2>
 			<div id="stores">
