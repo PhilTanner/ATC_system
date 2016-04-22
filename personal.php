@@ -105,18 +105,10 @@
 				
 				<label for="access_rights">Access level</label>
 				<select name="access_rights" id="access_rights" <?= ($ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_EDIT)?'':' class="uneditable" readonly="readonly" disabled="disabled"')?> >
-					<option value="<?=ATC_USER_LEVEL_CADET?>"> Cadet </option>
-					<option value="<?=ATC_USER_LEVEL_SNCO?>"> SNCO </option>
-					<option value="<?=ATC_USER_LEVEL_SUPOFF?>"> Supplimentary Officer </option>
-					<option value="<?=ATC_USER_LEVEL_OFFICER?>"> Officer </option>
-					<option value="<?=ATC_USER_LEVEL_ADJUTANT?>"> Adjutant </option>	
-					<option value="<?=ATC_USER_LEVEL_STORES?>"> Stores </option>
-					<option value="<?=ATC_USER_LEVEL_TRAINING?>"> Training </option>
-					<option value="<?=ATC_USER_LEVEL_CUCDR?>"> CUCDR </option>
-					<option value="<?=ATC_USER_LEVEL_USC?>"> Unit Support Committee Member </option>
-					<option value="<?=ATC_USER_LEVEL_TREASURER?>"> Treasurer </option>
-					<option value="<?=ATC_USER_LEVEL_EMRG_CONTACT?>"> Emergency Contact </option>
-					<option value="<?=ATC_USER_LEVEL_ADMIN?>"> Admin </option>
+					<?php
+						foreach( $translations['userlevel'] as $key => $val )
+							echo '<option value="'.$key.'"> '.$val.' </option>';
+					?>
 				</select><br />
 				
 				<label for="flight">Flight</label>
