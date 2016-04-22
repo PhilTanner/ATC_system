@@ -358,7 +358,6 @@
 		<li> New check - teachers on leave </li>
 		<li> New check - teachers double booked </li>
 		<li> new check - trainig locations double booked </li>
-		<li> Email all cadets/parents link </li>
 		
 		<li>
 			<h3> Outstanding documentation </h3>

@@ -58,6 +58,8 @@ For (hopefully obvious reasons) you should rename/change the password for these 
 - Enhancements:
   - Extend use of translations array for future-proofing
   - Allow bulk email contact
+- Bug fixes:
+  - Officers shouldn't have to pay for activities
   
 ### RC 0.8.3
 - Enhancements:
