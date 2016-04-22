@@ -54,12 +54,18 @@ For (hopefully obvious reasons) you should rename/change the password for these 
 
 ## Version history
 
+### RC 0.8.4
+- Enhancements:
+  - Extend use of translations array for future-proofing
+  - Allow bulk email contact
+  
 ### RC 0.8.3
 - Enhancements:
   - NZCF16 documentation production
   - Translations of CONSTANTS being implements (later versions will back-fill)
   - Finance report for personnel ATC_Finance->get_account_history()
   - Logic change, only GUI headers now check for login sessions by default
+- Bug fixes:
   - Bug fix for activities ICS login
   - Bug fix for activities ICS for Google embed
   - Bug fix for attendance register, shows current term on term end date

@@ -254,41 +254,10 @@
 			foreach($attendee->nok as $nok )
 			{
 				$pdf->SetFont('Arial','',6);
-				switch( $nok->relationship )
-				{
-					case ATC_NOK_TYPE_MOTHER:
-						$relation = 'Mother';
-						break;
-					case ATC_NOK_TYPE_FATHER:
-						$relation = 'Father';
-						break;
-					case ATC_NOK_TYPE_STEPMOTHER:
-						$relation = 'Step-Mother';
-						break;
-					case ATC_NOK_TYPE_STEPFATHER:
-						$relation = 'Step-Father';
-						break;
-					case ATC_NOK_TYPE_SPOUSE:
-						$relation = 'Spouse';
-						break;
-					case ATC_NOK_TYPE_SIBLING:
-						$relation = 'Sibling';
-						break;
-					case ATC_NOK_TYPE_DOMPTNR:
-						$relation = 'Domestic Partner';
-						break;
-					case ATC_NOK_TYPE_OTHER:
-						$relation = 'Other';
-						break;
-					case ATC_NOK_TYPE_GRANDMOTHER:
-						$relation = 'Grandmother';
-						break;
-					case ATC_NOK_TYPE_GRANDFATHER:
-						$relation = 'Grandfather';
-						break;
-					default:
-						$relation = 'Unknown';
-				}
+				if( isset( $translations['noktype'][$nok->relationship] ) )
+					$relation = $translations['noktype'][$nok->relationship];
+				else
+					$relation = 'Unknown';
 				
 				$n++;
 				if($n > 1 )

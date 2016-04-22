@@ -72,7 +72,7 @@
 <?php
 	} elseif( is_array( $user ) ) {
 ?>
-	<table class="tablesorter">
+	<table class="tablesorter" style="float:left; margin-right:1em;">
 		<thead>
 			<tr>
 				<th> Flight </th>
@@ -91,6 +91,18 @@
 		</tfoot>
 		<tbody>
 			<?php
+				$contactdetails = array();
+				$contactdetails["cadets"] = array();
+				$contactdetails["jncos"] = array();
+				$contactdetails["sncos"] = array();
+				$contactdetails["officers"] = array();
+				$contactdetails["cadetsnok"] = array();
+				$contactdetails["jncosnok"] = array();
+				$contactdetails["sncosnok"] = array();
+				$contactdetails["officersnok"] = array();
+				$contactdetails["usc"] = array();
+				$contactdetails["others"] = array();
+				
 				foreach( $user as $obj )
 				{
 					if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $obj->personnel_id ) )
@@ -99,62 +111,87 @@
 						//echo '	<th>'.$obj->personnel_id.'</th>';
 						echo '	<td>'.$obj->flight.'</td>';
 						echo '	<td>'.$obj->rank.'</td>';
-						echo '	<td><a href="?id='.$obj->personnel_id.'">'.$obj->lastname.', '.$obj->firstname.'</a></td>';
+						echo '	<td><a href="?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
 						echo '	<td>'.$obj->mobile_phone.'</td>';
-						switch( $obj->access_rights )
-						{
-							case ATC_USER_LEVEL_ADMIN:
-								echo '<td class="ui-state-highlight"> <strong>Admin</strong> </td>';
-								break;
-							case ATC_USER_LEVEL_CADET:
-								echo '<td> Cadet </td>';
-								break;
-							case ATC_USER_LEVEL_SNCO:
-								echo '<td> <acronym title="Senior Non-Commissioned Officer">SNCO</acronym> </td>';
-								break;
-							case ATC_USER_LEVEL_ADJUTANT:
-								echo '<td> Adjutant </td>';
-								break;
-							case ATC_USER_LEVEL_STORES:
-								echo '<td> Stores Officer </td>';
-								break;
-							case ATC_USER_LEVEL_TRAINING:
-								echo '<td> Training Officer </td>';
-								break;
-							case ATC_USER_LEVEL_CUCDR:
-								echo '<td> Unit Commander </td>';
-								break;
-							case ATC_USER_LEVEL_SUPOFF:
-								echo '<td> Supplimentary Officer </td>';
-								break;
-							case ATC_USER_LEVEL_OFFICER:
-								echo '<td> Officer </td>';
-								break;
-							case ATC_USER_LEVEL_EMRG_CONTACT:
-								echo '<td class="ui-state-highlight"> Emergency Contact </td>';
-								break;
-							case ATC_USER_LEVEL_TREASURER:
-								echo '<td class="ui-state-highlight"> Treasurer </td>';
-								break;
-							case ATC_USER_LEVEL_USC:
-								echo '<td class="ui-state-highlight"> Unit Support Committee </td>';
-								break;
-							default:
-								echo '<td class="ui-state-error">Unknown</td>';
-						}
+						if( isset( $translations['userlevel'][$obj->access_rights] ) )
+							echo '	<td>'.$translations['userlevel'][$obj->access_rights].'</td>';
+						else
+							echo '	<td class="ui-state-error"><strong>Unknown</strong></td>';
 						if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_EDIT, $obj->personnel_id ) )
 							echo '	<td> <a href="?id='.$obj->personnel_id.'" class="button edit">Edit</a> </td>';
 						echo '</tr>';
+						
+						// store some contact details
+						$obj->nok = $ATC->get_nok($obj->personnel_id);
+						if( in_array($obj->access_rights, explode(",",ATC_USER_GROUP_CADETS) ) )
+						{
+							$contactdetails["cadets"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
+							foreach($obj->nok as $nok)
+								$contactdetails["cadetsnok"][] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
+						}
+						if( in_array($obj->access_rights, explode(",",ATC_USER_GROUP_OFFICERS) ) )
+						{
+							$contactdetails["officers"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
+							foreach($obj->nok as $nok)
+								$contactdetails["officersnok"][] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
+						}
+						if( $obj->access_rights == ATC_USER_LEVEL_JNCO )
+						{
+							$contactdetails["jncos"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
+							foreach($obj->nok as $nok)
+								$contactdetails["jncosnok"][] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
+						}
+						if( $obj->access_rights == ATC_USER_LEVEL_SNCO )
+						{
+							$contactdetails["sncos"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
+							foreach($obj->nok as $nok)
+								$contactdetails["sncosnok"][] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
+						}
+						if( in_array($obj->access_rights, array(ATC_USER_LEVEL_TREASURER, ATC_USER_LEVEL_USC) ) )
+							$contactdetails["usc"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
+						if( in_array($obj->access_rights, array(ATC_USER_LEVEL_EMRG_CONTACT, ATC_USER_LEVEL_ADMIN) ) )
+							$contactdetails["others"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
+						
 					}
 				}
 			?>
 		</tbody>
 	</table>
+	<?php
+		if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW ) )
+		{
+	?>
+	<fieldset id="emaillist">
+		<legend> Send bulk email </legend>
+		<label for="cadets">Cadets</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["cadets"])) )?>" id="cadets" checked="checked" /><br />
+		<label for="jncos">JNCOs</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["jncos"])) )?>" id="jncos" checked="checked" /><br />
+		<label for="sncos">SNCOs</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["sncos"])) )?>" id="sncos" checked="checked" /><br />
+		<label for="officers">Officers</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["officers"])) )?>" id="officers" checked="checked"  /><br />
+		<hr />		
+		<label for="cadetsnok">Cadets Next of Kin</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["cadetsnok"])) )?>" id="cadetsnok" checked="checked" /><br />
+		<label for="jncosnok">JNCOs Next of  Kin</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["jncosnok"])) )?>" id="jncosnok" checked="checked" /><br />
+		<label for="sncosnok">SNCOs Next of Kin</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["sncosnok"])) )?>" id="sncosnok" checked="checked" /><br />
+		<label for="officersnok">Officers Next of Kin</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["officersnok"])) )?>" id="officersnok" checked="checked"  /><br />
+		<hr />
+		<label for="usc">USC</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["usc"])) )?>" id="usc" /><br />
+		<label for="others">Others</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["others"])) )?>" id="others" /><br />
+		
+		<a class="button email">Create email</a>
+	</fieldset>
+	<?php
+		}
+	?>
 	<script>
 		//$("thead th").button({ icons: { primary: "ui-icon-arrowthick-2-n-s" } }).removeClass("ui-corner-all").css({ display: "table-cell" });
 		$('a.button.edit').button({ icons: { primary: 'ui-icon-pencil' }, text: false });
 		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false });
 		$('td.ui-state-highlight').removeClass('ui-state-highlight').parent().addClass('ui-state-highlight');
+		
+		$('a.button.email').button({ icons: { primary: 'ui-icon-mail-closed' } }).click(function(){
+			var addresses = '';
+			$.each($('#emaillist input:checked'), function( index, value ){ addresses += $(this).val()+"; "; });
+			$(this).attr('href', "mailto:?bcc="+encodeURI(addresses));
+		});
 	</script>
 <?php
 	}

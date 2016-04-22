@@ -350,7 +350,6 @@
 		<li>Next/Prev years activity lists<br />
 		<li>Document folders<br />
 		<li>Activity status (planned/potential/alternative date/complete/etc)<br/>
-		<li>Promotion dates. Joiing dates<br />
 		<li>User cannot edit key fields for themselves (leaving dates, user levels, etc) - add "sensitive field" values to set_personnel()<br />
 		<li>Change perm structure to user level constants, which *then* map to perm structure to stop DB Unknown issues<br />
 		<li>Confirm box on dob entry < 13yrs ago<br />
