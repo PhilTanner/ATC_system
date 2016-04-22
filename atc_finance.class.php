@@ -152,6 +152,8 @@
 					`personnel`.'.(is_null($personnel_id)?'`enabled` = -1':'`personnel_id`='.(int)$personnel_id).'
 					AND not (`payments_tmp`.`amount_due` IS NULL AND `payments_tmp`.`amount_paid` IS NULL)
 					'.(is_null($activity_id)?'':'AND `payments_tmp`.`activity_id`='.(int)$activity_id).'
+					-- Officers do not pay for activities - they are there to manage them!
+					AND NOT `personnel`.`access_rights` IN ('.ATC_USER_GROUP_OFFICERS.')
 				GROUP BY 
 					`payments_tmp`.`activity_id`, 
 					`personnel`.`personnel_id`
