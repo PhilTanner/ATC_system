@@ -11,7 +11,19 @@
 					header('Location: ./', true, 302);
 			} catch (ATCExceptionInsufficientPermissions $e) {	
 				header("HTTP/1.0 401 Unauthorised");
-				echo 'Caught exception: ',  $e->getMessage(), "\n";
+?>
+	<script>
+		document.onready = function(){ 
+			$('#dialog').html("<p>Incorrect username or password.</p><p><a href='forgottenpassword.php?username=<?=urlencode($_POST['username'])?>'>Forgotten your password?</a>").dialog({
+				modal: true,
+				title: 'Error!',
+				buttons: { Close: function() { $( this ).dialog( "close" ); } },
+				close: function() { $( this ).dialog( "destroy" ); },
+				open: function() { $('.ui-dialog-titlebar').addClass('ui-state-error'); }
+			}); 
+		}
+	</script>
+<?php
 			} catch (ATCExceptionDBError $e) {
 				header("HTTP/1.0 500 Internal Server Error");
 				echo 'Caught exception: ',  $e->getMessage(), "\n";
@@ -30,7 +42,6 @@
 	if( $ATC->current_user_id() )
 		header('Location: ./', true, 302);
 	$ATC->gui_output_page_header('Login');
-	
 ?>
 <form method="post">
 	<fieldset>

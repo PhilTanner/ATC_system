@@ -54,6 +54,10 @@ For (hopefully obvious reasons) you should rename/change the password for these 
 
 ## Version history
 
+### RC 0.8.5
+- Enhancements:
+  - Forgotten password option
+  
 ### RC 0.8.4
 - Enhancements:
   - Extend use of translations array for future-proofing

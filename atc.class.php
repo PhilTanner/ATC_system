@@ -4,7 +4,7 @@
 	else
 		define( 'ATC_DEBUG', 					1 );
 	
-	define( 'ATC_VERSION',						'0.8.4' );
+	define( 'ATC_VERSION',						'0.8.5' );
 	
 	// Permissions structure, as a bitmask
 	define( 'ATC_PERMISSION_PERSONNEL_VIEW', 		1 );
@@ -210,6 +210,31 @@
 		public function current_user_id()
 		{
 			return self::$currentuser;
+		}
+		
+		
+		public function forgot_password_generate( $id )
+		{
+			$code = self::generate_session_key(32);
+			if( !strlen($code) )
+				throw new ATCExceptionBadData("Unable to generate key.");
+			if( !self::get_personnel($id) )
+				throw new ATCExceptionBadData("Invalid personnel ID parameter passed.");
+				
+			$query = '
+				INSERT INTO `password_reset` 
+				( 
+					`code`, 
+					`pesonnel_id` 
+				) VALUES ( 
+					"'.self::$mysqli->real_escape_string($code).'", 
+					'.(int)$id.'
+				);';
+				
+			if ($result = self::$mysqli->query($query))	
+				return $code;
+			else 
+				throw new ATCExceptionDBError(self::$mysqli->error);
 		}
 		
 		public function find_current_user_session( $useragent )
@@ -1318,20 +1343,32 @@
 		
 		public function gui_output_page_header( $title )
 		{
+			$redirect_to_login = 0;
+			// We've got a cookie
 			if( isset($_COOKIE['sessid']) )
 			{
 				try {
 					self::become_user_from_session($_COOKIE['sessid']);
+				// But it's wrong
 				} catch (ATCExceptionInvalidUserSession $e) {
-					if(substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
-						header('Location: login.php', true, 302);
+					$redirect_to_login = 1;
 				}
+			// No session cookie
 			} else 
-				if(substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
-					header('Location: login.php', true, 302);
+				$redirect_to_login = 2;
 
-			if(!self::$currentuser && substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
-				header('Location: login.php', true, 302);
+			// We're not logged in with a valid use in some other way
+			if(!self::$currentuser)
+				$redirect_to_login = 3;
+			
+			// We're on a non-logged-in page, so stop infinite redirect loops
+			if( substr($_SERVER['SCRIPT_NAME'], (0-strlen('login.php'))) == "login.php" || substr($_SERVER['SCRIPT_NAME'], (0-strlen('forgottenpassword.php'))) == 'forgottenpassword.php' )
+				$redirect_to_login = -1;
+			
+			echo $redirect_to_login;
+			if( $redirect_to_login )
+				// header('Location: login.php', true, 302);
+				echo 'redirect';
 				
 			echo '<!doctype html>
 <html lang="us">
