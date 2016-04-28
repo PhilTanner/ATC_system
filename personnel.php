@@ -103,6 +103,18 @@
 				$contactdetails["usc"] = array();
 				$contactdetails["others"] = array();
 				
+				$smscontactdetails = array();
+				$smscontactdetails["cadets"] = array();
+				$smscontactdetails["jncos"] = array();
+				$smscontactdetails["sncos"] = array();
+				$smscontactdetails["officers"] = array();
+				$smscontactdetails["cadetsnok"] = array();
+				$smscontactdetails["jncosnok"] = array();
+				$smscontactdetails["sncosnok"] = array();
+				$smscontactdetails["officersnok"] = array();
+				$smscontactdetails["usc"] = array();
+				$smscontactdetails["others"] = array();
+				
 				foreach( $user as $obj )
 				{
 					if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $obj->personnel_id ) )
@@ -126,32 +138,57 @@
 						if( in_array($obj->access_rights, explode(",",ATC_USER_GROUP_CADETS) ) )
 						{
 							$contactdetails["cadets"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
+							if(strlen(trim($obj->mobile_phone)) > 3) 
+								$smscontactdetails["cadets"][] = $obj->mobile_phone;
 							foreach($obj->nok as $nok)
+							{
 								$contactdetails["cadetsnok"][] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
+								if(strlen(trim($nok->mobile_number)) > 3) 
+									$smscontactdetails["cadetsnok"][] = $nok->mobile_number;
+							}
 						}
 						if( in_array($obj->access_rights, explode(",",ATC_USER_GROUP_OFFICERS) ) )
 						{
 							$contactdetails["officers"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
+							if(strlen(trim($obj->mobile_phone)) > 3) 
+								$smscontactdetails["officers"][] = $obj->mobile_phone;
 							foreach($obj->nok as $nok)
+							{
 								$contactdetails["officersnok"][] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
+							}
 						}
 						if( $obj->access_rights == ATC_USER_LEVEL_JNCO )
 						{
 							$contactdetails["jncos"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
+							if(strlen(trim($obj->mobile_phone)) > 3) 
+								$smscontactdetails["jncos"][] = $obj->mobile_phone;
 							foreach($obj->nok as $nok)
+							{
 								$contactdetails["jncosnok"][] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
+							}
 						}
 						if( $obj->access_rights == ATC_USER_LEVEL_SNCO )
 						{
 							$contactdetails["sncos"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
+							if(strlen(trim($obj->mobile_phone)) > 3) 
+								$smscontactdetails["sncos"][] = $obj->mobile_phone;
 							foreach($obj->nok as $nok)
+							{
 								$contactdetails["sncosnok"][] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
+							}
 						}
 						if( in_array($obj->access_rights, array(ATC_USER_LEVEL_TREASURER, ATC_USER_LEVEL_USC) ) )
+						{
 							$contactdetails["usc"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
+							if(strlen(trim($obj->mobile_phone)) > 3) 
+								$smscontactdetails["usc"][] = $obj->mobile_phone;
+						}
 						if( in_array($obj->access_rights, array(ATC_USER_LEVEL_EMRG_CONTACT, ATC_USER_LEVEL_ADMIN) ) )
+						{
 							$contactdetails["others"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
-						
+							if(strlen(trim($obj->mobile_phone)) > 3) 
+								$smscontactdetails["others"][] = $obj->mobile_phone;
+						}
 					}
 				}
 			?>
@@ -178,6 +215,24 @@
 		
 		<a class="button email">Create email</a>
 	</fieldset>
+	
+	<fieldset id="smslist" style="margin-top:1em;">
+		<legend> Send bulk SMS </legend>
+		<label for="cadets">Cadets</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($smscontactdetails["cadets"])) )?>" id="cadets" checked="checked" /><br />
+		<label for="jncos">JNCOs</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($smscontactdetails["jncos"])) )?>" id="jncos" checked="checked" /><br />
+		<label for="sncos">SNCOs</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($smscontactdetails["sncos"])) )?>" id="sncos" checked="checked" /><br />
+		<label for="officers">Officers</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($smscontactdetails["officers"])) )?>" id="officers" checked="checked"  /><br />
+		<hr />		
+		<label for="cadetsnok">Cadets Next of Kin</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($smscontactdetails["cadetsnok"])) )?>" id="cadetsnok" checked="checked" /><br />
+		<label for="jncosnok">JNCOs Next of  Kin</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($smscontactdetails["jncosnok"])) )?>" id="jncosnok" checked="checked" /><br />
+		<label for="sncosnok">SNCOs Next of Kin</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($smscontactdetails["sncosnok"])) )?>" id="sncosnok" checked="checked" /><br />
+		<label for="officersnok">Officers Next of Kin</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($smscontactdetails["officersnok"])) )?>" id="officersnok" checked="checked"  /><br />
+		<hr />
+		<label for="usc">USC</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($smscontactdetails["usc"])) )?>" id="usc" /><br />
+		<label for="others">Others</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($smscontactdetails["others"])) )?>" id="others" /><br />
+		
+		<a class="button sms">Create SMS</a>
+	</fieldset>
 	<?php
 		}
 	?>
@@ -188,10 +243,32 @@
 		$('td.ui-state-highlight').removeClass('ui-state-highlight').parent().addClass('ui-state-highlight');
 		
 		$('a.button.email').button({ icons: { primary: 'ui-icon-mail-closed' } }).click(function(){
-			var addresses = '';
-			$.each($('#emaillist input:checked'), function( index, value ){ addresses += $(this).val()+"; "; });
-			$(this).attr('href', "mailto:?bcc="+encodeURI(addresses));
+			// Collate our list of addresses based off which tick boxes are selected
+			var addresses = [];
+			$.each($('#emaillist input:checked'), function( index, value ){ 
+				var foo = $(this).val().split(';');
+				for(var i=0;i<foo.length;i++) addresses.push(foo[i]);
+			});
+			// Dedupe our list in case someone appears more than once (i.e. NOK for cadet, NOK for SNCO & USC member)
+			$(this).attr('href', "mailto:?bcc="+encodeURI( array_unique( addresses ).join(';') ));
 		});
+		$('a.button.sms').button({ icons: { primary: 'ui-icon-battery-2' } }).click(function(){
+			// Collate our list of addresses based off which tick boxes are selected
+			var addresses = [];
+			$.each($('#smslist input:checked'), function( index, value ){ 
+				var foo = $(this).val().split(';');
+				for(var i=0;i<foo.length;i++) addresses.push(foo[i]);
+			});
+			// Dedupe our list in case someone appears more than once (i.e. NOK for cadet, NOK for SNCO & USC member)
+			$(this).attr('href', "sms://"+encodeURI( array_unique( addresses ).join(';') ));
+		});
+		
+		function array_unique( array )
+		{
+			var result = [];
+			$.each( array, function(i, e){ if( $.inArray(e, result) == -1 ) result.push(e); });
+			return result;
+		}
 	</script>
 <?php
 	}
