@@ -58,11 +58,11 @@
 								ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
 						WHERE 
 							`personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
-							AND (`nzcf20_order` > 0 AND `nzcf20_order` < 15 AND `nzcf20_order` IS NOT NULL)
 						ORDER BY 
 							`date_achieved` DESC 
 						LIMIT 1 
-					) AS `nzcf_order`, group_concat(personnel.personnel_id) as people 
+					) AS `nzcf_order`,
+					GROUP_CONCAT(`personnel`.`personnel_id`) AS `people` 
 				FROM 	
 					`personnel`
 				WHERE 	
@@ -73,6 +73,8 @@
 				GROUP BY 
 					`personnel`.`is_female`, 
 					`nzcf_order`
+				HAVING 
+					(`nzcf_order` > 0 AND `nzcf_order` < 15 AND `nzcf_order` IS NOT NULL)
 				ORDER BY 
 					`nzcf_order`';
 
@@ -193,7 +195,7 @@
                         	ON `attendance_register`.`personnel_id` = `personnel`.`personnel_id`
 				WHERE 	`attendance_register`.`date` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'"
 					AND `attendance_register`.`presence` = '.ATC_ATTENDANCE_PRESENT.'
-					AND `personnel`.`access_rights` IN ('.ATC_USER_GROUP_OFFICERS.')
+					AND `personnel`.`access_rights` IN ('.ATC_USER_GROUP_OFFICERS.','.ATC_USER_LEVEL_SNCO.')
 				GROUP BY `personnel`.`personnel_id`
 				HAVING '.($supplimentary?'':'NOT ').'`rank` = \'SUPOFF\'
 				ORDER BY `rank_order`, `lastname`, `firstname`';
