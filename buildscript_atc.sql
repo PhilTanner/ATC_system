@@ -589,13 +589,6 @@ CREATE TABLE IF NOT EXISTS `password_reset` (
   PRIMARY KEY (`code`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-DROP TRIGGER IF EXISTS `ClearOldRequests`;
-DELIMITER //
-CREATE TRIGGER `ClearOldRequests` BEFORE INSERT ON `password_reset`
- FOR EACH ROW DELETE FROM `password_reset` WHERE DATE_ADD(`created`, INTERVAL 1 DAY)
-//
-DELIMITER ;
-
 -- /Version 0.8.5
 
 

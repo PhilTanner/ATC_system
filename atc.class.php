@@ -109,6 +109,7 @@
 	class ATCExceptionDBConn extends ATCException {}
 	class ATCExceptionDBError extends ATCExceptionDBConn {}
 	class ATCExceptionInsufficientPermissions extends ATCException {}
+	class ATCExceptionInvalidPassword extends ATCException {}
 	class ATCExceptionInvalidUserSession extends ATCExceptionInsufficientPermissions {}
 	
 	class ATC
@@ -131,7 +132,7 @@
 					self::$currentuser = $details->personnel_id;
 					self::$currentpermissions = $details->access_rights; 
 				} catch (ATCExceptionInvalidUserSession $e) {
-					if(substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" )
+					if(substr($_SERVER['SCRIPT_NAME'], -9, 9) != "login.php" && substr($_SERVER['SCRIPT_NAME'], (0-strlen('forgottenpassword.php')) ) != "forgottenpassword.php"  )
 						header('Location: login.php', true, 302);
 				}
 			} 
@@ -213,22 +214,30 @@
 		}
 		
 		
-		public function forgot_password_generate( $id )
+		public function forgot_password_generate( $username )
 		{
 			$code = self::generate_session_key(32);
 			if( !strlen($code) )
 				throw new ATCExceptionBadData("Unable to generate key.");
-			if( !self::get_personnel($id) )
-				throw new ATCExceptionBadData("Invalid personnel ID parameter passed.");
-				
+			
+			// Clear old entries
+			self:: $mysqli->query('DELETE FROM `password_reset` WHERE DATE_ADD(`created`, INTERVAL 1 DAY) < NOW() OR `personnel_id` = -1;');
+			// Set our default user for reset requests to be our dummy user. This keeps foreign keys consistent, and stops the requests being used.
+			// This way, we're secure - people can't interrogate the DB to find valid username to start brute-force attacks against the password
+			// And the system treats all requests exactly the same way.
 			$query = '
 				INSERT INTO `password_reset` 
 				( 
 					`code`, 
-					`pesonnel_id` 
+					`personnel_id` 
 				) VALUES ( 
 					"'.self::$mysqli->real_escape_string($code).'", 
-					'.(int)$id.'
+					IFNULL( (
+						SELECT	`personnel_id`
+						FROM	`personnel`
+						WHERE	LOWER(TRIM(`email`)) = "'.self::$mysqli->real_escape_string($username).'"
+						LIMIT	1
+					), -1 )
 				);';
 				
 			if ($result = self::$mysqli->query($query))	
@@ -822,7 +831,7 @@
 							setcookie( 'sessid', $uniqueid, time()+60*60*24*30 );
 							return true;
 						} else throw new ATCExceptionDBError(self::$mysqli->error);
-					} else throw new ATCExceptionInsufficientPermissions('Unknown username or password');
+					} else throw new ATCExceptionInvalidPassword($obj->personnel_id);
 				} else throw new ATCExceptionInsufficientPermissions('Unknown username or password');
 			}
 			else throw new ATCExceptionDBError(self::$mysqli->error);
@@ -875,6 +884,15 @@
 			return true;
 		}
 		
+		public function send_email( $to, $subject, $body, $cc=null, $bcc=null )
+		{
+			if( strlen(trim($to))+strlen(trim($cc))+strlen(trim($bcc)) )
+				throw new ATCExceptionBadData('No one to send emails to!');
+			if( strlen(trim($body)) )
+				throw new ATCExceptionBadData('Nothing to send!');
+				
+			
+		}		
 		
 		public function set_activity( $activity_id, $startdate, $enddate, $title, $location_id, $personnel_id, $twoic_personnel_id, $activity_type_id, $dress_code, $attendees, $cost )
 		{
@@ -1363,12 +1381,10 @@
 			
 			// We're on a non-logged-in page, so stop infinite redirect loops
 			if( substr($_SERVER['SCRIPT_NAME'], (0-strlen('login.php'))) == "login.php" || substr($_SERVER['SCRIPT_NAME'], (0-strlen('forgottenpassword.php'))) == 'forgottenpassword.php' )
-				$redirect_to_login = -1;
+				$redirect_to_login = 0;
 			
-			echo $redirect_to_login;
 			if( $redirect_to_login )
-				// header('Location: login.php', true, 302);
-				echo 'redirect';
+				header('Location: login.php', true, 302);
 				
 			echo '<!doctype html>
 <html lang="us">
