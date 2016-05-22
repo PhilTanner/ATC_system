@@ -44,7 +44,7 @@
 	define( 'ATC_USER_LEVEL_CADET',			  ATC_PERMISSION_TRAINING_VIEW | ATC_PERMISSION_ACTIVITIES_VIEW );
 	define( 'ATC_USER_LEVEL_JNCO', 				ATC_USER_LEVEL_CADET | ATC_PERMISSION_ATTENDANCE_VIEW );
 	define( 'ATC_USER_LEVEL_SNCO', 				ATC_USER_LEVEL_JNCO | ATC_PERMISSION_PERSONNEL_VIEW | ATC_PERMISSION_LOCATIONS_VIEW);
-	define( 'ATC_USER_LEVEL_SUPOFF', 			ATC_USER_LEVEL_SNCO | ATC_PERMISSION_ATTENDANCE_VIEW );
+	define( 'ATC_USER_LEVEL_SUPOFF', 			ATC_USER_LEVEL_SNCO | ATC_PERMISSION_FINANCE_VIEW );
 	define( 'ATC_USER_LEVEL_OFFICER', 			ATC_USER_LEVEL_SUPOFF | ATC_PERMISSION_FINANCE_VIEW | ATC_PERMISSION_STORES_VIEW | ATC_PERMISSION_SYSTEM_VIEW );
 	
 	/* Specific Officer roles */
@@ -89,16 +89,16 @@
 	$translations['userlevel'] = array();
 	$translations['userlevel'][ATC_USER_LEVEL_ADMIN] = '<strong>Admin</strong>';
 	$translations['userlevel'][ATC_USER_LEVEL_CADET] = 'Cadet';
-	$translations['userlevel'][ATC_USER_LEVEL_SNCO] = '<acronym title="Senior Non-Commissioned Officer">SNCO</acronym>';
 	$translations['userlevel'][ATC_USER_LEVEL_JNCO] = '<acronym title="Junior Non-Commissioned Officer">JNCO</acronym>';
+	$translations['userlevel'][ATC_USER_LEVEL_SNCO] = '<acronym title="Senior Non-Commissioned Officer">SNCO</acronym>';
+	$translations['userlevel'][ATC_USER_LEVEL_SUPOFF] = 'Supplimentary Officer';
+	$translations['userlevel'][ATC_USER_LEVEL_OFFICER] = 'Officer';
 	$translations['userlevel'][ATC_USER_LEVEL_ADJUTANT] = 'Adjutant';
 	$translations['userlevel'][ATC_USER_LEVEL_STORES] = 'Stores Officer';
 	$translations['userlevel'][ATC_USER_LEVEL_TRAINING] = 'Training Officer';
 	$translations['userlevel'][ATC_USER_LEVEL_CUCDR] = 'Unit Commander';
-	$translations['userlevel'][ATC_USER_LEVEL_SUPOFF] = 'Supplimentary Officer';
-	$translations['userlevel'][ATC_USER_LEVEL_OFFICER] = 'Officer';
 	$translations['userlevel'][ATC_USER_LEVEL_EMRG_CONTACT] = 'Emergency Contact';
-	$translations['userlevel'][ATC_USER_LEVEL_TREASURER] = 'Treasurer';
 	$translations['userlevel'][ATC_USER_LEVEL_USC] = 'Unit Support Committee';
+	$translations['userlevel'][ATC_USER_LEVEL_TREASURER] = 'Treasurer';
 	
 ?>

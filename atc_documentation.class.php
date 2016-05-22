@@ -46,38 +46,48 @@
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
 			
 			$query = '
-				SELECT	COUNT(DISTINCT `personnel`.`personnel_id`) as `count`,
-						`personnel`.`is_female`,
-						( 
-   						SELECT `nzcf20_order` 
-   						FROM `personnel_rank` 
-								INNER JOIN `rank` 
-									ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
-   						WHERE `personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
-   							AND (`nzcf20_order` > 0 AND `nzcf20_order` < 15 AND `nzcf20_order` IS NOT NULL)
-   						ORDER BY `date_achieved` DESC 
-   						LIMIT 1 
-						) AS `nzcf_order` 
-				FROM 	`personnel`
-				WHERE 	`personnel`.`joined_date` <= "'.date('Y-m-d', $date).'" 
+				SELECT	
+					COUNT(DISTINCT `personnel`.`personnel_id`) as `count`,
+					`personnel`.`is_female`,
+					( 
+						SELECT 
+							`nzcf20_order` 
+						FROM 
+							`personnel_rank` 
+							INNER JOIN `rank` 
+								ON `rank`.`rank_id` = `personnel_rank`.`rank_id` 
+						WHERE 
+							`personnel_rank`.`personnel_id` = `personnel`.`personnel_id` 
+						ORDER BY 
+							`date_achieved` DESC 
+						LIMIT 1 
+					) AS `nzcf_order`,
+					GROUP_CONCAT(`personnel`.`personnel_id`) AS `people` 
+				FROM 	
+					`personnel`
+				WHERE 	
+					`personnel`.`joined_date` <= "'.date('Y-m-d', $date).'" 
 					AND (`personnel`.`left_date` >= "'.date('Y-m-d', $date).'" OR `personnel`.`left_date` IS NULL)
 					AND `enabled` = -1
 					AND `access_rights` IN ( '.ATC_USER_GROUP_PERSONNEL.' )
-				GROUP BY `personnel`.`is_female`, `nzcf_order`
-				ORDER BY `nzcf_order`';
+				GROUP BY 
+					`personnel`.`is_female`, 
+					`nzcf_order`
+				HAVING 
+					(`nzcf_order` > 0 AND `nzcf_order` < 15 AND `nzcf_order` IS NOT NULL)
+				ORDER BY 
+					`nzcf_order`';
 
-			$activities = array();
+			$enrolled = array();
 			if ($result = self::$mysqli->query($query))
 			{
 				while ( $obj = $result->fetch_object() )
-				{
-					$activities[] = $obj;
-				}
-			}	
-			else
+					if( !is_null($obj->nzcf_order) )
+						$enrolled[] = $obj;
+			} else
 				throw new ATCExceptionDBError(self::$mysqli->error);
-			
-			return $activities;
+				
+			return $enrolled;
 		}
 		
 		public function get_cadet_attendance( $startdate, $enddate )
@@ -185,7 +195,7 @@
                         	ON `attendance_register`.`personnel_id` = `personnel`.`personnel_id`
 				WHERE 	`attendance_register`.`date` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'"
 					AND `attendance_register`.`presence` = '.ATC_ATTENDANCE_PRESENT.'
-					AND `personnel`.`access_rights` IN ('.ATC_USER_GROUP_OFFICERS.')
+					AND `personnel`.`access_rights` IN ('.ATC_USER_GROUP_OFFICERS.','.ATC_USER_LEVEL_SNCO.')
 				GROUP BY `personnel`.`personnel_id`
 				HAVING '.($supplimentary?'':'NOT ').'`rank` = \'SUPOFF\'
 				ORDER BY `rank_order`, `lastname`, `firstname`';
@@ -208,6 +218,7 @@
 			// We'll send back an array of sections with the right data in them
 			$returnval = array();
 			
+			// Blank strings not zeros because NZCF want blanks not zeroes in completed forms
 			$section1 = array( array( '', '' ), array( '', '' ), array( '', '' ), array( '', '' ), array( '', '' ), array( '', '' ), array( '', '' ) );
 			$enrolments = self::get_cadets_enrolled_on_date( $lastdayofmonth );
 			// Section one needs some munging to get what we want out
@@ -215,8 +226,8 @@
 			{		
 				if( $obj->nzcf_order > 0 && $obj->nzcf_order < 15 )
 				{
-					$section1[(($obj->nzcf_order)-1)][(($obj->is_female)+1)] = $obj->count;
-					$section1[6][(($obj->is_female)+1)] += $obj->count;
+					$section1[(($obj->nzcf_order)-1)][(($obj->is_female)+1)] = (int)$obj->count;
+					$section1[6][(($obj->is_female)+1)] += (int)$obj->count;
 				}
 			}
 			$returnval[] = $section1;
