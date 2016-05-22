@@ -4,7 +4,9 @@
 	else
 		define( 'ATC_DEBUG', 					1 );
 	
-	define( 'ATC_VERSION',						'0.8.4' );
+	// Version 0.X - single squadron ATC system
+	// Version 2.X - TriCorps system
+	define( 'ATC_VERSION',						'2.0.0' );
 	
 	// Permissions structure, as a bitmask
 	define( 'ATC_PERMISSION_PERSONNEL_VIEW', 		1 );
