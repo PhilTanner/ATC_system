@@ -54,6 +54,13 @@ For (hopefully obvious reasons) you should rename/change the password for these 
 
 ## Version history
 
+
+### RC 0.8.5
+- Enhancements:
+  - Can access next row on attendance register through tab key, reducing mouse input
+- Bug fixes:
+  - New Android OS doesn't like scrolling in scrolling - fixed attendees to activities boxes to be full height, not scrollable areas
+
 ### RC 0.8.4
 - Enhancements:
   - Extend use of translations array for future-proofing

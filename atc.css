@@ -44,8 +44,10 @@ ol.dragdrop li {
 }
 #attendees, #non_attendees {     float: left;  width:42%; }
 fieldset.dragdrop.attendees {
-    overflow-y: scroll;
+    /*
+overflow-y: scroll;
     max-height: 20em;
+*/
     padding-right:2em;
 }
 

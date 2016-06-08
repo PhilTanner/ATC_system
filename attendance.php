@@ -171,15 +171,19 @@
 			</tfoot>
 			<tbody>
 				<?php
+					$rowcounter=0;
 					foreach( $users as $obj )
 					{
+						
 						if( $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_VIEW, $obj->personnel_id ) )
 						{
+							$rowcounter++;
 							echo '<tr>';	
 							echo '	<td>'.$obj->flight.'</td>';
 							echo '	<td>'.$obj->rank.'</td>';
 							echo '	<td><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
 							$missednights = 0;
+							$tabindex=0;
 							
 							$night = strtotime($termstart);
 							while( $night <= strtotime($termend) )
@@ -189,7 +193,7 @@
 								// When embedding for a particular personnel page, don't let us edit - nor when they haven't started yet
 								if( $ATC->user_has_permission( ATC_PERMISSION_ATTENDANCE_EDIT, $obj->personnel_id ) && !isset($_GET['id']) && (strtotime($obj->joined_date) <= $night) ) 
 								{
-									echo '<select name="'.$obj->personnel_id.'|'.date(ATC_SETTING_DATE_INPUT,$night).'" id="'.$obj->personnel_id.'_'.date(ATC_SETTING_DATE_INPUT,$night).'">';
+									echo '<select name="'.$obj->personnel_id.'|'.date(ATC_SETTING_DATE_INPUT,$night).'" id="'.$obj->personnel_id.'_'.date(ATC_SETTING_DATE_INPUT,$night).'" tabindex="'.($rowcounter+$tabindex).'">';
 									echo '	<option value="" selected="selected"></option>';
 									echo '	<option value="'.ATC_ATTENDANCE_PRESENT.'">'.ATC_ATTENDANCE_PRESENT_SYMBOL.'</option>';
 									echo '	<option value="'.ATC_ATTENDANCE_ON_LEAVE.'">'.ATC_ATTENDANCE_ON_LEAVE_SYMBOL.'</option>';
@@ -198,6 +202,7 @@
 								}
 								echo '</td>';
 
+								$tabindex += count($users);
 								$night = strtotime( "next ".ATC_SETTING_PARADE_NIGHT, $night);
 							}
 							
