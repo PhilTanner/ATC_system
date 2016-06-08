@@ -10,8 +10,8 @@
 		setlocale(LC_ALL, 'enz');
 	}
 	
-	/* Database connection settngs */	
-	define( 'ATC_SETTING_DB_USER', 'atc' );
+	/* Database connection settngs */
+	define( 'ATC_SETTING_DB_USER', 'atc');
 	define( 'ATC_SETTING_DB_PSWD', 'ZIERIESs5ESa' );
 	define( 'ATC_SETTING_DB_HOST', 'localhost' );
 	define( 'ATC_SETTING_DB_NAME', 'atc' );
