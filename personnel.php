@@ -80,6 +80,7 @@
 				<th> Name </th>
 				<th> Contact N&ordm; </th>
 				<th> Access rights </th>
+				<th> Selected </th>
 				<td> <?= ( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_EDIT )?'<a href="?id=0" class="button new"> New </a>':'')?> </td>
 			</tr>
 		</thead>
@@ -105,6 +106,7 @@
 				
 				foreach( $user as $obj )
 				{
+					$thispersonsnok = array();
 					if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $obj->personnel_id ) )
 					{
 						echo '<tr'.($obj->enabled?'':' class="ui-state-disabled"').'>';
@@ -117,40 +119,57 @@
 							echo '	<td>'.$translations['userlevel'][$obj->access_rights].'</td>';
 						else
 							echo '	<td class="ui-state-error"><strong>Unknown</strong></td>';
-						if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_EDIT, $obj->personnel_id ) )
-							echo '	<td> <a href="?id='.$obj->personnel_id.'" class="button edit">Edit</a> </td>';
-						echo '</tr>';
-						
+							
 						// store some contact details
 						$obj->nok = $ATC->get_nok($obj->personnel_id);
 						if( in_array($obj->access_rights, explode(",",ATC_USER_GROUP_CADETS) ) )
 						{
 							$contactdetails["cadets"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
 							foreach($obj->nok as $nok)
+							{
 								$contactdetails["cadetsnok"][] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
+								$thispersonsnok[] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
+							}
 						}
 						if( in_array($obj->access_rights, explode(",",ATC_USER_GROUP_OFFICERS) ) )
 						{
 							$contactdetails["officers"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
 							foreach($obj->nok as $nok)
+							{
 								$contactdetails["officersnok"][] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
+							}
 						}
 						if( $obj->access_rights == ATC_USER_LEVEL_JNCO )
 						{
 							$contactdetails["jncos"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
 							foreach($obj->nok as $nok)
+							{
 								$contactdetails["jncosnok"][] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
+							}
 						}
 						if( $obj->access_rights == ATC_USER_LEVEL_SNCO )
 						{
 							$contactdetails["sncos"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
 							foreach($obj->nok as $nok)
+							{
 								$contactdetails["sncosnok"][] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
+							}
 						}
 						if( in_array($obj->access_rights, array(ATC_USER_LEVEL_TREASURER, ATC_USER_LEVEL_USC) ) )
 							$contactdetails["usc"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
 						if( in_array($obj->access_rights, array(ATC_USER_LEVEL_EMRG_CONTACT, ATC_USER_LEVEL_ADMIN) ) )
 							$contactdetails["others"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
+						
+							
+						echo '	<td> <input type="checkbox" id="contact_'.$obj->personnel_id.'" ';
+						echo ' data-email="'.htmlentities($obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>').'"';
+						echo ' data-nokEmail="'.htmlentities(implode(';', $thispersonsnok)).'"';
+						
+						
+						if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_EDIT, $obj->personnel_id ) )
+							echo '	<td> <a href="?id='.$obj->personnel_id.'" class="button edit">Edit</a> </td>';
+						echo '</tr>';
+						
 						
 					}
 				}
