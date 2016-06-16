@@ -91,6 +91,9 @@
 			</tr>
 		</tfoot>
 		<tbody>
+			<form id="personnellist">
+				<input type="hidden" name="what" id="what" value="" />
+				<input type="hidden" name="how" id="how" value=""/> 
 			<?php
 				$contactdetails = array();
 				$contactdetails["cadets"] = array();
@@ -104,9 +107,22 @@
 				$contactdetails["usc"] = array();
 				$contactdetails["others"] = array();
 				
+				$smscontactdetails = array();
+				$smscontactdetails["cadets"] = array();
+				$smscontactdetails["jncos"] = array();
+				$smscontactdetails["sncos"] = array();
+				$smscontactdetails["officers"] = array();
+				$smscontactdetails["cadetsnok"] = array();
+				$smscontactdetails["jncosnok"] = array();
+				$smscontactdetails["sncosnok"] = array();
+				$smscontactdetails["officersnok"] = array();
+				$smscontactdetails["usc"] = array();
+				$smscontactdetails["others"] = array();
+				
 				foreach( $user as $obj )
 				{
-					$thispersonsnok = array();
+					$thispersonsnokemail = array();
+					$thispersonsnokmobile = array();
 					if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $obj->personnel_id ) )
 					{
 						echo '<tr'.($obj->enabled?'':' class="ui-state-disabled"').'>';
@@ -120,96 +136,120 @@
 						else
 							echo '	<td class="ui-state-error"><strong>Unknown</strong></td>';
 							
-						// store some contact details
-						$obj->nok = $ATC->get_nok($obj->personnel_id);
+						echo '	<td style="text-align:center;"> ';
+						echo '		<input type="checkbox" id="contact_'.$obj->personnel_id.'" name="id[]" value="'.$obj->personnel_id.'"';
+						echo '			data-personnel_id="'.htmlentities($obj->personnel_id).'"';
 						if( in_array($obj->access_rights, explode(",",ATC_USER_GROUP_CADETS) ) )
-						{
-							$contactdetails["cadets"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
-							foreach($obj->nok as $nok)
-							{
-								$contactdetails["cadetsnok"][] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
-								$thispersonsnok[] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
-							}
-						}
+							echo '			data-cadet="true"';
 						if( in_array($obj->access_rights, explode(",",ATC_USER_GROUP_OFFICERS) ) )
-						{
-							$contactdetails["officers"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
-							foreach($obj->nok as $nok)
-							{
-								$contactdetails["officersnok"][] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
-							}
-						}
-						if( $obj->access_rights == ATC_USER_LEVEL_JNCO )
-						{
-							$contactdetails["jncos"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
-							foreach($obj->nok as $nok)
-							{
-								$contactdetails["jncosnok"][] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
-							}
-						}
-						if( $obj->access_rights == ATC_USER_LEVEL_SNCO )
-						{
-							$contactdetails["sncos"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
-							foreach($obj->nok as $nok)
-							{
-								$contactdetails["sncosnok"][] = '"'.$nok->firstname.' '.$nok->lastname.'" <'.$nok->email.'>';
-							}
-						}
+							echo '			data-officer="true"';
+						if( in_array($obj->access_rights, explode(",",ATC_USER_LEVEL_JNCO) ) )
+							echo '			data-jnco="true"';
+						if( in_array($obj->access_rights, explode(",",ATC_USER_LEVEL_SNCO) ) )
+							echo '			data-snco="true"';
 						if( in_array($obj->access_rights, array(ATC_USER_LEVEL_TREASURER, ATC_USER_LEVEL_USC) ) )
-							$contactdetails["usc"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
+							echo '			data-usc="true"';
 						if( in_array($obj->access_rights, array(ATC_USER_LEVEL_EMRG_CONTACT, ATC_USER_LEVEL_ADMIN) ) )
-							$contactdetails["others"][] = '"'.$obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>';
-						
-							
-						echo '	<td> <input type="checkbox" id="contact_'.$obj->personnel_id.'" ';
-						echo ' data-email="'.htmlentities($obj->rank.' '.$obj->display_name.'" <'.$obj->email.'>').'"';
-						echo ' data-nokEmail="'.htmlentities(implode(';', $thispersonsnok)).'"';
+							echo '			data-other="true"';
+						echo '			data-access_rights="'.$obj->access_rights.'" data-enabled="'.($obj->enabled?'true':'false').'" />';
+						echo '	</td>';
 						
 						
 						if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_EDIT, $obj->personnel_id ) )
 							echo '	<td> <a href="?id='.$obj->personnel_id.'" class="button edit">Edit</a> </td>';
 						echo '</tr>';
 						
-						
+
 					}
 				}
 			?>
+			</form>
 		</tbody>
 	</table>
 	<?php
 		if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW ) )
 		{
 	?>
-	<fieldset id="emaillist">
-		<legend> Send bulk email </legend>
-		<label for="cadets">Cadets</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["cadets"])) )?>" id="cadets" checked="checked" /><br />
-		<label for="jncos">JNCOs</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["jncos"])) )?>" id="jncos" checked="checked" /><br />
-		<label for="sncos">SNCOs</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["sncos"])) )?>" id="sncos" checked="checked" /><br />
-		<label for="officers">Officers</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["officers"])) )?>" id="officers" checked="checked"  /><br />
-		<hr />		
-		<label for="cadetsnok">Cadets Next of Kin</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["cadetsnok"])) )?>" id="cadetsnok" checked="checked" /><br />
-		<label for="jncosnok">JNCOs Next of  Kin</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["jncosnok"])) )?>" id="jncosnok" checked="checked" /><br />
-		<label for="sncosnok">SNCOs Next of Kin</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["sncosnok"])) )?>" id="sncosnok" checked="checked" /><br />
-		<label for="officersnok">Officers Next of Kin</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["officersnok"])) )?>" id="officersnok" checked="checked"  /><br />
+	
+	<a href="" style="width:1px; height:1px; border:0px;" id="actiontrigger"></a>
+	<fieldset id="findtribute">
+		<legend> Select Personnel </legend>
+		<a class="button cadets">Cadets</a> 
+		<a class="button jncos">JNCOs</a>
+		<a class="button sncos">SNCOs</a>
+		<a class="button officers">Officers</a>
 		<hr />
-		<label for="usc">USC</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["usc"])) )?>" id="usc" /><br />
-		<label for="others">Others</label><input type="checkbox" value="<?= htmlentities( implode("; ", array_unique($contactdetails["others"])) )?>" id="others" /><br />
-		
-		<a class="button email">Create email</a>
+		<a class="button usc">USC</a>
+		<a class="button others">Others</a>
 	</fieldset>
+	<fieldset id="makecontact">
+		<legend> Make contact </legend>
+		<h3> With selected personnel: </h3>
+		<a class="button email">Send email</a>
+		<a class="button sms">Send SMS</a>
+		<hr />
+		<h3> With selected personnel's Next Of Kin: </h3>
+		<a class="button email nok">Send email</a>
+		<a class="button sms nok">Send SMS</a>
+	</fieldset>
+		
 	<?php
 		}
 	?>
 	<script>
 		//$("thead th").button({ icons: { primary: "ui-icon-arrowthick-2-n-s" } }).removeClass("ui-corner-all").css({ display: "table-cell" });
+		$('a.button').button();
 		$('a.button.edit').button({ icons: { primary: 'ui-icon-pencil' }, text: false });
 		$('a.button.new').button({ icons: { primary: 'ui-icon-plusthick' }, text: false });
+		// Buttons to communicate with personnel
+		$('a.button.cadets').click( function(){
+			// Toggle the checkboxes which are checked on & off
+			$('input[type="checkbox"]').filter( function(){ return $(this).data('cadet') == true && $(this).data('enabled') == true; }).prop('checked', function(_, checked) { return !checked; }); 
+			return false;
+		});
+		$('a.button.jncos').click( function(){
+			$('input[type="checkbox"]').filter( function(){ return $(this).data('jnco') == true && $(this).data('enabled') == true; }).prop('checked', function(_, checked) { return !checked; }); 
+			return false;
+		});
+		$('a.button.sncos').click( function(){
+			$('input[type="checkbox"]').filter( function(){ return $(this).data('snco') == true && $(this).data('enabled') == true; }).prop('checked', function(_, checked) { return !checked; }); 
+			return false;
+		});
+		$('a.button.officers').click( function(){
+			$('input[type="checkbox"]').filter( function(){ return $(this).data('officer') == true && $(this).data('enabled') == true; }).prop('checked', function(_, checked) { return !checked; }); 
+			return false;
+		});
+		$('a.button.usc').click( function(){
+			$('input[type="checkbox"]').filter( function(){ return $(this).data('usc') == true && $(this).data('enabled') == true; }).prop('checked', function(_, checked) { return !checked; }); 
+			return false;
+		});
+		$('a.button.others').click( function(){
+			$('input[type="checkbox"]').filter( function(){ return $(this).data('other') == true && $(this).data('enabled') == true; }).prop('checked', function(_, checked) { return !checked; }); 
+			return false;
+		});
+		
 		$('td.ui-state-highlight').removeClass('ui-state-highlight').parent().addClass('ui-state-highlight');
 		
-		$('a.button.email').button({ icons: { primary: 'ui-icon-mail-closed' } }).click(function(){
-			var addresses = '';
-			$.each($('#emaillist input:checked'), function( index, value ){ addresses += $(this).val()+"; "; });
-			$(this).attr('href', "mailto:?bcc="+encodeURI(addresses));
+		$('a.button.email').button({ icons: { primary: 'ui-icon-mail-closed' } });
+		$('a.button.sms').button({ icons: { primary: 'ui-icon-battery-2' } })
+		$('a.button.email, a.button.sms').click(function(){
+			
+			$('#what').val($(this).hasClass('nok')?'nok':'personal');
+			$('#how').val($(this).hasClass('email')?'email':'sms');
+			
+			$.ajax({	
+				dataType:	'json',
+				url:		'personnel_contactdetails.php',
+				data:		$('#personnellist').serialize(),
+				success:	function(data)
+							{
+								if( $('#how').val() == 'email' ) 
+									$("#actiontrigger").attr('href', "mailto:?bcc="+encodeURI( data.join(';') ))[0].click();
+								else
+									$("#actiontrigger").attr('href', "sms://"+encodeURI( data.join(';') ))[0].click();
+							},
+				error:	function(err,msg){ alert(err); alert(msg); return false; }
+			});
 		});
 	</script>
 <?php

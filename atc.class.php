@@ -686,7 +686,7 @@
 				
 					$query = "SELECT *,
 						".ATC_SETTING_DISPLAY_NAME." AS `display_name`,
-						".ATC_SETTING_DISPLAY_RANK_SHORTNAME." AS `rank` 
+						".ATC_SETTING_DISPLAY_RANK_SHORTNAME." AS `rank`
 					FROM `personnel` 
 					WHERE `personnel_id` = ".(int)$id." 
 					LIMIT 1;";
@@ -695,7 +695,8 @@
 						$personnel = $result->fetch_object();
 					else
 						throw new ATCExceptionDBError(self::$mysqli->error);
-					$personnel->created = date("Y-m-d\TH:i", strtotime($personnel->created));
+						
+					//$personnel->created = date("Y-m-d\TH:i", strtotime($personnel->created));
 					
 					break;
 			}
