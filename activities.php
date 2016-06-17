@@ -307,6 +307,7 @@
 ?>
 <form name='editactivity' id='editactivity' method='post'>
 	<div style="width:49%; float:left;">
+		
 		<label for='title'>Activity name</label><br />
 		<input type='text' id='title' name='title' value='<?=htmlentities($activity->title)?>' required='required' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
 		<label for='startdate'>Assemble date/time</label><br />
@@ -333,15 +334,63 @@
 			<option value='<?=ATC_DRESS_CODE_MUFTI?>'<?=($activity->dress_code==ATC_DRESS_CODE_MUFTI?' selected="selected"':'')?>><?=htmlentities(ATC_DRESS_CODE_MUFTI_NAME)?></option>
 		</select>
 	</div><br style="clear:left" />
-	<fieldset id='attendees' class='dragdrop attendees'><legend>Attendees</legend><ol class='dragdrop attendees'></ol></fieldset>
-	<fieldset id='non_attendees' class='dragdrop attendees'><legend>Non-Attendees</legend><ol class='dragdrop attendees'></ol></fieldset>
+	<fieldset id='attendees' class='dragdrop attendees'>
+		<legend>Attendees</legend>
+		<ol class='dragdrop attendees'></ol>
+		
+		<a class="button email">Send email to attendees</a>
+		<a class="button sms">Send SMS to attendees</a>
+		<hr />
+		<a class="button email nok">Send email to attendee's NOK</a>
+		<a class="button sms nok">Send SMS to attendee's NOK</a>
+		
+	</fieldset>
+	<fieldset id='non_attendees' class='dragdrop attendees'>
+		<legend>Non-Attendees</legend>
+		<ol class='dragdrop attendees'></ol>
+	</fieldset>
 	<input type='hidden' id='activity_id' name='activity_id' value='<?=$activity->activity_id?>' />
 	<input type='hidden' id='location_id' name='location_id' value='<?=$activity->location_id?>' />
 	<input type='hidden' id='activity_type_id' name='activity_type_id' value='<?=$activity->activity_type_id?>' />
 	<input type='hidden' id='personnel_id' name='personnel_id' value='<?=$activity->personnel_id?>' />
 	<input type='hidden' id='2ic_personnel_id' name='2ic_personnel_id' value='<?=$activity->twoic_personnel_id?>' />
+	
+	<input type="hidden" name="what" id="what" value="" />
+	<input type="hidden" name="how" id="how" value=""/> 
+	
+	<a href="" style="width:1px; height:1px; border:0px;" id="actiontrigger"></a>
 </form>
 <script>
+	
+		$('a.button.email').button({ icons: { primary: 'ui-icon-mail-closed' } });
+		$('a.button.sms').button({ icons: { primary: 'ui-icon-battery-2' } })
+		
+		$('a.button.email, a.button.sms').click(function(){
+			$('#what').val($(this).hasClass('nok')?'nok':'personal');
+			$('#how').val($(this).hasClass('email')?'email':'sms');
+			
+
+			var ids = new Array();
+			$('#attendees ol li').each( function( i ){
+				ids.push($(this).data('personnel_id'));
+			});
+			
+			$.ajax({	
+				dataType:	'json',
+				url:		'personnel_contactdetails.php?id%5B%5D='+ids.join('&id%5B%5D=')+'&what='+$('#what').val()+'&how='+$('#how').val(),
+				processData:false,
+				success:	function(data)
+							{
+								if( $('#how').val() == 'email' ) 
+									$("#actiontrigger").attr('href', "mailto:?bcc="+encodeURI( data.join(';') ))[0].click();
+								else
+									$("#actiontrigger").attr('href', "sms://"+encodeURI( data.join(';') ))[0].click();
+							},
+				error:	function(err,msg){ alert(err); alert(msg); return false; }
+			});
+			
+		});
+	
 	var names = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_activity_names() )) ?>' );
 	$('#title').autocomplete({ source: names, minLength: 0 });
 	
@@ -434,12 +483,14 @@
 		if( person.personnel_id > 0 )
 		{
 			if( attendees.indexOf( person.personnel_id ) >= 0 )
-				$('#attendees ol.dragdrop').append('<li personnel_id="'+person.personnel_id+'">'+person.rank+' '+person.lastname+', '+person.firstname+'</li>'); 
+				$('#attendees ol.dragdrop').append('<li personnel_id="'+person.personnel_id+'" data-personnel_id="'+person.personnel_id+'">'+person.rank+' '+person.lastname+', '+person.firstname+'</li>'); 
 			else
-				$('#non_attendees ol.dragdrop').append('<li personnel_id="'+person.personnel_id+'">'+person.rank+' '+person.lastname+', '+person.firstname+'</li>'); 
+				$('#non_attendees ol.dragdrop').append('<li personnel_id="'+person.personnel_id+'" data-personnel_id="'+person.personnel_id+'">'+person.rank+' '+person.lastname+', '+person.firstname+'</li>'); 
 		}
 	});
+	
 	<?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '$("#attendees ol.dragdrop,#non_attendees ol.dragdrop").sortable({ connectWith: ".dragdrop.attendees" }).disableSelection();':'' ) ?> 
+	
 	
 </script>
 <?php
