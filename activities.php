@@ -374,7 +374,7 @@
 			$('#attendees ol li').each( function( i ){
 				ids.push($(this).data('personnel_id'));
 			});
-			
+		
 			$.ajax({	
 				dataType:	'json',
 				url:		'personnel_contactdetails.php?id%5B%5D='+ids.join('&id%5B%5D=')+'&what='+$('#what').val()+'&how='+$('#how').val(),
