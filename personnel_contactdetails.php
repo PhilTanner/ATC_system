@@ -68,6 +68,6 @@
 	
 	header('Content-Type: application/json; charset=utf-8');
 	// Dedupe our list in case someone appears more than once (i.e. NOK for cadet, NOK for SNCO & USC member)
-	echo json_encode(array_unique($returnvalue));
+	echo json_encode(array_values(array_unique($returnvalue)));
 	
 ?>

@@ -55,6 +55,13 @@ For (hopefully obvious reasons) you should rename/change the password for these 
 ## Version history
 
 
+### RC 0.8.6
+- Enhancements:
+  - Can now select which cadets/NOK to contact from the personnel list.
+  - Can now contact cadets/NOK for an activity
+- Bug Fixes:
+  - Fix personnel created date parsing errors
+
 ### RC 0.8.5
 - Enhancements:
   - Can access next row on attendance register through tab key, reducing mouse input
