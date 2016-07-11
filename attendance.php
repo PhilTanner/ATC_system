@@ -424,6 +424,19 @@
 			return false;
 		});
 		
+		$("#attendanceregister table.tablesorter").tablesorter().on("sortStart", function(){ $("tbody tr").removeClass("evenrow"); }).on("sortEnd", function(){ 
+			var rowcounter=0;
+			$("#attendanceregister table.tablesorter tr").each( function(){
+				rowcounter++;
+				var tabIndex = rowcounter;
+				$(this).find('select').each( function(){
+					tabIndex += <?= count($users) ?>;
+					$(this).attr('tabIndex', tabIndex);
+				});
+			});
+			$("tbody tr:odd").not(".ui-state-highlight, .ui-state-error").addClass("evenrow");
+		});
+		
 		$('a.button.new.term').button({ icons: { primary: 'ui-icon-plusthick' }, text: false }).click(function(){
 			$('#dialog').html("<form name='newterm' id='newterm' method='post'><label for='startdate' style='width:auto;'>New term start date</label><br /><input type='date' id='startdate' name='startdate' value='<?=date("Y-m-d",strtotime('next '.ATC_SETTING_PARADE_NIGHT,$term->enddate))?>' style='width:auto' /><br /><label for='enddate' style='width:auto;'>New term end date</label><br /><input type='date' id='enddate' name='enddate' value='<?=date("Y-m-d",strtotime('+10 weeks', strtotime('next '.ATC_SETTING_PARADE_NIGHT,$term->enddate)))?>' style='width:auto' /></form>").dialog({
 			  modal: true,

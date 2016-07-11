@@ -1298,7 +1298,7 @@
 		<script>
 			$("thead th").button().removeClass("ui-corner-all").css({ display: "table-cell" });
 			$("tbody tr:odd").not(".ui-state-highlight, .ui-state-error").addClass("evenrow");
-			$("table.tablesorter").tablesorter().on("sortStart", function(){ $("tbody tr").removeClass("evenrow"); }).on("sortEnd", function(){ $("tbody tr:odd").not(".ui-state-highlight, .ui-state-error").addClass("evenrow"); });
+			$("table.tablesorter").not("#attendanceregister table").tablesorter().on("sortStart", function(){ $("tbody tr").removeClass("evenrow"); }).on("sortEnd", function(){ $("tbody tr:odd").not(".ui-state-highlight, .ui-state-error").addClass("evenrow"); });
 			$("a.button.edit").button({ icons: { primary: "ui-icon-pencil" }, text: false });
 			$("a.button.new").button({ icons: { primary: "ui-icon-plusthick" }, text: false });
 			$("button.update").button({ icons: { primary: "ui-icon-refresh" } });
