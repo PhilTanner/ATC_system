@@ -14,7 +14,7 @@
 	define( 'ATC_SETTING_DB_USER', 'atc');
 	define( 'ATC_SETTING_DB_PSWD', 'ZIERIESs5ESa' );
 	define( 'ATC_SETTING_DB_HOST', 'localhost' );
-	define( 'ATC_SETTING_DB_NAME', 'atc' );
+	define( 'ATC_SETTING_DB_NAME', 'cgcu' );
 	
 	/* Presentation settings */
 	define( 'ATC_SETTING_PARADE_NIGHT',			"Wednesday" );
@@ -31,7 +31,7 @@
 	define( 'ATC_SETTING_FINANCE_UNIFORM_DEPOSIT',		50.00 );
 	define( 'ATC_SETTING_FINANCE_MONEYFORMAT', 	'%(#2.2n' );
 	
-	define( 'ATC_DRESS_CODE_BLUES_NAME',				'No 6 GP Uniform' );
+	define( 'ATC_DRESS_CODE_BLUES_NAME',				'SDAR' );
 	define( 'ATC_DRESS_CODE_DPM_NAME',				'DPM' );
 	define( 'ATC_DRESS_CODE_BLUES_AND_DPM_NAME',	'Mixed' );
 	define( 'ATC_DRESS_CODE_MUFTI_NAME',			'Mufti' );
@@ -100,5 +100,9 @@
 	$translations['userlevel'][ATC_USER_LEVEL_EMRG_CONTACT] = 'Emergency Contact';
 	$translations['userlevel'][ATC_USER_LEVEL_USC] = 'Unit Support Committee';
 	$translations['userlevel'][ATC_USER_LEVEL_TREASURER] = 'Treasurer';
-	
+
+	$translations['training_level'][ATC_LESSON_LEVEL_YEAR_ONE] = 'Year One';
+	$translations['training_level'][ATC_LESSON_LEVEL_YEAR_TWO] = 'Year Two';
+	$translations['training_level'][ATC_LESSON_LEVEL_YEAR_THREE] = 'Year Three';
+	$translations['training_level'][ATC_LESSON_LEVEL_YEAR_FOUR] = 'Year Four';	
 ?>

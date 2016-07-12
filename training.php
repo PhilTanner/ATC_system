@@ -87,9 +87,11 @@
 			</tr>
 		</thead>
 		<tbody>
-			<tr>
-				<th rowspan="2"> Advanced </th>
-				<?php
+			<?php
+				foreach(  $translations['training_level'] as $key => $value )
+				{
+					echo '<tr>';
+					echo '	<th rowspan="2"> '.$value.' </th>';
 					foreach( $terms as $term )
 					{
 						echo '<th style="font-size:20%">&nbsp;</th>';
@@ -97,14 +99,12 @@
 						$night = $term->startdate;
 						while( $night <= $term->enddate )
 						{
-							echo '<td class="lesson_block" level="'.ATC_LESSON_LEVEL_ADVANCED.'" date="'.date('Y-m-d',$night).' 19:00"></td>';
+							echo '<td class="lesson_block" level="'.$key.'" date="'.date('Y-m-d',$night).' 19:00"></td>';
 							$night = strtotime( "next ".ATC_SETTING_PARADE_NIGHT, $night);
 						}
 					}
-				?>
-			</tr>
-			<tr>
-				<?php
+					echo '</tr>';
+					echo '<tr>';
 					foreach( $terms as $term )
 					{
 						echo '<th style="font-size:20%">&nbsp;</th>';
@@ -112,14 +112,15 @@
 						$night = $term->startdate;
 						while( $night <= $term->enddate )
 						{
-							echo '<td class="lesson_block" level="'.ATC_LESSON_LEVEL_ADVANCED.'" date="'.date('Y-m-d',$night).' 20:00"></td>';
+							echo '<td class="lesson_block" level="'.$key.'" date="'.date('Y-m-d',$night).' 20:00"></td>';
 							$night = strtotime( "next ".ATC_SETTING_PARADE_NIGHT, $night);
 						}
 					}
-				?>
-			</tr>
-			<tr> <th colspan="<?= $n; ?>" style="font-size:50%">&nbsp;</th> </tr>
-			<tr> <th colspan="<?= $n; ?>" style="font-size:50%">&nbsp;</th> </tr>
+					echo '</tr>';
+					echo '<tr> <th colspan="<?= $n; ?>" style="font-size:50%">&nbsp;</th> </tr>';
+					echo '<tr> <th colspan="<?= $n; ?>" style="font-size:50%">&nbsp;</th> </tr>';
+				}
+/*
 			<tr>
 				<th rowspan="2"> Proficient </th>
 				<?php
@@ -182,7 +183,7 @@
 							$night = strtotime( "next ".ATC_SETTING_PARADE_NIGHT, $night);
 						}
 					}
-				?>
+*/				?>
 			</tr>
 		</tbody>
 	</table>

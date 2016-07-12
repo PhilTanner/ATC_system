@@ -58,10 +58,12 @@
 						echo '	<td style="background-color:'.$lesson->colour.'">'.$lesson->category_short.'</td>';
 						echo '	<td style="background-color:'.$lesson->colour.'">'.$lesson->code.'</td>';
 						echo '	<td>'.($lesson->nzqa_qualifies?'Y':'').'</td>';
-						echo '	<td> ';
+						echo '	<td> '. $translations['training_level'][$lesson->level];
+						/*
 						echo (($lesson->level & ATC_LESSON_LEVEL_ADVANCED)?'Advanced ':'');
 						echo (($lesson->level & ATC_LESSON_LEVEL_PROFICIENT)?'Proficient ':'');
 						echo (($lesson->level & ATC_LESSON_LEVEL_BASIC)?'Basic ':'');
+						*/
 						echo '	</td>';
 						if( $ATC->user_has_permission( ATC_PERMISSION_SYSTEM_EDIT ))
 							echo '	<td> <a href="system_lesson.php?id='.$lesson->lesson_id.'" class="button edit">Edit</a> </td>';
@@ -168,9 +170,15 @@
 			<input type="checkbox" name="nzqa_qualifies" id="nzqa_qualifies" value="1" <?= ($lesson->nzqa_qualifies?' checked="checked"':'') ?> /><br />
 			<label for="level">Level</label><br />
 			<select name="level" id="level">
+<?php
+				foreach(  $translations['training_level'] as $key => $value )
+					echo '<option value="'.$key.'"'.(($lesson->level == $key)?' selected="selected"':'').'>'.$value.'</option>';
+?>
+<!--
 				<option value="<?= ATC_LESSON_LEVEL_ADVANCED ?>"<?= (($lesson->level == ATC_LESSON_LEVEL_ADVANCED)?' selected="selected"':'') ?>>Advanced</option>
 				<option value="<?= ATC_LESSON_LEVEL_PROFICIENT ?>"<?= (($lesson->level == ATC_LESSON_LEVEL_PROFICIENT)?' selected="selected"':'') ?>>Proficient</option>
 				<option value="<?= ATC_LESSON_LEVEL_BASIC ?>"<?= (($lesson->level == ATC_LESSON_LEVEL_BASIC)?' selected="selected"':'') ?>>Basic</option>
+-->
 			</select><br />
 			<label for='dress_code'>Dress code</label><br />
 			<select name='dress_code' id='dress_code'>

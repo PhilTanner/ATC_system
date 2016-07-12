@@ -56,9 +56,10 @@
 	define( 'ATC_NZCF_CADETS',		1 << 1 );
 	define( 'ATC_NZCF_SEA',		1 << 2 );
 	
-	define( 'ATC_LESSON_LEVEL_ADVANCED', 	1 );
-	define( 'ATC_LESSON_LEVEL_PROFICIENT',	1 << 1 );
-	define( 'ATC_LESSON_LEVEL_BASIC',		1 << 2 );
+	define( 'ATC_LESSON_LEVEL_YEAR_ONE', 	1 );
+	define( 'ATC_LESSON_LEVEL_YEAR_TWO',	1 << 1 );
+	define( 'ATC_LESSON_LEVEL_YEAR_THREE',	1 << 2 );
+	define( 'ATC_LESSON_LEVEL_YEAR_FOUR',  1 << 3 );
 	
 	define( 'ATC_SESSION_TYPE_CALENDAR',		'activities_calendar' );
 
