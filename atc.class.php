@@ -252,7 +252,7 @@
 			return false;
 		}
 		
-		public function get_activities( $date=null, $days=365 )
+		public function get_activities( $date=null, $days=365, $for_attending_user_id=null )
 		{
 			if( is_null($date) ) $startdate = strtotime(date("Y")."-01-01");
 			else $startdate = strtotime($date);
@@ -298,7 +298,16 @@
 						FROM 	`activity_register`
 						GROUP BY `activity_id`
 						HAVING	`activity_id` = `activity`.`activity_id`
-					) AS `attendees`
+					) AS `attendees`,'.((int)$for_attending_user_id>0?'
+                                	(
+                                                SELECT
+                                                        COUNT(DISTINCT `activity_register`.`activity_id`)
+                                                FROM
+                                                        `activity_register`
+                                                WHERE   `activity_register`.`activity_id` = `activity`.`activity_id`
+                                                        AND `activity_register`.`personnel_id` = '.(int)$for_attending_user_id.'
+                                                        AND `activity_register`.`presence` = '.ATC_ATTENDANCE_PRESENT.'
+                                        )':'0').' AS `attendedcount`
 				FROM 	`activity` 
 					INNER JOIN `activity_type`
 						ON `activity`.`activity_type_id` = `activity_type`.`activity_type_id`
@@ -310,6 +319,7 @@
 						ON `activity`.`location_id` = `location`.`location_id`
 				WHERE 	`activity`.`startdate` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" 
 					AND `activity`.`activity_id` > 0
+				'.((int)$for_attending_user_id>0?'HAVING  `attendedcount` > 0':'').'
 				ORDER BY `sortorder`, `startdate` ASC;';
 
 			$activities = array();
@@ -647,7 +657,16 @@
 						$query = "
 							SELECT 	*, 
 								".ATC_SETTING_DISPLAY_NAME." AS `display_name`,
-								".ATC_SETTING_DISPLAY_RANK_SHORTNAME." AS `rank`
+								".ATC_SETTING_DISPLAY_RANK_SHORTNAME." AS `rank`,
+                                                		( 
+                                		                        SELECT 
+                		                                                COUNT(`activity_id`) 
+		                                                        FROM 
+                                                                		`activity_register` 
+                                                		        WHERE 
+                                		                                `presence` = ".ATC_ATTENDANCE_PRESENT." 
+                		                                                AND `activity_register`.`personnel_id` = `personnel`.`personnel_id`
+		                                                ) AS `activities`
 							FROM `personnel` 
 							WHERE `personnel_id` > 0 ";
 						if( !is_null($access_rights) )
@@ -686,7 +705,16 @@
 				
 					$query = "SELECT *,
 						".ATC_SETTING_DISPLAY_NAME." AS `display_name`,
-						".ATC_SETTING_DISPLAY_RANK_SHORTNAME." AS `rank`
+						".ATC_SETTING_DISPLAY_RANK_SHORTNAME." AS `rank`,
+						( 
+							SELECT 
+								COUNT(`activity_id`) 
+							FROM 
+								`activity_register` 
+							WHERE 
+								`presence` = ".ATC_ATTENDANCE_PRESENT." 
+								AND `activity_register`.`personnel_id` = ".(int)$id."
+						) AS `activities` 
 					FROM `personnel` 
 					WHERE `personnel_id` = ".(int)$id." 
 					LIMIT 1;";

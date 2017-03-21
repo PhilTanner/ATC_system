@@ -32,11 +32,11 @@
 			<h2 href="personal.php?id=<?=$user->personnel_id?>&amp;action=finance"> Finance </h2>
 			<div id="finance">
 			</div>
-	<!--
-			<h2> Activites </h2>
+
+			<h2 href="personal.php?id=<?=$user->personnel_id?>&amp;action=activities"> Activites </h2>
 			<div id="activities">
 			</div>
-	
+<!--	
 	
 			<h2> Stores </h2>
 			<div id="stores">
@@ -78,6 +78,9 @@
 				<th> Flight </th>
 				<th> Rank </th>
 				<th> Name </th>
+				<th> Age </th>
+				<th> Length of Service </th>
+				<th> Activities </th>
 				<th> Contact N&ordm; </th>
 				<th> Access rights </th>
 				<th> Selected </th>
@@ -86,7 +89,7 @@
 		</thead>
 		<tfoot>
 			<tr>
-				<th colspan="5"> <form><label for="showall">Show all personnel?</label><input type="checkbox" name="showall" id="showall" value="1" <?=($_GET['showall']?' checked="checked"':'')?> onchange="$(this).parent().submit();" /></form></th>
+				<th colspan="8"> <form><label for="showall">Show all personnel?</label><input type="checkbox" name="showall" id="showall" value="1" <?=($_GET['showall']?' checked="checked"':'')?> onchange="$(this).parent().submit();" /></form></th>
 				
 			</tr>
 		</tfoot>
@@ -124,12 +127,20 @@
 					$thispersonsnokemail = array();
 					$thispersonsnokmobile = array();
 					if( $ATC->user_has_permission( ATC_PERMISSION_PERSONNEL_VIEW, $obj->personnel_id ) )
-					{
-						echo '<tr'.($obj->enabled?'':' class="ui-state-disabled"').'>';
+					{ 
+						echo '<tr'.($obj->enabled?'':' class="ui-state-disabled"').' data-id="'.$obj->personnel_id.'">';
 						//echo '	<th>'.$obj->personnel_id.'</th>';
 						echo '	<td>'.$obj->flight.'</td>';
 						echo '	<td>'.$obj->rank.'</td>';
-						echo '	<td><a href="?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
+						echo '	<td class="name"><a href="?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
+						$now = new DateTime();
+						$dob = new DateTime($obj->dob);
+						$age = date_diff( $dob, $now );
+						$joined = new DateTime($obj->joined_date);
+						$service = date_diff( $joined, $now );
+						echo '	<td>'.$age->format('%y/%m').'</td>';
+						echo '	<td>'.$service->format('%y/%m').'</td>';
+						echo '	<td class="activities"> <a href="#">'.$obj->activities.'</a></td>';
 						echo '	<td>'.$obj->mobile_phone.'</td>';
 						if( isset( $translations['userlevel'][$obj->access_rights] ) )
 							echo '	<td>'.$translations['userlevel'][$obj->access_rights].'</td>';
@@ -251,6 +262,18 @@
 				error:	function(err,msg){ alert(err); alert(msg); return false; }
 			});
 		});
+	
+		$('td.activities a').click( function() { showActivities( $(this).parent() ); });
+	
+		function showActivities( tablecell ){
+			var displayname = tablecell.siblings('.name').html(); 
+			$('#dialog').load('personal.php?action=activities&id='+tablecell.parent().data('id')).dialog({
+				title: 'Activities attended by '+displayname,
+				modal: false,
+				position: { my: 'left top', at: 'right top', of: tablecell },
+				width: '50em'
+			});
+		}
 	</script>
 <?php
 	}

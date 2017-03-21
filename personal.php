@@ -388,5 +388,36 @@
 		<script>$('tfoot td').html('<?=$ATC_Finance->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT, $totalamount)?>');</script>
 <?php
 		$ATC->gui_output_page_footer(null);
+	} elseif( isset($_GET['action']) && $_GET['action'] == 'activities' && isset($_GET['id']) ) {
+                $activities = $ATC->get_activities( '2010-01-01', (365.25*20), (int)$_GET['id'] );
+?>
+                <table>
+                        <thead>
+                                <tr>
+					<th> Date </th>
+                                        <th> Activity </th>
+					<th> Location </th>
+                                        <th> Type </th>
+					<th> Off </th>
+					<th> CDT </th>
+                                </tr>
+                        </thead>
+                        <tbody>
+                                <?php
+                                        foreach($activities as $activity)
+                                        {
+                                                echo '<tr>';
+                                                echo '  <td> '.date(ATC_SETTING_DATE_OUTPUT.", Y", strtotime($activity->startdate)).' </td>';
+                                                echo '  <td> '.$activity->title.' </td>';
+						echo '	<td> '.$activity->location_name.' </td>';
+						echo '	<td> '.$activity->type.' </td>';
+						echo '	<td> '.$activity->officers_attending.' </td>';
+						echo '	<td> '.$activity->cadets_attending.' </td>';
+                                                echo '</tr>';
+                                        }
+                                ?>
+                        </tbody>
+                </table>
+<?php
 	}
 ?>
