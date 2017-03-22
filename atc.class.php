@@ -880,7 +880,7 @@
 		}
 		
 		
-		public function set_activity( $activity_id, $startdate, $enddate, $title, $location_id, $personnel_id, $twoic_personnel_id, $activity_type_id, $dress_code, $attendees, $cost )
+		public function set_activity( $activity_id, $startdate, $enddate, $title, $location_id, $personnel_id, $twoic_personnel_id, $activity_type_id, $dress_code, $attendees, $cost, $nzcf12_to_cucdr=null, $nzcf11_to_cucdr=null, $nzcf12_to_hq=null, $nzcf11_to_hq=null, $nzcf8_issued=null, $nzcf8_return=null )
 		{
 			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_EDIT, $activity_id ))
 			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
@@ -941,7 +941,13 @@
 						`location_id`,
 						`activity_type_id`,
 						`dress_code`,
-						`cost`
+						`cost`,
+						`nzcf12_to_cucdr`,
+						`nzcf11_to_cucdr`,
+						`nzcf12_to_hq`,
+						`nzcf11_to_hq`,
+						`nzcf8_issued`,
+						`nzcf8_return`
 					) VALUES ( 
 						'".date("Y-m-d H:i",strtotime($startdate))."',
 						'".date("Y-m-d H:i",strtotime($enddate))."',
@@ -951,7 +957,13 @@
 						".(int)$location_id.",
 						".(int)$activity_type_id.",
 						".(int)$dress_code.",
-						".(float)$cost."
+						".(float)$cost.",
+						".($nzcf12_to_cucdr?"'".date("Y-m-d",strtotime($nzcf12_to_cucdr))."'":"NULL").",
+						".($nzcf11_to_cucdr?"'".date("Y-m-d",strtotime($nzcf11_to_cucdr))."'":"NULL").",
+						".($nzcf12_to_hq?"'".date("Y-m-d",strtotime($nzcf12_to_hq))."'":"NULL").",
+						".($nzcf11_to_hq?"'".date("Y-m-d",strtotime($nzcf11_to_hq))."'":"NULL").",
+						".($nzcf8_issued?"'".date("Y-m-d",strtotime($nzcf8_issued))."'":"NULL").",
+						".($nzcf8_return?"'".date("Y-m-d",strtotime($nzcf8_return))."'":"NULL")."
 					);";
 				if ($result = self::$mysqli->query($query))
 				{
@@ -995,6 +1007,12 @@
 						`activity_type_id` = ".(int)$activity_type_id.",
 						`dress_code` = ".(int)$dress_code.",
 						`cost` = ".(float)$cost."
+						".($nzcf12_to_cucdr?", `nzcf12_to_cucdr` = '".date("Y-m-d",strtotime($nzcf12_to_cucdr))."'":"")."
+						".($nzcf11_to_cucdr?", `nzcf11_to_cucdr` = '".date("Y-m-d",strtotime($nzcf11_to_cucdr))."'":"")."
+						".($nzcf12_to_hq?", `nzcf12_to_hq` = '".date("Y-m-d",strtotime($nzcf12_to_hq))."'":"")."
+						".($nzcf11_to_hq?", `nzcf11_to_hq` = '".date("Y-m-d",strtotime($nzcf11_to_hq))."'":"")."
+						".($nzcf8_issued?", `nzcf8_issued` = '".date("Y-m-d",strtotime($nzcf8_issued))."'":"")."
+						".($nzcf8_return?", `nzcf8_return` = '".date("Y-m-d",strtotime($nzcf8_return))."'":"")."
 					WHERE `activity_id` = ".(int)$activity_id."
 					LIMIT 1;";
 				if ($result = self::$mysqli->query($query))
@@ -1384,7 +1402,8 @@
 				id: "ATC_SETTING_DATETIME_OUTPUT",
 				is: function(s) {
 					// return false so this parser is not auto detected
-					return  /^\d{1,2}[\ ][A-Za-z]{3}[\,][\ ]\d{2}[\:]\d{2}$/.test(s);;
+					return  /^\d{1,2}[\ ][A-Za-z]{3}[\,][\ ]\d{2}[\:]\d{2}$/.test(s);
+;
 				},
 				format: function(s) {
 					// format your data for normalization
@@ -1398,7 +1417,8 @@
 				id: "ATC_SETTING_DATE_OUTPUT",
 				is: function(s) {
 					// return false so this parser is not auto detected
-					return  /^\d{1,2}[\ ][A-Za-z]{3}$/.test(s);;
+					return  /^\d{1,2}[\ ][A-Za-z]{3}$/.test(s);
+;
 				},
 				format: function(s) {
 					// format your data for normalization

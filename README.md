@@ -55,6 +55,12 @@ For (hopefully obvious reasons) you should rename/change the password for these 
 ## Version history
 
 
+### RC 0.8.7
+- Enhancements
+  - Added Age & Length of service to personnel list
+  - Added Activities attended to personnel list
+
+
 ### RC 0.8.6
 - Enhancements:
   - Can now select which cadets/NOK to contact from the personnel list.

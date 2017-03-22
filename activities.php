@@ -18,7 +18,13 @@
 					$ATC->set_activity_type( $_POST['activity_type_id'], $_POST['activity_type'], null ), 
 					$_POST['dress_code'],
 					$_POST['attendees'],
-					$_POST['cost'] 
+					$_POST['cost'],
+					( isset($_POST['nzcf12_to_cucdr']) && strlen($_POST['nzcf12_to_cucdr']) && strtotime($_POST['nzcf12_to_cucdr']) ? $_POST['nzcf12_to_cucdr'] : null ),
+					( isset($_POST['nzcf11_to_cucdr']) && strlen($_POST['nzcf11_to_cucdr']) && strtotime($_POST['nzcf11_to_cucdr']) ? $_POST['nzcf11_to_cucdr'] : null ),
+					( isset($_POST['nzcf12_to_hq']) && strlen($_POST['nzcf12_to_hq']) && strtotime($_POST['nzcf12_to_hq']) ? $_POST['nzcf12_to_hq'] : null ),
+					( isset($_POST['nzcf11_to_hq']) && strlen($_POST['nzcf11_to_hq']) && strtotime($_POST['nzcf11_to_hq']) ? $_POST['nzcf11_to_hq'] : null ),
+					( isset($_POST['nzcf8_issued']) && strlen($_POST['nzcf8_issued']) && strtotime($_POST['nzcf8_issued']) ? $_POST['nzcf8_issued'] : null ),
+					( isset($_POST['nzcf8_return']) && strlen($_POST['nzcf8_return']) && strtotime($_POST['nzcf8_return']) ? $_POST['nzcf8_return'] : null )
 				);
 			} catch (ATCExceptionInsufficientPermissions $e) {	
 				header("HTTP/1.0 401 Unauthorised");
@@ -306,7 +312,7 @@
 		$activity = $activity[0];
 ?>
 <form name='editactivity' id='editactivity' method='post'>
-	<div style="width:49%; float:left;">
+	<div style="width:30%; float:left;">
 		
 		<label for='title'>Activity name</label><br />
 		<input type='text' id='title' name='title' value='<?=htmlentities($activity->title)?>' required='required' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
@@ -319,7 +325,7 @@
 		<label for='cost'>Activity cost</label><br />
 		<input type="number" step="0.1" name="cost" id="cost" value="<?=htmlentities($activity->cost)?>" min="0" <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
 	</div>
-	<div style="width:45%; float:left;">
+	<div style="width:25%; float:left;">
 		<label for='activity_type'>Type of activity</label><br />
 		<input type='text' id='activity_type' name='activity_type' value='<?=$activity->type?>' required='required' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
 		<label for='personnel_id'>Officer In Charge</label><br />
@@ -333,7 +339,22 @@
 			<option value='<?=ATC_DRESS_CODE_BLUES_AND_DPM?>'<?=($activity->dress_code==ATC_DRESS_CODE_BLUES_AND_DPM?' selected="selected"':'')?>><?=htmlentities(ATC_DRESS_CODE_BLUES_AND_DPM_NAME)?></option>
 			<option value='<?=ATC_DRESS_CODE_MUFTI?>'<?=($activity->dress_code==ATC_DRESS_CODE_MUFTI?' selected="selected"':'')?>><?=htmlentities(ATC_DRESS_CODE_MUFTI_NAME)?></option>
 		</select>
-	</div><br style="clear:left" />
+	</div>
+	<div style="width:35%; float: left; text-align:right;">
+		<label for='nzcf12_to_cucdr'>NZCF12 to CUCDR</label>&nbsp;
+		<input type='date' id='nzcf12_to_cucdr' name='nzcf12_to_cucdr' value='<?=$activity->nzcf12_to_cucdr?>' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
+		<label for='nzcf11_to_cucdr'>NZCF11 to CUCDR</label>&nbsp;
+		<input type='date' id='nzcf11_to_cucdr' name='nzcf11_to_cucdr' value='<?=$activity->nzcf11_to_cucdr?>' required='required' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
+		<label for='nzcf12_to_hq'>NZCF12 to CFTSU</label>&nbsp;
+		<input type='date' id='nzcf12_to_hq' name='nzcf12_to_hq' value='<?=$activity->nzcf12_to_hq?>' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
+		<label for='nzcf11_to_hq'>NZCF11 to CFTSU</label>&nbsp;
+		<input type='date' id='nzcf11_to_hq' name='nzcf11_to_hq' value='<?=$activity->nzcf11_to_hq?>' required='required' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
+		<label for='nzcf8_issued'>NZCF8 issued</label>&nbsp;
+		<input type='date' id='nzcf8_issued' name='nzcf8_issued' value='<?=$activity->nzcf8_issued?>' required='required' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
+		<label for='nzcf8_return'>NZCF8 Returned</label>&nbsp;
+		<input type='date' id='nzcf8_return' name='nzcf8_return' value='<?=$activity->nzcf8_return?>' required='required' <?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '':'readonly="readonly"' ) ?> /><br />
+	</div>
+	<br style="clear:left" />
 	<fieldset id='attendees' class='dragdrop attendees'>
 		<legend>Attendees</legend>
 		<ol class='dragdrop attendees'></ol>
@@ -491,6 +512,28 @@
 	
 	<?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '$("#attendees ol.dragdrop,#non_attendees ol.dragdrop").sortable({ connectWith: ".dragdrop.attendees" }).disableSelection();':'' ) ?> 
 	
+	// When the start date is entered, pre-populate the form due dates for them.
+	$('#startdate').change( function(){
+		var startdate = new Date( Date.parse( $('#startdate').val() ));
+		if( !$('#nzcf12_to_cucdr').val() ){
+			$('#nzcf12_to_cucdr').val( new Date( new Date().setDate( startdate.getDate() - (8*7) ) ).toISOString().substr(0,10) );
+		}
+		if( !$('#nzcf11_to_cucdr').val() ){
+			$('#nzcf11_to_cucdr').val( new Date( new Date().setDate( startdate.getDate() - (8*7) ) ).toISOString().substr(0,10) );
+		}
+		if( !$('#nzcf12_to_hq').val() ){
+			$('#nzcf12_to_hq').val( new Date( new Date().setDate( startdate.getDate() - (6*7) ) ).toISOString().substr(0,10) );
+		}
+		if( !$('#nzcf11_to_hq').val() ){
+			$('#nzcf11_to_hq').val( new Date( new Date().setDate( startdate.getDate() - (6*7) ) ).toISOString().substr(0,10) );
+		}
+		if( !$('#nzcf8_issued').val() ){
+			$('#nzcf8_issued').val( new Date( new Date().setDate( startdate.getDate() - (7*7) ) ).toISOString().substr(0,10) );
+		}
+		if( !$('#nzcf8_return').val() ){
+			$('#nzcf8_return').val( new Date( new Date().setDate( startdate.getDate() - (2.5*7) ) ).toISOString().substr(0,10) );
+		}
+	});
 	
 </script>
 <?php
@@ -532,7 +575,7 @@
 				<?php
 					foreach( $activities as $obj )
 					{
-						echo '<tr'.(strtotime($obj->enddate) < time()?' class="ui-state-disabled"':'').'>';
+						echo '<tr'.(strtotime($obj->enddate) < time()?' class="ui-state-disabled"':'').''.((($obj->cadets_attending+10)/($obj->officers_attending+1))>10?' class="ui-state-error"':'').'>';
 						echo '	<td'.(array_search($ATC->get_currentuser_id(),explode(',',$obj->attendees))!==false?' class="highlighted"':'').'><!--<span class="ui-icon ui-icon-'.($obj->nzcf_status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> --><a href="?id='.$obj->activity_id.'" class="edit">'.$obj->title.'</a></td>';
 						echo '	<td'.($obj->personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
 						echo '	<td'.($obj->twoic_personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'><a href="personnel.php?id='.$obj->twoic_personnel_id.'">'.$obj->twoic_display_name.'</a></td>';
@@ -630,7 +673,7 @@
 			var href = $(this).attr("href");
 			$('#dialog').empty().load(href).dialog({
 				modal: true,
-				width: 600,
+				width: 800,
 				title: 'Edit activity details',
 				buttons: {
 					Cancel: function() {

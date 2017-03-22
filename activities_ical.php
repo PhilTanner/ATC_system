@@ -45,6 +45,52 @@
 		echo 'CONTACT:'.vcalendaruserstring( $obj->rank.' '.$obj->display_name, $obj->email, $obj->mobile_phone).$CRLF;
 		echo 'ATTENDEE;ROLE=CHAIR;'.vcalendaruserstring( $obj->rank.' '.$obj->display_name, $obj->email, $obj->mobile_phone).$CRLF;
 		echo 'ORGANIZER;'.vcalendaruserstring( $obj->rank.' '.$obj->display_name, $obj->email, $obj->mobile_phone).$CRLF;
+
+		// Set up our reminders for paperwork due dates
+		if( strlen(trim($obj->nzcf12_to_cucdr)) && strtotime($obj->nzcf12_to_cucdr) ){
+			echo 'BEGIN:VALARM'.$CRLF;
+			echo 'TRIGGER;VALUE=DATE-TIME:'.gmdate("Ymd\THis\Z", strtotime($obj->nzcf12_to_cucdr)).$CRLF;
+			echo 'ACTION:DISPLAY'.$CRLF;
+			echo 'DESCRIPTION:'.vcalendarsafestring($obj->title).' ('.gmdate("d/m/Y", strtotime($obj->startdate)).'): '.vcalendarsafestring('NZCF12s due to CUCDR').$CRLF;
+			echo 'END:VALARM'.$CRLF;
+		}
+		if( strlen(trim($obj->nzcf11_to_cucdr)) && strtotime($obj->nzcf11_to_cucdr) ){
+			echo 'BEGIN:VALARM'.$CRLF;
+			echo 'TRIGGER;VALUE=DATE-TIME:'.gmdate("Ymd\THis\Z", strtotime($obj->nzcf11_to_cucdr)).$CRLF;
+			echo 'ACTION:DISPLAY'.$CRLF;
+			echo 'DESCRIPTION:'.vcalendarsafestring($obj->title).' ('.gmdate("d/m/Y", strtotime($obj->startdate)).'): '.vcalendarsafestring('NZCF11s due to CUCDR').$CRLF;
+			echo 'END:VALARM'.$CRLF;
+		}
+		if( strlen(trim($obj->nzcf12_to_hq)) && strtotime($obj->nzcf12_to_hq) ){
+			echo 'BEGIN:VALARM'.$CRLF;
+			echo 'TRIGGER;VALUE=DATE-TIME:'.gmdate("Ymd\THis\Z", strtotime($obj->nzcf12_to_hq)).$CRLF;
+			echo 'ACTION:DISPLAY'.$CRLF;
+			echo 'DESCRIPTION:'.vcalendarsafestring($obj->title).' ('.gmdate("d/m/Y", strtotime($obj->startdate)).'): '.vcalendarsafestring('NZCF12s due to CFTSU').$CRLF;
+			echo 'END:VALARM'.$CRLF;
+		}
+		if( strlen(trim($obj->nzcf11_to_hq)) && strtotime($obj->nzcf11_to_hq) ){
+			echo 'BEGIN:VALARM'.$CRLF;
+			echo 'TRIGGER;VALUE=DATE-TIME:'.gmdate("Ymd\THis\Z", strtotime($obj->nzcf11_to_hq)).$CRLF;
+			echo 'ACTION:DISPLAY'.$CRLF;
+			echo 'DESCRIPTION:'.vcalendarsafestring($obj->title).' ('.gmdate("d/m/Y", strtotime($obj->startdate)).'): '.vcalendarsafestring('NZCF11s due to CFTSU').$CRLF;
+			echo 'END:VALARM'.$CRLF;
+		}
+		if( strlen(trim($obj->nzcf8_issued)) && strtotime($obj->nzcf8_issued) ){
+			echo 'BEGIN:VALARM'.$CRLF;
+			echo 'TRIGGER;VALUE=DATE-TIME:'.gmdate("Ymd\THis\Z", strtotime($obj->nzcf8_issued)).$CRLF;
+			echo 'ACTION:DISPLAY'.$CRLF;
+			echo 'DESCRIPTION:'.vcalendarsafestring($obj->title).' ('.gmdate("d/m/Y", strtotime($obj->startdate)).'): '.vcalendarsafestring('NZCF8s to CDT').$CRLF;
+			echo 'END:VALARM'.$CRLF;
+		}
+		if( strlen(trim($obj->nzcf8_return)) && strtotime($obj->nzcf8_return) ){
+			echo 'BEGIN:VALARM'.$CRLF;
+			echo 'TRIGGER;VALUE=DATE-TIME:'.gmdate("Ymd\THis\Z", strtotime($obj->nzcf12_to_cucdr)).$CRLF;
+			echo 'ACTION:DISPLAY'.$CRLF;
+			echo 'DESCRIPTION:'.vcalendarsafestring($obj->title).' ('.gmdate("d/m/Y", strtotime($obj->startdate)).'): '.vcalendarsafestring('NZCF8s due back').$CRLF;
+			echo 'END:VALARM'.$CRLF;
+		}
+
+
 		
 		$emergencycontactdetails = vcalendaruserstring( $obj->twoic_display_name, $obj->twoic_email, $obj->twoic_mobile_phone);
 		if( strlen(trim($emergencycontactdetails)) > 1 )
@@ -52,6 +98,7 @@
 		
 		$userids = explode(',', $obj->attendees );
 		$description = '';
+		$htmldesc = '<ul>';
 		foreach($userids as $userid )
 		{
 			if( !$userid ) continue;
@@ -63,60 +110,79 @@
 			if( !$ATC->user_has_permission(ATC_PERMISSION_PERSONNEL_VIEW, $userid) )
 			{
 				echo 'ATTENDEE;ROLE=REQ-PARTICIPANT;'.vcalendaruserstring( $users[$userid]->rank.' '.$users[$userid]->display_name, '', '').$CRLF;
-				$description .= '  o '.$users[$userid]->rank.' '.$users[$userid]->display_name.$CRLF;
+				$description .= '  o '.$users[$userid]->rank.' '.$users[$userid]->display_name.'\\n'.$CRLF;
+				$htmldec .= '<li>'.vcalendarsafestring($users[$userid]->rank).' '.vcalendarsafestring($users[$userid]->display_name).'</li>';
 			} else {
 				echo 'ATTENDEE;ROLE=REQ-PARTICIPANT;'.vcalendaruserstring( $users[$userid]->rank.' '.$users[$userid]->display_name, $users[$userid]->email, $users[$userid]->mobile_phone).$CRLF;
-				$description .= '  o '.vcalendarsafestring($users[$userid]->rank).' '.vcalendarsafestring($users[$userid]->display_name).' '.($users[$userid]->mobile_phone?'('.vcalendarsafestring($users[$userid]->mobile_phone).')':'').$CRLF.'    <'.vcalendarsafestring($users[$userid]->email).'>'.$CRLF;
+				$description .= '  o '.vcalendarsafestring($users[$userid]->rank).' '.vcalendarsafestring($users[$userid]->display_name).' '.($users[$userid]->mobile_phone?'('.vcalendarsafestring($users[$userid]->mobile_phone).')':'').'\\n'.$CRLF.'    <'.vcalendarsafestring($users[$userid]->email).'>'.'\\n'.$CRLF;
+				$htmldesc .= '<li>'.vcalendarsafestring($users[$userid]->rank).' '.vcalendarsafestring($users[$userid]->display_name).' '.($users[$userid]->mobile_phone?'('.vcalendarsafestring($users[$userid]->mobile_phone).')':'').'<br /><a href="mailto='.vcalendarsafestring($users[$userid]->email).'">'.vcalendarsafestring($users[$userid]->email).'</a><ul>';
+
+
 				$noks = $ATC->get_nok($userid);
 				
 				foreach($noks as $nok)
 				{
 					$description .= '     ';
+					$htmldesc .= '<li>';
 					switch( $nok->relationship )
 					{
 						case ATC_NOK_TYPE_MOTHER:
 							$description .= ' (Mother)';
+							$htmldesc .= ' (Mother)';
 							break;
 						case ATC_NOK_TYPE_FATHER:
 							$description .= ' (Father)';
+							$htmldesc .= ' (Father)';
 							break;
 						case ATC_NOK_TYPE_STEPMOTHER:
 							$description .= ' (Step-Mother)';
+							$htmldesc .= ' (Step-Mother)';
 							break;
 						case ATC_NOK_TYPE_STEPFATHER:
-							$description .= ' (Step-Mother)';
+							$description .= ' (Step-Father)';
+							$htmldesc .= ' (Step-Father)';
 							break;
 						case ATC_NOK_TYPE_SPOUSE:
 							$description .= ' (Spouse)';
+							$htmldesc .= ' (Spouse)';
 							break;
 						case ATC_NOK_TYPE_SIBLING:
 							$description .= ' (Sibling)';
+							$htmldesc .= ' (Sibling)';
 							break;
 						case ATC_NOK_TYPE_DOMPTNR:
 							$description .= ' (Domestic Partner)';
-							break;
-						case ATC_NOK_TYPE_OTHER:
-							$description .= ' (Other)';
+							$htmldesc .= ' (Domestic Partner)';
 							break;
 						case ATC_NOK_TYPE_GRANDMOTHER:
 							$description .= ' (Grandmother)';
+							$htmldesc .= ' (Grandmother)';
 							break;
 						case ATC_NOK_TYPE_GRANDFATHER:
 							$description .= ' (Grandfather)';
+							$htmldesc .= ' (Grandfather)';
+							break;
+						default:
+							$description .= ' (Other)';
+							$htmldesc .= ' (Other)';
 							break;
 					}
-					$description .= ' '.vcalendarsafestring($nok->firstname).' '.vcalendarsafestring($nok->lastname).' '.vcalendarsafestring($nok->email).' ('.vcalendarsafestring($nok->mobile_number).') ('.vcalendarsafestring($nok->home_number).')'.$CRLF;
+					$description .= ' '.vcalendarsafestring($nok->firstname).' '.vcalendarsafestring($nok->lastname).' <'.vcalendarsafestring($nok->email).'> ('.vcalendarsafestring(str_replace(" ","",$nok->mobile_number)).') ('.vcalendarsafestring(str_replace(" ","",$nok->home_number)).')'.'\\n'.$CRLF;
+					$htmldesc .= ' '.vcalendarsafestring($nok->firstname).' '.vcalendarsafestring($nok->lastname).' <a href="'.vcalendarsafestring($nok->email).'">'.vcalendarsafestring($nok->email).'</a> ('.vcalendarsafestring(str_replace(" ","",$nok->mobile_number)).') ('.vcalendarsafestring(str_replace(" ","",$nok->home_number)).')</li>';
 				}
+				$description .= '';
+				$htmldesc .= '</ul></li>';
 			}
-			
+			$htmldesc .= '</ul>';
 			
 		}
 		if( strlen(trim($description)) )
 		{
-			$description = 'Cost\: '.$ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT, $obj->cost).$CRLF.' Attendees:'.$CRLF.' '.$description;
-			echo 'DESCRIPTION:'.wordwrap($description, 75, "\n  ", true);
+			$description = 'Cost\: '.$ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT, $obj->cost).'\\n'.$CRLF.' Attendees:\\n'.$CRLF.' '.$description;
+			$htmldesc = '<html><body><strong>Cost\: '.$ATC->currency_format(ATC_SETTING_FINANCE_MONEYFORMAT, $obj->cost).'<br />Attendees\:</strong> '.$htmldesc.'</body></html>';
+			echo 'DESCRIPTION:'.wordwrap($description, 75, "\n  ", true).$CRLF;
+			echo 'X-ALT-DESC;FMTTYPE=text/html:'.wordwrap($htmldesc, 75, "\n  ", true).$CRLF;
 		}
-		
 		echo 'END:VEVENT'.$CRLF;
 		
 		//echo 'CONTACT:'.vcalendarsafestring($obj->display_name).'\\,'.vcalendarsafestring($obj->mobile_phone).$CRLF;
@@ -142,7 +208,7 @@
 		if(strlen(trim($email)))
 			$string .=':MAILTO:'.$email;
 		if(strlen(trim($mobile)))
-			$string .=':TEL:+64-'.substr($mobile, 1);
+			$string .=':TEL:+64-'.str_replace(" ","", substr($mobile, 1));
 		
 		return $string;
 	}
