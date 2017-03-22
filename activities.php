@@ -497,21 +497,6 @@
 		.appendTo( ul );
 	}
 					
-	// Attending personnel
-	var personnel = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_personnel(null,'ASC',ATC_USER_GROUP_PERSONNEL) )) ?>' );
-	var attendees = jQuery.parseJSON( '<?= json_encode($activity->attendees) ?>' );
-	$.each(personnel, function(key, person){ 
-		if( person.personnel_id > 0 )
-		{
-			if( attendees.indexOf( person.personnel_id ) >= 0 )
-				$('#attendees ol.dragdrop').append('<li personnel_id="'+person.personnel_id+'" data-personnel_id="'+person.personnel_id+'">'+person.rank+' '+person.lastname+', '+person.firstname+'</li>'); 
-			else
-				$('#non_attendees ol.dragdrop').append('<li personnel_id="'+person.personnel_id+'" data-personnel_id="'+person.personnel_id+'">'+person.rank+' '+person.lastname+', '+person.firstname+'</li>'); 
-		}
-	});
-	
-	<?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '$("#attendees ol.dragdrop,#non_attendees ol.dragdrop").sortable({ connectWith: ".dragdrop.attendees" }).disableSelection();':'' ) ?> 
-	
 	// When the start date is entered, pre-populate the form due dates for them.
 	$('#startdate').change( function(){
 		var startdate = new Date( Date.parse( $('#startdate').val() ));
@@ -534,6 +519,22 @@
 			$('#nzcf8_return').val( new Date( new Date().setDate( startdate.getDate() - (2.5*7) ) ).toISOString().substr(0,10) );
 		}
 	});
+
+	// Attending personnel
+	var personnel = jQuery.parseJSON( '<?= str_replace("'","\\'", json_encode( $ATC->get_personnel(null,'ASC',ATC_USER_GROUP_PERSONNEL) )) ?>' );
+	var attendees = jQuery.parseJSON( '<?= json_encode($activity->attendees) ?>' );
+	$.each(personnel, function(key, person){ 
+		if( person.personnel_id > 0 )
+		{
+			if( attendees.indexOf( person.personnel_id ) >= 0 )
+				$('#attendees ol.dragdrop').append('<li personnel_id="'+person.personnel_id+'" data-personnel_id="'+person.personnel_id+'">'+person.rank+' '+person.lastname+', '+person.firstname+'</li>'); 
+			else
+				$('#non_attendees ol.dragdrop').append('<li personnel_id="'+person.personnel_id+'" data-personnel_id="'+person.personnel_id+'">'+person.rank+' '+person.lastname+', '+person.firstname+'</li>'); 
+		}
+	});
+	
+	<?= ( $ATC->user_has_permission(ATC_PERMISSION_ACTIVITIES_EDIT) ? '$("#attendees ol.dragdrop,#non_attendees ol.dragdrop").sortable({ connectWith: ".dragdrop.attendees" }).disableSelection();':'' ) ?> 
+	
 	
 </script>
 <?php
