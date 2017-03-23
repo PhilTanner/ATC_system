@@ -309,7 +309,15 @@
 		exit();
 	} elseif( isset($_GET['id']) ) {
 		$activity = $ATC->get_activity((int)$_GET["id"]);
-		$activity = $activity[0];
+		if( $activity ) {
+			$activity = $activity[0];
+		} else {
+			$activity = new stdClass();
+			$activity->title = $activity->startdate = $activity->enddate = $activity->name = $activity->cost = $activity->type = $activity->display_name = $activity->twoic_display_name = $activity->nzcf12_to_cucdr = $activity->nzcf12_to_hq = $activity->nzcf11_to_cucdr = $activity->nzcf11_to_hq = $activity->nzcf8_issued = $activity->nzcf8_return = "";
+			$activity->activity_id = $activity->location_id = $activity->activity_type_id = $activity->personnel_id = $activity->twoic_personnel_id = 0;
+			$activity->attendees = [];
+			$activity->dress_code = ATC_DRESS_CODE_BLUES;
+		}
 ?>
 <form name='editactivity' id='editactivity' method='post'>
 	<div style="width:30%; float:left;">
@@ -499,24 +507,26 @@
 					
 	// When the start date is entered, pre-populate the form due dates for them.
 	$('#startdate').change( function(){
-		var startdate = new Date( Date.parse( $('#startdate').val() ));
+		var startdate = Date.parse( $('#startdate').val() );
+		var week = (7*24*60*60*1000);
+
 		if( !$('#nzcf12_to_cucdr').val() ){
-			$('#nzcf12_to_cucdr').val( new Date( new Date().setDate( startdate.getDate() - (8*7) ) ).toISOString().substr(0,10) );
+			$('#nzcf12_to_cucdr').val( new Date( startdate - (8*week) ).toISOString().substr(0,10) );
 		}
 		if( !$('#nzcf11_to_cucdr').val() ){
-			$('#nzcf11_to_cucdr').val( new Date( new Date().setDate( startdate.getDate() - (8*7) ) ).toISOString().substr(0,10) );
+			$('#nzcf11_to_cucdr').val( new Date( startdate - (8*week) ).toISOString().substr(0,10) );
 		}
 		if( !$('#nzcf12_to_hq').val() ){
-			$('#nzcf12_to_hq').val( new Date( new Date().setDate( startdate.getDate() - (6*7) ) ).toISOString().substr(0,10) );
+			$('#nzcf12_to_hq').val( new Date( startdate - (6*week) ).toISOString().substr(0,10) );
 		}
 		if( !$('#nzcf11_to_hq').val() ){
-			$('#nzcf11_to_hq').val( new Date( new Date().setDate( startdate.getDate() - (6*7) ) ).toISOString().substr(0,10) );
+			$('#nzcf11_to_hq').val( new Date( startdate - (6*week) ).toISOString().substr(0,10) );
 		}
 		if( !$('#nzcf8_issued').val() ){
-			$('#nzcf8_issued').val( new Date( new Date().setDate( startdate.getDate() - (7*7) ) ).toISOString().substr(0,10) );
+			$('#nzcf8_issued').val( new Date( startdate - (7*week) ).toISOString().substr(0,10) );
 		}
 		if( !$('#nzcf8_return').val() ){
-			$('#nzcf8_return').val( new Date( new Date().setDate( startdate.getDate() - (2.5*7) ) ).toISOString().substr(0,10) );
+			$('#nzcf8_return').val( new Date( startdate - (2.5*week) ).toISOString().substr(0,10) );
 		}
 	});
 
