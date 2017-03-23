@@ -35,6 +35,13 @@
 	define( 'ATC_ACTIVITY_RECOGNISED',			0 );
 	define( 'ATC_ACTIVITY_AUTHORISED',			1 );
 
+	define( 'ATC_ACTIVITY_PAPERWORK_TYPE_12_CUCDR',	1 );
+	define( 'ATC_ACTIVITY_PAPERWORK_TYPE_11_CUCDR',	1 << 1 );
+	define( 'ATC_ACTIVITY_PAPERWORK_TYPE_12_CTFSU',	1 << 2 );
+	define( 'ATC_ACTIVITY_PAPERWORK_TYPE_11_CTFSU',	1 << 3 );
+	define( 'ATC_ACTIVITY_PAPERWORK_TYPE_8_ISSUED',	1 << 4 );
+	define( 'ATC_ACTIVITY_PAPERWORK_TYPE_8_RETURN',	1 << 5 );
+
 	define( 'ATC_DRESS_CODE_BLUES',				0 );
 	define( 'ATC_DRESS_CODE_DPM',				1 );
 	define( 'ATC_DRESS_CODE_BLUES_AND_DPM',			2 );
@@ -320,6 +327,94 @@
 				WHERE 	`activity`.`startdate` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'" 
 					AND `activity`.`activity_id` > 0
 				'.((int)$for_attending_user_id>0?'HAVING  `attendedcount` > 0':'').'
+				ORDER BY `sortorder`, `startdate` ASC;';
+
+			$activities = array();
+			if ($result = self::$mysqli->query($query))
+			{
+				while ( $obj = $result->fetch_object() )
+				{
+					$activities[] = $obj;
+				}
+			}	
+			else
+				throw new ATCExceptionDBError(self::$mysqli->error);
+			
+			return $activities;
+		}
+		
+		public function get_activities_paperwork( $date=null, $days=365, $paperworktype )
+		{
+			if( is_null($date) ) $startdate = strtotime(date("Y")."-01-01");
+			else $startdate = strtotime($date);
+			$enddate = $startdate + ((int)$days*24*60*60);
+			
+			if(!self::user_has_permission( ATC_PERMISSION_ACTIVITIES_VIEW ))
+			    throw new ATCExceptionInsufficientPermissions("Insufficient rights to view this page");
+				
+			$query = '
+				SELECT
+					`activity`.*,
+					`activity_type`.*,
+					`location`.`name` AS `location_name`,
+					`location`.`address`,
+					'.ATC_SETTING_DISPLAY_NAME.' AS `display_name`,
+					'.ATC_SETTING_DISPLAY_RANK_SHORTNAME.' AS `rank`,
+					`personnel`.`personnel_id`,
+					`personnel`.`email`,
+					`personnel`.`mobile_phone`,
+					'.str_replace("personnel","2ic_personnel",ATC_SETTING_DISPLAY_NAME).' AS `twoic_display_name`,
+					`2ic_personnel`.`personnel_id` AS `twoic_personnel_id`,
+					`2ic_personnel`.`email` AS `twoic_email`,
+					`2ic_personnel`.`mobile_phone` AS `twoic_mobile_phone`,
+					CASE WHEN `activity`.`enddate` < now() THEN 1 ELSE 0 END AS `sortorder`, 
+					(
+						SELECT	COUNT(`personnel`.`personnel_id`)
+						FROM	`activity_register`
+							INNER JOIN `personnel`
+								ON `personnel`.`personnel_id` = `activity_register`.`personnel_id`
+						WHERE	`activity_register`.`activity_id` = `activity`.`activity_id`
+							AND `personnel`.`access_rights` IN ('.ATC_USER_GROUP_OFFICERS.')
+					) AS `officers_attending`,
+					(
+						SELECT	COUNT(`personnel`.`personnel_id`)
+						FROM	`activity_register`
+							INNER JOIN `personnel`
+								ON `personnel`.`personnel_id` = `activity_register`.`personnel_id`
+						WHERE	`activity_register`.`activity_id` = `activity`.`activity_id`
+							AND `personnel`.`access_rights` IN ('.ATC_USER_GROUP_CADETS.')
+					) AS `cadets_attending`,
+					(
+						SELECT	GROUP_CONCAT(DISTINCT `personnel_id` SEPARATOR ",")
+						FROM 	`activity_register`
+						GROUP BY `activity_id`
+						HAVING	`activity_id` = `activity`.`activity_id`
+					) AS `attendees`
+				FROM 	`activity` 
+					INNER JOIN `activity_type`
+						ON `activity`.`activity_type_id` = `activity_type`.`activity_type_id`
+					INNER JOIN `personnel`
+						ON `activity`.`personnel_id` = `personnel`.`personnel_id`
+					INNER JOIN `personnel` `2ic_personnel`
+						ON `activity`.`2ic_personnel_id` = `2ic_personnel`.`personnel_id`
+					INNER JOIN `location`
+						ON `activity`.`location_id` = `location`.`location_id`
+				WHERE
+					1=0';
+			if( $paperworktype & ATC_ACTIVITY_PAPERWORK_TYPE_12_CUCDR )
+				$query .= ' 	OR `activity`.`nzcf12_to_cucdr` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'"';
+			if( $paperworktype & ATC_ACTIVITY_PAPERWORK_TYPE_11_CUCDR )
+				$query .= ' 	OR `activity`.`nzcf11_to_cucdr` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'"';
+			if( $paperworktype & ATC_ACTIVITY_PAPERWORK_TYPE_12_CTFSU )
+				$query .= ' 	OR `activity`.`nzcf12_to_hq` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'"';
+			if( $paperworktype & ATC_ACTIVITY_PAPERWORK_TYPE_11_CTFSU )
+				$query .= ' 	OR `activity`.`nzcf11_to_hq` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'"';
+			if( $paperworktype & ATC_ACTIVITY_PAPERWORK_TYPE_8_ISSUED )
+				$query .= ' 	OR `activity`.`nzcf8_issued` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'"';
+			if( $paperworktype & ATC_ACTIVITY_PAPERWORK_TYPE_8_RETURN )
+				$query .= ' 	OR `activity`.`nzcf8_return` BETWEEN "'.date('Y-m-d', $startdate).'" AND "'.date('Y-m-d', $enddate).'"';
+			$query .= ' 
+					AND `activity`.`activity_id` > 0
 				ORDER BY `sortorder`, `startdate` ASC;';
 
 			$activities = array();

@@ -5,6 +5,147 @@
 	$ATC_Finance = new ATC_Finance();
 	
 	$ATC->gui_output_page_header('Home');
+
+
+	try {
+		$activities = $ATC->get_activities_paperwork(date('Y-m-d'), 30, (ATC_ACTIVITY_PAPERWORK_TYPE_12_CUCDR | ATC_ACTIVITY_PAPERWORK_TYPE_11_CUCDR) );
+		
+		if( count($activities) ) 
+		{
+?>
+		
+			<h2> Paperwork due to CUCDR</h2>
+			<table class="tablesorter">
+				<thead>
+					<tr>
+						<th rowspan="2"> Activity </th>
+						<th rowspan="2"> Officer In Charge </th>
+						<th rowspan="2"> 2<sup>nd</sup> Contact </th>
+						<th colspan="4"> Date </th>
+					</tr>
+					<tr>
+						<th> NZCF12 </th>
+						<th> NZCF11 </th>
+						<th> Assemble </th>
+						<th> Dispersal </th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php
+						foreach( $activities as $obj )
+						{
+							echo '<tr>';
+							echo '	<td'.(array_search($ATC->get_currentuser_id(),explode(',',$obj->attendees))!==false?' class="highlighted"':'').'><!--<span class="ui-icon ui-icon-'.($obj->nzcf_status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> --><a href="activities.php?id='.$obj->activity_id.'" class="activity edit">'.$obj->title.'</a></td>';
+							echo '	<td'.($obj->personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
+							echo '	<td'.($obj->twoic_personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'><a href="personnel.php?id='.$obj->twoic_personnel_id.'">'.$obj->twoic_display_name.'</a></td>';
+							echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->nzcf12_to_cucdr)).'</td>';
+							echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->nzcf11_to_cucdr)).'</td>';
+							echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->startdate)).'</td>';
+							echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->enddate)).'</td>';
+							echo '</tr>';
+						}
+					?>
+				</tbody>
+			</table>
+<?php
+		}
+	} catch (ATCExceptionInsufficientPermissions $e) { 
+		// We just don't show the error if it was a permission issue, that's fine, we don't know who's logged in, after all 
+	}
+	
+	
+	try {
+		$activities = $ATC->get_activities_paperwork(date('Y-m-d'), 30, (ATC_ACTIVITY_PAPERWORK_TYPE_12_CTFSU | ATC_ACTIVITY_PAPERWORK_TYPE_11_CTFSU) );
+		
+		if( count($activities) ) 
+		{
+?>
+		
+			<h2> Paperwork due to CTFSU</h2>
+			<table class="tablesorter">
+				<thead>
+					<tr>
+						<th rowspan="2"> Activity </th>
+						<th rowspan="2"> Officer In Charge </th>
+						<th rowspan="2"> 2<sup>nd</sup> Contact </th>
+						<th colspan="4"> Date </th>
+					</tr>
+					<tr>
+						<th> NZCF12 </th>
+						<th> NZCF11 </th>
+						<th> Assemble </th>
+						<th> Dispersal </th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php
+						foreach( $activities as $obj )
+						{
+							echo '<tr>';
+							echo '	<td'.(array_search($ATC->get_currentuser_id(),explode(',',$obj->attendees))!==false?' class="highlighted"':'').'><!--<span class="ui-icon ui-icon-'.($obj->nzcf_status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> --><a href="activities.php?id='.$obj->activity_id.'" class="activity edit">'.$obj->title.'</a></td>';
+							echo '	<td'.($obj->personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
+							echo '	<td'.($obj->twoic_personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'><a href="personnel.php?id='.$obj->twoic_personnel_id.'">'.$obj->twoic_display_name.'</a></td>';
+							echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->nzcf12_to_hq)).'</td>';
+							echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->nzcf11_to_hq)).'</td>';
+							echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->startdate)).'</td>';
+							echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->enddate)).'</td>';
+							echo '</tr>';
+						}
+					?>
+				</tbody>
+			</table>
+<?php
+		}
+	} catch (ATCExceptionInsufficientPermissions $e) { 
+		// We just don't show the error if it was a permission issue, that's fine, we don't know who's logged in, after all 
+	}
+	
+	
+	try {
+		$activities = $ATC->get_activities_paperwork(date('Y-m-d'), 30, (ATC_ACTIVITY_PAPERWORK_TYPE_8_RETURN | ATC_ACTIVITY_PAPERWORK_TYPE_8_ISSUED) );
+		
+		if( count($activities) ) 
+		{
+?>
+		
+			<h2> NZCF8s Due out/return </h2>
+			<table class="tablesorter">
+				<thead>
+					<tr>
+						<th rowspan="2"> Activity </th>
+						<th rowspan="2"> Officer In Charge </th>
+						<th rowspan="2"> 2<sup>nd</sup> Contact </th>
+						<th colspan="4"> Date </th>
+					</tr>
+					<tr>
+						<th> NZCF12 </th>
+						<th> NZCF11 </th>
+						<th> Assemble </th>
+						<th> Dispersal </th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php
+						foreach( $activities as $obj )
+						{
+							echo '<tr>';
+							echo '	<td'.(array_search($ATC->get_currentuser_id(),explode(',',$obj->attendees))!==false?' class="highlighted"':'').'><!--<span class="ui-icon ui-icon-'.($obj->nzcf_status==ATC_ACTIVITY_RECOGNISED?'radio-off" title="Recognised Activity"':'bullet" title="Authorised Activity"').'" style="float:left">A</span> --><a href="activities.php?id='.$obj->activity_id.'" class="activity edit">'.$obj->title.'</a></td>';
+							echo '	<td'.($obj->personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'><a href="personnel.php?id='.$obj->personnel_id.'">'.$obj->display_name.'</a></td>';
+							echo '	<td'.($obj->twoic_personnel_id==$ATC->get_currentuser_id()?' class="highlighted"':'').'><a href="personnel.php?id='.$obj->twoic_personnel_id.'">'.$obj->twoic_display_name.'</a></td>';
+							echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->nzcf8_issued)).'</td>';
+							echo '	<td>'.date(ATC_SETTING_DATE_OUTPUT, strtotime($obj->nzcf8_return)).'</td>';
+							echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->startdate)).'</td>';
+							echo '	<td>'.date(ATC_SETTING_DATETIME_OUTPUT, strtotime($obj->enddate)).'</td>';
+							echo '</tr>';
+						}
+					?>
+				</tbody>
+			</table>
+<?php
+		}
+	} catch (ATCExceptionInsufficientPermissions $e) { 
+		// We just don't show the error if it was a permission issue, that's fine, we don't know who's logged in, after all 
+	}
 	
 	try {
 		$activities = $ATC->get_activities(date('Y-m-d'), 30);
@@ -165,7 +306,7 @@
 	} catch (ATCExceptionInsufficientPermissions $e) { 
 		// We just don't show the error if it was a permission issue, that's fine, we don't know who's logged in, after all 
 	}
-	
+	/*
 	try {
 		$missinginvoices = $ATC_Finance->get_missing_invoices();
 		if( count($missinginvoices) )
@@ -303,7 +444,7 @@
 	} catch (ATCExceptionInsufficientPermissions $e) { 
 		// We just don't show the error if it was a permission issue, that's fine, we don't know who's logged in, after all 
 	}
-	
+	*/
 	try {
 		$cadetsriskingsignout = $ATC->get_cadets_risking_sign_off();
 		if( count($cadetsriskingsignout) )
