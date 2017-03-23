@@ -118,8 +118,8 @@
 						<th colspan="4"> Date </th>
 					</tr>
 					<tr>
-						<th> NZCF12 </th>
-						<th> NZCF11 </th>
+						<th> NZCF8 Out </th>
+						<th> NZCF8 In </th>
 						<th> Assemble </th>
 						<th> Dispersal </th>
 					</tr>
